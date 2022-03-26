@@ -1,0 +1,190 @@
+post:
+  operationId: bulk_intl_verifications
+
+  summary: Bulk Verify
+
+  description: >-
+    Verify a list of international (except US or US territories) address _with a live
+    API key_. Requests to this endpoint with a test API key will return a dummy
+    response based on the primary line you input.
+
+  tags:
+    - Intl Verifications
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/intl_verifications_payload.yml"
+        example:
+          addresses:
+            - recipient: "John Doe"
+              primary_line: "370 Water St"
+              secondary_line: ""
+              city: "Summerside"
+              state: "Prince Edwards Island"
+              postal_code: "C1N 1C4"
+              country: "CA"
+            - recipient: "Jane Doe"
+              primary_line: "UL. DOLSKAYA 1"
+              secondary_line: ""
+              city: "MOSCOW"
+              state: "MOSCOW G"
+              postal_code: "115569"
+              country: "RU"
+
+      # application/x-www-form-urlencoded excluded b/c
+      # openapi can't handle arrays in objects
+
+      multipart/form-data:
+        schema:
+          $ref: "models/intl_verifications_payload.yml"
+        example:
+          addresses:
+            - recipient: "John Doe"
+              primary_line: "370 Water St"
+              secondary_line: ""
+              city: "Summerside"
+              state: "Prince Edwards Island"
+              postal_code: "C1N 1C4"
+              country: "CA"
+            - recipient: "Jane Doe"
+              primary_line: "UL. DOLSKAYA 1"
+              secondary_line: ""
+              city: "MOSCOW"
+              state: "MOSCOW G"
+              postal_code: "115569"
+              country: "RU"
+
+  responses:
+    "200":
+      $ref: responses/bulk_intl_verifications.yml
+
+    default:
+      $ref: "../../shared/responses/intl_verifications_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/bulk_intl_verifications \
+          -u <YOUR_LIVE_API_KEY>: \
+          --data-raw '{
+            "addresses": [
+              {
+                "primary_line": "210 King Street",
+                "city": "San Francisco",
+                "state": "CA",
+                "zip_code": "94107"
+              }
+            ]
+          }'
+      label: CURL
+    - lang: Typescript
+      source: |
+        const IntlVerifications = new IntlVerificationsApi(av_config);
+        let verificationData1: IntlVerificationWritable = {
+            primary_line: "370 WATER ST",
+            postal_code: "C1N 1C4",
+            country: CountryExtended.Ca
+        };
+        const verificationData2: IntlVerificationWritable = {
+            primary_line: "012 PLACEHOLDER ST",
+            postal_code: "F0O 8A2",
+            country: CountryExtended.Ca
+        };
+        let addressList = new IntlVerificationsPayload({
+            addresses: [verificationData1, verificationData2]
+        });
+
+        try {
+          const bulkVerified = await IntlVerifications.verifyBulk(addressList);
+            
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.bulkIntlVerifications.verify({
+          addresses: [{
+            primary_line: '370 Water St',
+            secondary_line: '',
+            city: 'Summerside',
+            state: 'Prince Edward Island',
+            postal_code: 'C1N 1C4',
+            country: 'CA'
+          }]
+        }), function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.bulk_intl_verifications.verify(
+          addresses: [
+            {
+              primary_line: '370 Water St',
+              secondary_line: '',
+              city: 'Summerside',
+              state: 'Prince Edward Island',
+              postal_code: 'C1N 1C4',
+              country: 'CA'
+            }
+          ]
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.BulkIntlVerification.create(
+          addresses=[
+            {
+              'primary_line' = '370 Water St',
+              'secondary_line' = '',
+              'city' = 'Summerside',
+              'state'= 'Prince Edward Island',
+              'postal_code' = 'C1N 1C4',
+              'country' = 'CA'
+            }
+          ]
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->bulkIntlVerifications()->verify('addresses' => array(
+          array(
+            'primary_line' => '370 Water St',
+            'city' => 'Summerside',
+            'state' => 'Prince Edward Island',
+            'postal_code' => 'C1N 1C4',
+            'country' => 'CA'
+          )));
+    - lang: Java
+      source: |
+        List<IntlVerification.RequestBuilder> addresses = new ArrayList<IntlVerification.RequestBuilder>();
+        addresses.add(new IntlVerification.RequestBuilder()
+                .setPrimaryLine("370 Water St")
+                .setCity("Summerside")
+                .setState("Prince Edward Island")
+                .setPostalCode("C1N 1C4")
+                .setCountry("CA"));
+        LobResponse<BulkIntlVerification> response = new BulkIntlVerification.RequestBuilder()
+                .setAddresses(addresses)
+                .verify();
+        BulkIntlVerification bulkIntlVerification = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.BulkIntlVerification.verify.verify(
+        %{addresses:[
+            {
+              primary_line: '370 Water St',
+              secondary_line: '',
+              city: 'Summerside',
+              state: 'Prince Edward Island',
+              postal_code: 'C1N 1C4',
+              country: 'CA'
+            }
+          ]
+        })
+      label: ELIXIR

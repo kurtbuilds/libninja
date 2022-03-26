@@ -1,0 +1,12 @@
+description: Error
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/error.yml"
+
+    example:
+      error:
+        code: invalid
+        message: html is required
+        status_code: 422

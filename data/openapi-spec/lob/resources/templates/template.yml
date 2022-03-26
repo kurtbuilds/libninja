@@ -1,0 +1,229 @@
+parameters:
+  - in: path
+    name: tmpl_id
+    description: id of the template
+    required: true
+    schema:
+      $ref: "../../shared/attributes/model_ids/tmpl_id.yml"
+
+get:
+  operationId: template_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing template. You need only supply
+    the unique template identifier that was returned upon template creation.
+
+  tags:
+    - Templates
+
+  responses:
+    "200":
+      description: Returns a template object
+      content:
+        $ref: "responses/template.yml"
+
+    default:
+      $ref: "../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/templates/tmpl_c94e83ca2cd5121 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const Template = await new TemplatesApi(config).get("tmpl_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR
+
+post:
+  operationId: template_update
+
+  summary: Update
+
+  description: >-
+    Updates the description and/or published version of the template with the
+    given id. To update the template's html, create a new version of the template.
+
+  tags:
+    - Templates
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/template_update.yml"
+        example:
+          description: Updated Example
+          published_version: vrsn_a
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/template_update.yml"
+        example:
+          description: Updated Example
+          published_version: vrsn_a
+
+      multipart/form-data:
+        schema:
+          $ref: "models/template_update.yml"
+        example:
+          description: Updated Example
+          published_version: vrsn_a
+
+  responses:
+    "200":
+      description: Returns the updated template object
+
+      headers:
+        ratelimit-limit:
+          $ref: "../../shared/headers/ratelimit.yml#/ratelimit-limit"
+        ratelimit-remaining:
+          $ref: "../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+        ratelimit-reset:
+          $ref: "../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+      content:
+        $ref: responses/template.yml
+
+    default:
+      $ref: "../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/templates/tmpl_c94e83ca2cd5121 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Updated description" \
+          -d "published_version=vrsn_362184d96d9b0c9"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const Templates = new TemplatesApi(config);
+        const templateData = new TemplateWritable({
+          description: "Newer Template",
+          html: "<html>Updated HTML for {{name}}</html>"
+        });
+
+        try {
+          const createTemplate = await Templates.create(templateData);
+          const updateData= new TemplateUpdate ({
+            description: "updated template",
+            published_version: createTemplate.published_version?.id as string
+        });
+          const updateTemplate = await Templates.update(createTemplate.id updateData);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR
+
+delete:
+  operationId: template_delete
+
+  summary: Delete
+
+  description: >-
+    Permanently deletes a template. Deleting a template also deletes its
+    associated versions. Deleted templates can not be used to create postcard,
+    letter, or check resources.
+
+  tags:
+    - Templates
+
+  responses:
+    "200":
+      $ref: "../../shared/responses/template_deleted.yml"
+
+    default:
+      $ref: "../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/templates/tmpl_df934eeda694203 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const deleteTemplate = await new TemplatesApi(config).delete("tmpl_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR

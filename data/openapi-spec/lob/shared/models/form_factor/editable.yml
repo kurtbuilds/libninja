@@ -1,0 +1,17 @@
+type: object
+
+properties:
+  description:
+    $ref: "../../attributes/resource_description.yml"
+
+  metadata:
+    $ref: "../../models/metadata.yml"
+
+  mail_type:
+    $ref: "../../attributes/mail_type.yml"
+
+  merge_variables:
+    $ref: "../../models/merge_variables.yml"
+
+  send_date:
+    $ref: "../../attributes/send_date.yml"

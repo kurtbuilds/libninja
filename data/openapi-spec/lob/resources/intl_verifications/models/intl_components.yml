@@ -1,0 +1,20 @@
+type: object
+
+description: >-
+  A nested object containing a breakdown of each component of an address.
+
+properties:
+  primary_number:
+    $ref: "../../../shared/attributes/address/primary_number.yml"
+
+  street_name:
+    $ref: "../../../shared/attributes/address/street_name.yml"
+
+  city:
+    $ref: "../../../shared/attributes/address/city/city.yml"
+
+  state:
+    $ref: "../../../shared/attributes/address/state.yml"
+
+  postal_code:
+    $ref: "../../../shared/attributes/address/postal_code.yml"

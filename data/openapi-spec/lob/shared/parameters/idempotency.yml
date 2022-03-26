@@ -1,0 +1,33 @@
+idem-header:
+  in: header
+
+  name: Idempotency-Key
+
+  required: false
+
+  description: >
+    A string of no longer than 256 characters that uniquely identifies
+    this resource. For more help integrating idempotency keys, refer to
+    our [implementation guide](https://www.lob.com/guides#idempotent_request).
+
+  schema:
+    type: string
+    maxLength: 256
+    example: 026e7634-24d7-486c-a0bb-4a17fd0eebc5
+
+idem-query:
+  in: query
+
+  name: idempotency_key
+
+  required: false
+
+  description: >
+    A string of no longer than 256 characters that uniquely identifies
+    this resource. For more help integrating idempotency keys, refer to
+    our [implementation guide](https://www.lob.com/guides#idempotent_request).
+
+  schema:
+    type: string
+    maxLength: 256
+    example: 026e7634-24d7-486c-a0bb-4a17fd0eebc5

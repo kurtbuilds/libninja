@@ -1,0 +1,7 @@
+# If other resources will need to reference this id, move
+# the id to 'shared/attributes/model_ids/'
+type: string
+
+description: Unique identifier prefixed with `card_`.
+
+pattern: "^card_[a-zA-Z0-9]+$"

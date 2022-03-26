@@ -1,0 +1,4 @@
+type: string
+description: >-
+  The country of the address. Will be returned as a 2 letter country short-name code (ISO 3166).
+example: CA

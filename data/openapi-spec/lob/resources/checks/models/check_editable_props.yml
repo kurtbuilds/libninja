@@ -1,0 +1,95 @@
+allOf:
+  - $ref: "check_base.yml"
+  - $ref: "check_input_to.yml"
+  - type: object
+
+    required:
+      - bank_account
+      - to
+      - from
+      - amount
+
+    properties:
+      from:
+        description: >-
+          Must either be an address ID or an inline object with correct address
+          parameters. Must either be an address ID or an inline object with correct
+          address parameters. All addresses will be standardized into uppercase
+          without being modified by verification.
+        oneOf:
+          - $ref: "../../../shared/attributes/model_ids/adr_id.yml"
+          - $ref: "../../../shared/models/address/inline_address_us.yml"
+
+      bank_account:
+        allOf:
+          - $ref: "../../../shared/attributes/model_ids/bank/bank_id_no_description.yml"
+          - type: string
+            description: The id for a verified bank account.
+
+      amount:
+        description: >-
+          The payment amount to be sent in US dollars. Amounts will be rounded
+          to two decimal places.
+        type: number
+        format: float
+        maximum: 999999.99
+
+      logo:
+        description: >-
+          Accepts a remote URL or local file upload to an image to print
+          (in grayscale) in the upper-left corner of your check.
+          Image requirements:
+
+            * RGB or CMYK
+
+            * square
+
+            * minimum size: 100px x 100px
+
+            * transparent backgrond
+
+            * `png` or `jpg`
+        oneOf:
+          - type: string
+            pattern: "^https://[-a-zA-Z0-9@:%._+~#=/]{1,256}.(png|jpg)$"
+          - type: string
+            pattern: "^(?!https://)[a-zA-Z0-9@:%._+~#=/]{1,256}.(png|jpg)$"
+
+      check_bottom:
+        $ref: "../attributes/check_bottom.yml"
+
+      attachment:
+        description: >-
+          A document to include with the check.
+
+
+          Notes:
+
+          - HTML merge variables should not include delimiting
+          whitespace.
+
+          - All pages of PDF, PNG, and JPGs must be sized at 8.5"x11"
+          at 300 DPI, while supplied HTML will be rendered and trimmed to as
+          many 8.5"x11" pages as necessary.
+
+          - If a PDF is provided, it must be 6
+          pages or fewer.
+
+          - The attachment will be printed double-sided in black &
+          white and will be included in the envelope after the check
+          page.
+
+          - Please follow these [design guidelines](https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/check_attachment_template.pdf).
+
+
+          See [pricing](https://lob.com/pricing/print-mail#compare) for extra
+          costs incurred.
+          Need more help? Consult our [HTML examples](#section/HTML-Examples).
+        oneOf:
+          - $ref: "../../../shared/attributes/html_string.yml"
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+          - $ref: "../../../shared/attributes/remote_file_url.yml"
+          - $ref: "../../../shared/attributes/local_file_path.yml"
+
+      billing_group_id:
+        $ref: "../../../shared/attributes/billing_group_id.yml"

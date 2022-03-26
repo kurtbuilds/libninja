@@ -1,0 +1,10 @@
+description: Deleted
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/deletion_models/address_deletion.yml"
+
+    example:
+      id: adr_123456789
+      deleted: true

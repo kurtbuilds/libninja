@@ -1,0 +1,22 @@
+allOf:
+  - $ref: "intl_verification_base.yml"
+
+  - type: object
+
+    required:
+      - primary_line
+      - country
+
+    properties:
+      city:
+        $ref: "../../../shared/attributes/address/city/city.yml"
+
+      state:
+        type: string
+        description: The name of the state.
+
+      postal_code:
+        $ref: "../../../shared/attributes/address/postal_code.yml"
+
+      country:
+        $ref: "../../../shared/attributes/country_extended.yml"

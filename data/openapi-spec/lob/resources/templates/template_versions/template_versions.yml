@@ -1,0 +1,165 @@
+get:
+  operationId: template_versions_list
+
+  summary: List
+
+  description: >
+    Returns a list of template versions for the given template ID. The
+    template versions are sorted by creation date, with the most recently
+    created appearing first.
+
+  tags:
+    - Template Versions
+
+  parameters:
+    - in: path
+      name: tmpl_id
+      description: The ID of the template associated with the retrieved versions
+      required: true
+      schema:
+        $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+
+    - $ref: "../../../shared/parameters/limit.yml"
+    - $ref: "../../../shared/parameters/before_after.yml"
+    - $ref: "../../../shared/parameters/include.yml"
+    - $ref: "../../../shared/parameters/date_created.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_template_versions.yml
+
+    default:
+      $ref: "../../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/templates/tmpl_ea6e6a1abf01703/versions?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const templateVersions = await new TemplateVersionsApi(config).list(tmpl_xxxx);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR
+
+post:
+  operationId: create_template_version
+
+  summary: Create
+
+  description: >-
+    Creates a new template version attached to the specified template.
+
+  tags:
+    - Template Versions
+
+  parameters:
+    - in: path
+      name: tmpl_id
+      description: The ID of the template the new version will be attached to
+      required: true
+      schema:
+        $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/template_version_writable.yml"
+        example:
+          description: Some Description
+          html: "<html>HTML for {{name}}</html>"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/template_version_writable.yml"
+        example:
+          description: Some Description
+          html: "<html>HTML for {{name}}</html>"
+
+      multipart/form-data:
+        schema:
+          $ref: "models/template_version_writable.yml"
+        example:
+          description: Some Description
+          html: "<html>HTML for {{name}}</html>"
+
+  responses:
+    "200":
+      $ref: "responses/post_template_version.yml"
+
+    default:
+      $ref: "../../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/templates/tmpl_4aa14648113e45b/versions \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Second Version" \
+          --data-urlencode "html=<html>Second HTML for {{name}}</html>"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const templateVersionCreate = new TemplateVersionWritable({
+          description: "Newer Template",
+          html: "<html>Updated HTML for {{name}}</html>"
+        });
+
+        try {
+          const myTemplateVersion = await new TemplateVersionsApi(config).create(templateVersionCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR

@@ -1,0 +1,10 @@
+description: Deleted
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/deletion_models/letter_deletion.yml"
+
+    example:
+      id: ltr_123456789
+      deleted: true

@@ -1,0 +1,150 @@
+post:
+  operationId: intl_autocompletions
+  summary: Autocomplete
+
+  description: >-
+    Given an address prefix consisting of a partial primary line and country, as well as
+    optional input of city, state, and zip code, this functionality returns up
+    to 10 full International address suggestions. Not all of them will turn out to be valid
+    addresses; they'll need to be [verified](#operation/intl_verification).
+  tags:
+    - Intl Autocompletions
+
+  parameters:
+    - $ref: "../../shared/parameters/lang_spec.yml"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/intl_autocompletions_writable.yml"
+        examples:
+          basic:
+            value:
+              address_prefix: 340 Wat
+              city: Summerside
+              state: Prince Edward Island
+              zip_code: C1N 1C4
+              country: CA
+          test:
+            value:
+              address_prefix: 1 sugg
+              country: CA
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/intl_autocompletions_writable.yml"
+        examples:
+          basic:
+            value:
+              address_prefix: 340 Wat
+              city: Summerside
+              state: Prince Edward Island
+              zip_code: C1N 1C4
+              country: CA
+          test:
+            value:
+              address_prefix: 1 sugg
+              country: CA
+
+      multipart/form-data:
+        schema:
+          $ref: "models/intl_autocompletions_writable.yml"
+        examples:
+          basic:
+            value:
+              address_prefix: 340 Wat
+              city: Summerside
+              state: Prince Edward Island
+              zip_code: C1N 1C4
+              country: CA
+          test:
+            value:
+              address_prefix: 1 sugg
+              country: CA
+
+  responses:
+    "200":
+      $ref: responses/intl_autocompletions.yml
+
+    default:
+      $ref: "responses/intl_autocompletions_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/intl_autocompletions \
+          -u <YOUR_LIVE_API_KEY>: \
+          -d "address_prefix=340 Wat" \
+          -d "city=Summerside" \
+          -d "state=Prince Edward Island" \
+          -d "zip_code=C1N 1C4" \
+          -d "country=CA"
+      label: CURL
+    - lang: Typescript
+      source: |
+        This feature is not currently supported by this library.
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.intlVerifications.verify({
+          address_prefix: '340 Wat',
+          city: 'Summerside',
+          state: 'Prince Edward Island',
+          zip_code: 'C1N 1C4',
+          country: 'CA'
+        }, function (err, res) {
+          console.log (err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.intl_verifications.verify(
+          address_prefix: "340 Wat",
+          city:         "Summerside",
+          state:        "Prince Edward Island",
+          zip_code:  "C1N 1C4",
+          country:      "CA"
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.IntlVerification.create(
+          address_prefix='340 Wat',
+          city='Summerside',
+          state='Prince Edward Island',
+          zip_code='C1N 1C4',
+          country='CA'
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->intlVerifications()->verify(array(
+          'address_prefix' => '340 Wat',
+          'city'         => 'Summerside',
+          'state'        => 'Prince Edward Island',
+          'zip_code'  => 'C1N 1C4',
+          'country'      => 'CA',
+        ));
+    - lang: Java
+      source: |
+        LobResponse<IntlVerification> response = new IntlVerification.RequestBuilder()
+                .setAddressPrefix("340 Wat")
+                .setCity("Summerside")
+                .setState("Prince Edward Island")
+                .setPostalCode("C1N 1C4")
+                .setCountry("CA")
+                .verify();
+        IntlVerification intlVerification = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.IntlVerification.verify(%{
+          address_prefix: "340 Wat",
+          city: "Summerside",
+          state: "Prince Edward Island",
+          zip_code: "C1N 1C4",
+          country: "CA"
+        })
+      label: ELIXIR

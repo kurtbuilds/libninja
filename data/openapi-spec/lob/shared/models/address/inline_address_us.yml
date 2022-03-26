@@ -1,0 +1,10 @@
+allOf:
+  - $ref: "address_editable_us.yml"
+
+  - type: object
+
+    required:
+      - address_line1
+      - address_city
+      - address_state
+      - address_zip

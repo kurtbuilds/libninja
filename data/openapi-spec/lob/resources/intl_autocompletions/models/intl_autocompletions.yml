@@ -1,0 +1,14 @@
+type: object
+
+properties:
+  id:
+    $ref: "../attributes/intl_auto_id.yml"
+
+  suggestions:
+    type: array
+    description: >
+      An array of objects representing suggested addresses.
+    minItems: 0
+    maxItems: 10
+    items:
+      $ref: "intl_suggestions.yml"

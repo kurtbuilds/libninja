@@ -1,0 +1,19 @@
+ratelimit-limit:
+  description: The rate limit for a given endpoint.
+  schema:
+    type: integer
+    example: 150
+
+ratelimit-remaining:
+  description: The number of requests remaining in the current window.
+  schema:
+    type: integer
+    example: 100
+
+ratelimit-reset:
+  description: >
+    The time at which the rate limit window resets in 
+    <a href="https://en.wikipedia.org/wiki/Unix_time">UTC epoch seconds</a>
+  schema:
+    type: integer
+    example: 1528749846

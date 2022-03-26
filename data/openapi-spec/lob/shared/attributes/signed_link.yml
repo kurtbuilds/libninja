@@ -1,0 +1,8 @@
+type: string
+
+description: >-
+  A [signed link](#section/Asset-URLs) served over HTTPS. The link returned will expire in 30 days
+  to prevent mis-sharing. Each time a GET request is initiated, a new signed URL
+  will be generated.
+
+pattern: '^https://lob-assets\.com/(letters|postcards|bank-accounts|checks|self-mailers|cards)/[a-z]{3,4}_[a-z0-9]{15,16}(\.pdf|_thumb_[a-z]+_[0-9]+\.png)\?(version=[a-z0-9-]*&)?expires=[0-9]{10}&signature=[a-zA-Z0-9-_]+$'

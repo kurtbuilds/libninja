@@ -1,0 +1,19 @@
+type: object
+
+description: >-
+  A nested object containing a breakdown of each component of a reverse geocoded response.
+
+required:
+  - zip_code
+  - zip_code_plus_4
+
+properties:
+  zip_code:
+    type: string
+    description: The 5-digit ZIP code
+    pattern: ^\d{5}$
+
+  zip_code_plus_4:
+    allOf:
+      - description: A 4-digit ZIP add-on code
+      - $ref: "../../../shared/attributes/address/zip_code_plus_4.yml"

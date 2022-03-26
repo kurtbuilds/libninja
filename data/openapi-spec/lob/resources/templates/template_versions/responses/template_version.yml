@@ -1,0 +1,10 @@
+application/json:
+  schema:
+    $ref: "../models/template_version.yml"
+  example:
+    id: "vrsn_534e339882d2282"
+    description: "Second Version"
+    html: "<html>Second HTML for {{name}}</html>"
+    date_created: "2017-11-09T04:49:38.016Z"
+    date_modified: "2017-11-09T04:49:38.016Z"
+    object: version

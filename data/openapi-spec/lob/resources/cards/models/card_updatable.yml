@@ -1,0 +1,12 @@
+type: object
+properties:
+  description:
+    $ref: "../attributes/card_description.yml"
+  auto_reorder:
+    description: Allows for auto reordering
+    type: boolean
+  reorder_quantity:
+    description: The quantity of items to be reordered (only required when auto_reorder is true).
+    type: number
+    minimum: 10000
+    maximum: 10000000

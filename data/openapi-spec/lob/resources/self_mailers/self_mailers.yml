@@ -1,0 +1,313 @@
+get:
+  operationId: self_mailers_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your self_mailers. The self_mailers are returned sorted by
+    creation date, with the most recently created self_mailers appearing first.
+
+  tags:
+    - Self Mailers
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/metadata.yml"
+    - in: query
+      name: size
+      description: The self mailer sizes to be returned.
+      schema:
+        $ref: "attributes/self_mailer_size.yml"
+
+    - $ref: "../../shared/parameters/scheduled.yml"
+    - $ref: "../../shared/parameters/send_date.yml"
+    - $ref: "../../shared/parameters/mail_type.yml"
+    - $ref: "../../shared/parameters/sort_by.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_self_mailers.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/self_mailers?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: typescript
+      source: |
+        try {
+          const selfMailers = await new selfMailersApi(config).list(2);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.selfMailers.list({limit: 2}, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.self_mailers.list(limit: 2)
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.SelfMailer.list(limit=2)
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->selfMailers()->all(array(
+          'limit' => 2
+        ));
+    - lang: Java
+      source: |
+        Map<String, Object> params = new HashMap<>>();
+        params.put("limit", 2);
+
+        LobResponse<SelfMailerCollection> response = SelfMailer.list(params);
+        SelfMailerCollection selfMailers = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.SelfMailer.list(%{limit: 2})
+      label: ELIXIR
+
+post:
+  operationId: self_mailer_create
+
+  summary: Create
+
+  description: >-
+    Creates a new self_mailer given information
+
+  tags:
+    - Self Mailers
+
+  parameters:
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-header"
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-query"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/self_mailer_editable.yml"
+        example:
+          description: Demo Self Mailer job
+          to: adr_bae820679f3f536b
+          from: adr_210a8d4b0b76d77b
+          inside: "https://lob.com/selfmailerinside.pdf"
+          outside: "https://lob.com/selfmaileroutside.pdf"
+          size: 12x9_bifold
+          metadata:
+            spiffy: "true"
+          mail_type: usps_standard
+          merge_variables:
+            name: Harry
+          send_date: "2017-11-01T00:00:00.000Z"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/self_mailer_editable.yml"
+        example:
+          description: Demo Self Mailer job
+          to: adr_bae820679f3f536b
+          from: adr_210a8d4b0b76d77b
+          inside: "https://lob.com/selfmailerinside.pdf"
+          outside: "https://lob.com/selfmaileroutside.pdf"
+          size: 12x9_bifold
+          metadata:
+            spiffy: "true"
+          mail_type: usps_standard
+          merge_variables:
+            name: Harry
+          send_date: "2017-11-01T00:00:00.000Z"
+        encoding:
+          merge_variables:
+            style: deepObject
+            explode: true
+          metadata:
+            style: deepObject
+            explode: true
+
+      multipart/form-data:
+        schema:
+          $ref: "models/self_mailer_editable.yml"
+        example:
+          description: Demo Self Mailer job
+          to: adr_bae820679f3f536b
+          from: adr_210a8d4b0b76d77b
+          inside: "https://lob.com/selfmailerinside.pdf"
+          outside: "https://lob.com/selfmaileroutside.pdf"
+          size: 12x9_bifold
+          metadata:
+            spiffy: "true"
+          mail_type: usps_standard
+          merge_variables:
+            name: Harry
+          send_date: "2017-11-01T00:00:00.000Z"
+
+  responses:
+    "200":
+      $ref: responses/post_self_mailer.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/self_mailers \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Demo Self Mailer job" \
+          -d "to[name]=Harry Zhang" \
+          -d "to[address_line1]=210 King St" \
+          -d "to[address_city]=San Francisco" \
+          -d "to[address_state]=CA" \
+          -d "to[address_zip]=94107" \
+          -d "from=adr_210a8d4b0b76d77b" \
+          --data-urlencode "inside=<html style='padding: 1in; font-size: 50;'>Inside HTML for {{name}}</html>" \
+          --data-urlencode "outside=<html style='padding: 1in; font-size: 20;'>Outside HTML for {{name}}</html>" \
+          -d "merge_variables[name]=Harry"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const selfMailerCreate = new SelfMailerEditable({
+          to: addressId,
+          from: addressId,
+          inside:
+          "https://s3.us-west-2.amazonaws.com/public.lob.com/assets/templates/self_mailers/6x18_sfm_inside.pdf",
+          outside:
+          "https://s3.us-west-2.amazonaws.com/public.lob.com/assets/templates/self_mailers/6x18_sfm_outside.pdf"
+        });
+
+        try {
+          const mySelfMailer = await new SelfMailersApi(config).create(selfMailerCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.selfMailers.create({
+          description: 'Demo Self Mailer job',
+          to: {
+            name: 'Harry Zhang',
+            address_line1: '210 King St',
+            address_city: 'San Francisco',
+            address_state: 'CA',
+            address_zip: '94107'
+          },
+          from: 'adr_210a8d4b0b76d77b',
+          inside: '<html style="padding: 1in; font-size: 50;">Inside HTML for {{name}}</html>',
+          outside: '<html style="padding: 1in; font-size: 20;">Outside HTML for {{name}}</html>',
+          merge_variables: {
+            name: 'Harry'
+          }
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.self_mailers.create(
+          description: "Demo Self Mailers job",
+          to: {
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          inside: "<html style='padding: 1in; font-size: 50;'>Inside HTML for {{name}}</html>",
+          outside: "<html style='padding: 1in; font-size: 20;'>Outside HTML for {{name}}</html>",
+          merge_variables: {
+            name: "Harry"
+          }
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.SelfMailer.create(
+          description = 'Demo Self Mailer job',
+          to_address = {
+            'name': 'Harry Zhang',
+            'address_line1': '210 King St',
+            'address_city': 'San Francisco',
+            'address_state': 'CA',
+            'address_zip': '94107'
+          },
+          from_address = 'adr_210a8d4b0b76d77b',
+          inside = '<html style="padding: 1in; font-size: 50;">Inside HTML for {{name}}</html>',
+          outside = '<html style="padding: 1in; font-size: 20;">Outside HTML for {{name}}</html>',
+          merge_variables = {
+            'name': 'Harry'
+          }
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->selfMailers()->create(array(
+          'description'           => 'Demo Self Mailer job',
+          'to[name]'              => 'Harry Zhang',
+          'to[address_line1]'     => '210 King St',
+          'to[address_city]'      => 'San Francisco',
+          'to[address_zip]'       => '94107',
+          'to[address_state]'     => 'CA',
+          'from'                  => 'adr_210a8d4b0b76d77b',
+          'inside'                => '<html style="padding: 1in; font-size: 50;">Inside HTML for {{name}}</html>',
+          'outside'               => '<html style="padding: 1in; font-size: 20;">Outside HTML for {{name}}</html>',
+          'merge_variables[name]' => 'Harry'
+        ));
+    - lang: Java
+      source: |
+        Map<String, String> mergeVariables = new HashMap<>();
+        mergeVariables.put("name", "Harry");
+
+        LobResponse<SelfMailer> response = new SelfMailer.RequestBuilder()
+                .setDescription("Demo Self Mailer job")
+                .setTo(
+                        new Address.RequestBuilder()
+                                .setName("Harry Zhang")
+                                .setLine1("210 King St")
+                                .setCity("San Francisco")
+                                .setState("CA")
+                                .setZip("94107")
+                )
+                .setFrom("adr_210a8d4b0b76d77b")
+                .setInside("<html style='padding: 1in; font-size: 50;'>Inside HTML for {{name}}</html>")
+                .setOutside("<html style='padding: 1in; font-size: 20;'>Outside HTML for {{name}}</html>")
+                .setMergeVariables(mergeVariables)
+                .create();
+
+        SelfMailer selfMailer = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.SelfMailer.create(%{
+          description: "Demo Self Mailer job",
+          to: %{
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          inside: "<html style='padding: 1in; font-size: 50;'>Inside HTML for {{name}}</html>",
+          outside: "<html style='padding: 1in; font-size: 20;'>Outside HTML for {{name}}</html>",
+          merge_variables: %{
+            name: "Harry"
+          }
+        })
+      label: ELIXIR

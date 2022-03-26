@@ -1,0 +1,127 @@
+parameters:
+  - in: path
+    name: bank_id
+    description: id of the bank account
+    required: true
+    schema:
+      $ref: "../../shared/attributes/model_ids/bank/bank_id.yml"
+
+get:
+  operationId: bank_account_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing bank account. You need only supply
+    the unique bank account identifier that was returned upon bank account creation.
+
+  tags:
+    - Bank Accounts
+
+  responses:
+    "200":
+      description: Returns a bank account object
+      content:
+        $ref: responses/bank_account.yml
+
+    default:
+      $ref: responses/bank_account_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/bank_accounts/bank_8cad8df5354d33f \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const bankAccount = await new BankAccountsApi(config).get("bank_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.bankAccounts.retrieve('bank_8cad8df5354d33f', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.bank_accounts.find("bank_8cad8df5354d33f")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.BankAccount.retrieve('bank_8cad8df5354d33f')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->bankAccounts()->get('bank_8cad8df5354d33f');
+    - lang: Java
+      source: |
+        LobResponse<BankAccount> response = BankAccount.retrieve("bank_8cad8df5354d33f");
+        BankAccount bankAccount = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.BankAccount.find("bank_8cad8df5354d33f")
+      label: ELIXIR
+
+delete:
+  operationId: bank_account_delete
+
+  summary: Delete
+
+  description: Permanently deletes a bank account. It cannot be undone.
+
+  tags:
+    - Bank Accounts
+
+  responses:
+    "200":
+      $ref: ../../shared/responses/bank_account_deleted.yml
+
+    default:
+      $ref: responses/bank_account_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/bank_accounts/bank_3e64d9904356b20 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const deleteBankAccount = await new BankAccountsApi(config).delete("bank_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.bankAccounts.delete('bank_3e64d9904356b20', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.bank_accounts.destroy("bank_3e64d9904356b20")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.BankAccount.delete('bank_3e64d9904356b20')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->bankAccounts()->delete('bank_3e64d9904356b20');
+    - lang: Java
+      source: |
+        LobResponse<BankAccount> response = BankAccount.delete("bank_3e64d9904356b20");
+        BankAccount bankAccount = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.BankAccount.destroy("bank_3e64d9904356b20")
+      label: ELIXIR

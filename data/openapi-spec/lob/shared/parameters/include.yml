@@ -1,0 +1,14 @@
+in: query
+
+name: include
+
+description: >
+  Request that the response include the total count by specifying
+  `include=["total_count"]`.
+
+schema:
+  type: array
+  items:
+    type: string
+
+explode: true

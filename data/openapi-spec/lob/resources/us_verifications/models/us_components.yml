@@ -1,0 +1,206 @@
+type: object
+
+description: A nested object containing a breakdown of each component of an address.
+
+required:
+  - primary_number
+  - street_predirection
+  - street_name
+  - street_suffix
+  - street_postdirection
+  - secondary_designator
+  - secondary_number
+  - pmb_designator
+  - pmb_number
+  - extra_secondary_designator
+  - extra_secondary_number
+  - city
+  - state
+  - zip_code
+  - zip_code_plus_4
+  - zip_code_type
+  - delivery_point_barcode
+  - address_type
+  - record_type
+  - default_building_address
+  - county
+  - county_fips
+  - carrier_route
+  - carrier_route_type
+
+properties:
+  primary_number:
+    $ref: "../../../shared/attributes/address/primary_number.yml"
+
+  street_predirection:
+    type: string
+    enum:
+      - "N"
+      - "S"
+      - "E"
+      - "W"
+      - "NE"
+      - "SW"
+      - "SE"
+      - "NW"
+      - ""
+    description: >
+      Geographic direction preceding a street name (`N`, `S`, `E`,
+      `W`, `NE`, `SW`, `SE`, `NW`).
+
+  street_name:
+    $ref: "../../../shared/attributes/address/street_name.yml"
+
+  street_suffix:
+    type: string
+    description: >
+      The standard USPS abbreviation for the street suffix (`ST`, `AVE`, `BLVD`, etc).
+
+  street_postdirection:
+    type: string
+    enum:
+      - "N"
+      - "S"
+      - "E"
+      - "W"
+      - "NE"
+      - "SW"
+      - "SE"
+      - "NW"
+      - ""
+    description: >
+      Geographic direction following a street name (`N`, `S`, `E`,
+      `W`, `NE`, `SW`, `SE`, `NW`).
+
+  secondary_designator:
+    type: string
+    description: >
+      The standard USPS abbreviation describing the `components[secondary_number]`
+      (`STE`, `APT`, `BLDG`, etc).
+
+  secondary_number:
+    type: string
+    description: >
+      Number of the apartment/unit/etc.
+
+  pmb_designator:
+    type: string
+    description: >
+      Designator of a [CMRA-authorized](https://en.wikipedia.org/wiki/Commercial_mail_receiving_agency) private mailbox.
+
+  pmb_number:
+    type: string
+    description: >
+      Number of a [CMRA-authorized](https://en.wikipedia.org/wiki/Commercial_mail_receiving_agency) private mailbox.
+
+  extra_secondary_designator:
+    type: string
+    description: >
+      An extra (often unnecessary) secondary designator provided with the input address.
+
+  extra_secondary_number:
+    type: string
+    description: >
+      An extra (often unnecessary) secondary number provided with the input address.
+
+  city:
+    $ref: "../../../shared/attributes/address/city/city.yml"
+
+  state:
+    $ref: "../../../shared/attributes/address/state.yml"
+
+  zip_code:
+    type: string
+    description: The 5-digit ZIP code
+    pattern: ^\d{5}$
+
+  zip_code_plus_4:
+    allOf:
+      - description: The 4-digit ZIP add-on code
+      - $ref: "../../../shared/attributes/address/zip_code_plus_4.yml"
+
+  zip_code_type:
+    $ref: "../../../shared/attributes/address/zip_code_type.yml"
+
+  delivery_point_barcode:
+    type: string
+    description: >
+      A 12-digit identifier that uniquely identifies a delivery point (location where mail can be sent and received).
+      It consists of the 5-digit ZIP code (`zip_code`), 4-digit ZIP+4 add-on (`zip_code_plus_4`),
+      2-digit delivery point, and 1-digit delivery point check digit.
+
+  address_type:
+    type: string
+    enum:
+      - residential
+      - commercial
+      - ""
+    description: |
+      Uses USPS's [Residential Delivery Indicator
+      (RDI)](https://www.usps.com/nationalpremieraccounts/rdi.htm) to identify
+      whether an address is classified as residential or
+      business. Possible values are:
+      * `residential` –– The address is residential or a PO Box.
+      * `commercial` –– The address is commercial.
+      * `''` –– Not enough information provided to be determined.
+
+  record_type:
+    type: string
+    enum:
+      - street
+      - highrise
+      - firm
+      - po_box
+      - rural_route
+      - general_delivery
+      - ""
+    description: |
+      A description of the type of address. Populated if a DPV match is made (`deliverability_analysis[dpv_confirmation]`
+      is `Y`, `S`, or `D`). For more detailed information about each record type, see
+      [US Verification Details](#tag/US-Verification-Types).
+
+  default_building_address:
+    type: boolean
+    description: >
+      Designates whether or not the address is the default address for a building containing multiple delivery points.
+
+  county:
+    $ref: "../../../shared/attributes/address/county.yml"
+
+  county_fips:
+    $ref: "../../../shared/attributes/address/county_fips.yml"
+
+  carrier_route:
+    type: string
+    description: >
+      A 4-character code assigned to a mail delivery route within a ZIP code.
+
+  carrier_route_type:
+    type: string
+    enum:
+      - city_delivery
+      - rural_route
+      - highway_contract
+      - po_box
+      - general_delivery
+    description: |
+      The type of `components[carrier_route]`. For more detailed information about
+      each carrier route type, see [US Verification Details](#tag/US-Verification-Types).
+
+  latitude:
+    type: number
+    format: float
+    description: >
+      A positive or negative decimal indicating the geographic latitude of the address, specifying the north-to-south position of a
+      location. This should be used with `longitude` to pinpoint locations on a map. Will not be returned for undeliverable addresses
+      or military addresses (state is `AA`, `AE`, or `AP`).
+    nullable: true
+
+  longitude:
+    type: number
+    format: float
+    description: >
+      A positive or negative decimal indicating the geographic longitude of the address, specifying the north-to-south position of a
+      location. This should be used with `latitude` to pinpoint locations on a map. Will not be returned for undeliverable addresses
+      or military addresses (state is `AA`, `AE`, or `AP`).
+    nullable: true

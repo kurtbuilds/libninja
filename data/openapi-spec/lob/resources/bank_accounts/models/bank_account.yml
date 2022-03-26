@@ -1,0 +1,58 @@
+allOf:
+  - $ref: "bank_account_base.yml"
+  - $ref: "../../../shared/models/lob_base.yml"
+
+  - type: object
+
+    required:
+      - id
+
+    # Add any properties that are specific to this form factor
+    # that are generated when a new mailpiece is created here.
+    # Be sure to include the stored versions of any form factor
+    # specific input properties you added to the 'editable' schema.
+    properties:
+      id:
+        $ref: "../../../shared/attributes/model_ids/bank/bank_id.yml"
+
+      signature_url:
+        allOf:
+          - type: string
+            nullable: true
+            description: A [signed link](#section/Asset-URLs) to the signature image.
+          - $ref: "../../../shared/attributes/signed_link.yml"
+
+      bank_name:
+        description: >-
+          The name of the bank based on the provided routing number, e.g. `JPMORGAN CHASE BANK`.
+        type: string
+
+      verified:
+        description: >-
+          A bank account must be verified before a check can be created.
+          More info [here](#operation/bank_account_verify).
+        type: boolean
+        default: false
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - bank_account
+        default: bank_account
+
+example:
+  id: bank_a
+  signature_url: https://lob-assets.com/bank-accounts/asd_asdfghjkqwertyui.pdf?expires=1234567890&signature=aksdf
+  bank_name: JPMORGAN CHASE BANK
+  verified: true
+  object: bank_account
+  description: "Test Bank Account"
+  routing_number: "322271627"
+  account_number: "123456789"
+  signatory: "Jane Doe"
+  account_type: "individual"
+  metadat:
+    spiffy: "true"
+  date_created: "2019-08-08T19:34:47.571Z"
+  date_modified: "2019-08-08T19:34:47.571Z"

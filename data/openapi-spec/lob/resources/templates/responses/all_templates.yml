@@ -1,0 +1,73 @@
+description: >-
+  A dictionary with a data property that contains an array of
+  up to `limit` templates. Each entry in the array is a separate
+  template. The previous and next page of templates can be retrieved
+  by calling the endpoint contained in the `previous_url` and
+  `next_url` fields in the API response respectively.<br>If no
+  more templates are available beyond the current set of returned results,
+  the `next_url` field will be empty.
+
+content:
+  application/json:
+    schema:
+      allOf:
+        - $ref: "../../../shared/models/list.yml"
+        - type: object
+          properties:
+            data:
+              type: array
+              description: list of templates
+              items:
+                $ref: "../models/template.yml"
+
+    example:
+      data:
+        - id: tmpl_d5a5a89da9106f8
+          description: Test Template
+          versions:
+            - id: vrsn_232a02fb8224791
+              suggest_json_editor: true
+              description: Test Template
+              engine: legacy
+              html: "HTML for "
+              date_created: "2019-07-27T23:49:01.512Z"
+              date_modified: "2019-07-27T23:49:01.512Z"
+              object: version
+          published_version:
+            id: vrsn_232a02fb8224791
+            suggest_json_editor: false
+            description: Test Template
+            engine: handlebars
+            html: "HTML for "
+            date_created: "2019-07-27T23:49:01.512Z"
+            date_modified: "2019-07-27T23:49:01.512Z"
+            object: version
+          metadata: {}
+          date_created: "2019-07-27T23:49:01.511Z"
+          date_modified: "2019-07-27T23:49:01.511Z"
+          object: template
+
+        - id: tmpl_59b2150ae120887
+          description: Test Template
+          versions:
+            - id: vrsn_2a7eb63ccb795b9
+              description: Test Template
+              html: "HTML for "
+              date_created: "2019-03-29T10:22:34.643Z"
+              date_modified: "2019-03-29T10:22:34.643Z"
+              object: version
+          published_version:
+            id: vrsn_2a7eb63ccb795b9
+            description: Test Template
+            html: "HTML for "
+            date_created: "2019-03-29T10:22:34.643Z"
+            date_modified: "2019-03-29T10:22:34.643Z"
+            object: version
+          metadata: {}
+          date_created: "2019-03-29T10:22:34.642Z"
+          date_modified: "2019-03-29T10:22:34.642Z"
+          object: template
+      object: list
+      previous_url:
+      next_url: https://api.lob.com/v1/templates?limit=2&after=eyJkYXRlT2Zmc2V0IjoiMjAxOS0wMy0yOVQxMDoyMjozNC42NDJaIiwiaWRPZmZzZXQiOiJ0bXBsXzU5YjIxNTBhZTEyMDg4NyJ9
+      count: 2

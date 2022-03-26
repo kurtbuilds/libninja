@@ -1,0 +1,33 @@
+allOf:
+  - $ref: "../../../shared/models/zip5.yml"
+
+  - type: object
+
+    required:
+      - id
+      - cities
+      - zip_code_type
+      - object
+
+    properties:
+      id:
+        $ref: "../attributes/zip_id.yml"
+
+      cities:
+        type: array
+        items:
+          $ref: "zip_lookup_city.yml"
+        description: >
+          An array of city objects containing valid cities for the `zip_code`.
+          Multiple cities will be returned if more than one city is associated with the
+          input ZIP code.
+
+      zip_code_type:
+        $ref: "../../../shared/attributes/address/zip_code_type.yml"
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - us_zip_lookup
+        default: us_zip_lookup

@@ -1,0 +1,12 @@
+type: object
+
+properties:
+  description:
+    $ref: "../attributes/card_description.yml"
+  size:
+    description: The size of the card
+    enum:
+      - 3.375x2.125
+      - 2.125x3.375
+    type: string
+    default: 2.125x3.375

@@ -1,0 +1,23 @@
+in: query
+name: sort_by
+description: >
+  Sorts items by ascending or descending dates. Use either `date_created` or `send_date`, not both.
+schema:
+  allOf:
+    - type: object
+      properties:
+        date_created:
+          type: string
+          enum:
+            - asc
+            - desc
+        send_date:
+          type: string
+          enum:
+            - asc
+            - desc
+    - oneOf:
+        - required:
+            - date_created
+        - required:
+            - send_date

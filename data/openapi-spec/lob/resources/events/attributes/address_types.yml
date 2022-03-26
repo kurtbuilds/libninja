@@ -1,0 +1,5 @@
+type: string
+description: Unique identifier referring to status of address
+enum:
+  - address.created
+  - address.deleted

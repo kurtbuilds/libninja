@@ -1,0 +1,323 @@
+allOf:
+  - $ref: ../lob_base.yml
+  - type: object
+
+    required:
+      - id
+      - address_line1
+      - address_country
+
+    anyOf:
+      - title: address obj with `name` defined
+        required:
+          - name
+      - title: address obj with `company` defined
+        required:
+          - company
+
+    properties:
+      id:
+        $ref: "../../../shared/attributes/model_ids/adr_id.yml"
+
+      description:
+        $ref: "../../../shared/attributes/resource_description.yml"
+
+      name:
+        type: string
+        description: >
+          Either `name` or `company` is required,
+          you may also add both. Must be no longer than 40 characters.
+          If both `name` and `company` are provided,
+          they will be printed on two separate lines above the rest of the address.
+        maxLength: 40
+        nullable: true
+
+      company:
+        $ref: "../../../shared/attributes/address/company.yml"
+
+      phone:
+        type: string
+        description: Must be no longer than 40 characters.
+        maxLength: 40
+        nullable: true
+
+      email:
+        type: string
+        description: Must be no longer than 100 characters.
+        maxLength: 100
+        nullable: true
+
+      metadata:
+        $ref: "../../../shared/models/metadata.yml"
+
+      address_line1:
+        type: string
+        maxLength: 200
+
+      address_line2:
+        type: string
+        maxLength: 200
+        nullable: true
+
+      address_city:
+        type: string
+        maxLength: 200
+        nullable: true
+
+      address_state:
+        description: Will be returned as a full string
+        type: string
+        maxLength: 200
+        nullable: true
+
+      address_zip:
+        type: string
+        description: Optional postal code.
+        maxLength: 40
+        nullable: true
+
+      address_country:
+        description: Full name of country
+        type: string
+        maxLength: 200
+        enum:
+          - "AFGHANISTAN"
+          - "ALBANIA"
+          - "ALGERIA"
+          - "AMERICAN SAMOA"
+          - "ANDORRA"
+          - "ANGOLA"
+          - "ANGUILLA"
+          - "ANTARCTICA"
+          - "ANTIGUA AND BARBUDA"
+          - "ARGENTINA"
+          - "ARUBA"
+          - "AUSTRALIA"
+          - "AUSTRIA"
+          - "AZERBAIJAN"
+          - "BAHRAIN"
+          - "BANGLADESH"
+          - "BARBADOS"
+          - "BELARUS"
+          - "BELGIUM"
+          - "BELIZE"
+          - "BENIN"
+          - "BERMUDA"
+          - "BHUTAN"
+          - "BOLIVIA (PLURINATIONAL STATE OF)"
+          - "BONAIRE, SAINT EUSTATIUS AND SABA"
+          - "BOSNIA AND HERZEGOVINA"
+          - "BOTSWANA"
+          - "BRAZIL"
+          - "BRITISH INDIAN OCEAN TERRITORY"
+          - "BRITISH VIRGIN ISLANDS"
+          - "BRUNEI DARUSSALAM"
+          - "BULGARIA"
+          - "BURKINA FASO"
+          - "BURUNDI"
+          - "CABO VERDE"
+          - "CAMBODIA"
+          - "CAMEROON"
+          - "CANADA"
+          - "CAYMAN ISLANDS"
+          - "CENTRAL AFRICAN REPUBLIC"
+          - "CHAD"
+          - "CHILE"
+          - "CHINA"
+          - "COLOMBIA"
+          - "COMOROS"
+          - "CONGO"
+          - "CONGO, DEMOCRATIC REPUBLIC OF THE"
+          - "COOK ISLANDS"
+          - "COSTA RICA"
+          - "CÔTE D'IVOIRE"
+          - "CROATIA"
+          - "CUBA"
+          - "CURAÇAO"
+          - "CYPRUS"
+          - "CZECH REPUBLIC"
+          - "DENMARK"
+          - "DJIBOUTI"
+          - "DOMINICA"
+          - "DOMINICAN REPUBLIC"
+          - "ECUADOR"
+          - "EGYPT"
+          - "EL SALVADOR"
+          - "EQUATORIAL GUINEA"
+          - "ERITREA"
+          - "ESTONIA"
+          - "ESWATINI"
+          - "ETHIOPIA"
+          - "FALKLAND ISLANDS (MALVINAS)"
+          - "FAROE ISLANDS"
+          - "FIJI"
+          - "FINLAND"
+          - "FRANCE"
+          - "GABON"
+          - "GAMBIA"
+          - "GEORGIA"
+          - "GERMANY"
+          - "GHANA"
+          - "GIBRALTAR"
+          - "GREECE"
+          - "GREENLAND"
+          - "GRENADA"
+          - "GUATEMALA"
+          - "GUINEA"
+          - "GUINEA-BISSAU"
+          - "GUYANA"
+          - "HAITI"
+          - "HOLY SEE"
+          - "HONDURAS"
+          - "HONG KONG"
+          - "HUNGARY"
+          - "ICELAND"
+          - "INDIA"
+          - "INDONESIA"
+          - "IRAN (ISLAMIC REPUBLIC OF)"
+          - "IRAQ"
+          - "IRELAND"
+          - "ISRAEL"
+          - "ITALY"
+          - "JAMAICA"
+          - "JAPAN"
+          - "JORDAN"
+          - "KAZAKHSTAN"
+          - "KENYA"
+          - "KIRIBATI"
+          - "KOREA (DEMOCRATIC PEOPLE’S REPUBLIC OF)"
+          - "KOREA, REPUBLIC OF"
+          - "KUWAIT"
+          - "KYRGYZSTAN"
+          - "LAO PEOPLE’S DEMOCRATIC REPUBLIC"
+          - "LATVIA"
+          - "LEBANON"
+          - "LESOTHO"
+          - "LIBERIA"
+          - "LIBYA"
+          - "LIECHTENSTEIN"
+          - "LITHUANIA"
+          - "LUXEMBOURG"
+          - "MACAO"
+          - "MACEDONIA"
+          - "MADAGASCAR"
+          - "MALAWI"
+          - "MALAYSIA"
+          - "MALDIVES"
+          - "MALI"
+          - "MALTA"
+          - "MAURITANIA"
+          - "MAURITIUS"
+          - "MEXICO"
+          - "MOLDOVA, REPUBLIC OF"
+          - "MONACO"
+          - "MONGOLIA"
+          - "MONTENEGRO"
+          - "MONTSERRAT"
+          - "MOROCCO"
+          - "MOZAMBIQUE"
+          - "MYANMAR"
+          - "NAMIBIA"
+          - "NAURU"
+          - "NEPAL"
+          - "NETHERLAND ANTILLES"
+          - "NETHERLANDS"
+          - "NEW ZEALAND"
+          - "NICARAGUA"
+          - "NIGER"
+          - "NIGERIA"
+          - "NIUE"
+          - "NORFOLK ISLAND"
+          - "NORWAY"
+          - "OMAN"
+          - "PAKISTAN"
+          - "PANAMA"
+          - "PAPUA NEW GUINEA"
+          - "PARAGUAY"
+          - "PERU"
+          - "PHILIPPINES"
+          - "PITCAIRN"
+          - "POLAND"
+          - "PORTUGAL"
+          - "QATAR"
+          - "ROMANIA"
+          - "RUSSIAN FEDERATION"
+          - "RWANDA"
+          - "SAINT HELENA"
+          - "SAINT KITTS AND NEVIS"
+          - "SAINT LUCIA"
+          - "SAINT VINCENT AND THE GRENADINES"
+          - "SAMOA"
+          - "SAN MARINO"
+          - "SAO TOME AND PRINCIPE"
+          - "SAUDI ARABIA"
+          - "SENEGAL"
+          - "SERBIA"
+          - "SEYCHELLES"
+          - "SIERRA LEONE"
+          - "SINGAPORE"
+          - "SINT MAARTEN"
+          - "SLOVAKIA"
+          - "SLOVENIA"
+          - "SOLOMON ISLANDS"
+          - "SOMALIA"
+          - "SOUTH AFRICA"
+          - "SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS"
+          - "SOUTH SUDAN"
+          - "SPAIN"
+          - "SRI LANKA"
+          - "SUDAN"
+          - "SURINAME"
+          - "SWEDEN"
+          - "SWITZERLAND"
+          - "SYRIAN ARAB REPUBLIC"
+          - "TAIWAN"
+          - "TAJIKISTAN"
+          - "TANZANIA"
+          - "THAILAND"
+          - "THE BAHAMAS"
+          - "TIMOR-LESTE"
+          - "TOGO"
+          - "TOKELAU"
+          - "TONGA"
+          - "TRINIDAD AND TOBAGO"
+          - "TUNISIA"
+          - "TURKEY"
+          - "TURKMENISTAN"
+          - "TURKS AND CAICOS ISLANDS"
+          - "TUVALU"
+          - "UGANDA"
+          - "UKRAINE"
+          - "UNITED ARAB EMIRATES"
+          - "UNITED KINGDOM"
+          - "URUGUAY"
+          - "UZBEKISTAN"
+          - "VANUATU"
+          - "VENEZUELA"
+          - "VIET NAM"
+          - "WESTERN SAHARA"
+          - "YEMEN"
+          - "ZAMBIA"
+          - "ZIMBABWE"
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - address
+        default: address
+
+    example:
+      id: adr_e68217bd744d65c8
+      description: "Harry - Office"
+      name: "Harry Zhang"
+      company: "Lob"
+      phone: "5555555555"
+      email: "harry@lob.com"
+      metadata: {}
+      address_line1: "370 WATER ST"
+      address_line2: ""
+      address_city: "SUMMERSIDE"
+      address_state: "PRINCE EDWARD ISLAND"
+      address_zip: "C1N 1C4"
+      address_country: "CANADA"

@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `sfm_`.
+
+pattern: "^sfm_[a-zA-Z0-9]+$"

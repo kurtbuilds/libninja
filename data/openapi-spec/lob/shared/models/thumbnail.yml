@@ -1,0 +1,11 @@
+type: object
+
+properties:
+  small:
+    $ref: "../attributes/signed_link.yml"
+
+  medium:
+    $ref: "../attributes/signed_link.yml"
+
+  large:
+    $ref: "../attributes/signed_link.yml"

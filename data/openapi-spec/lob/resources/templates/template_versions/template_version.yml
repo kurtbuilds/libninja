@@ -1,0 +1,216 @@
+parameters:
+  - in: path
+    name: tmpl_id
+    description: The ID of the template to which the version belongs.
+    required: true
+    schema:
+      $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+
+  - in: path
+    name: vrsn_id
+    description: id of the template_version
+    required: true
+    schema:
+      $ref: "../../../shared/attributes/model_ids/vrsn_id.yml"
+
+get:
+  operationId: template_version_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the template version with the given template and version ids.
+
+  tags:
+    - Template Versions
+
+  responses:
+    "200":
+      description: Returns the template version with the given template and version ids.
+      content:
+        $ref: "responses/template_version.yml"
+
+    default:
+      $ref: "../../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/templates/tmpl_c94e83ca2cd5121/versions/vrsn_534e339882d2282 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const templateVersion = await new TemplateVersionsApi(config).get("tmpl_xxxx, vrsn_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR
+
+post:
+  operationId: template_version_update
+
+  summary: Update
+
+  description: >-
+    Updates the template version with the given template and version ids.
+
+  tags:
+    - Template Versions
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/template_version_updatable.yml"
+        example:
+          description: Some description
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/template_version_updatable.yml"
+        example:
+          description: Some description
+
+      multipart/form-data:
+        schema:
+          $ref: "models/template_version_updatable.yml"
+        example:
+          description: Some description
+
+  responses:
+    "200":
+      $ref: "responses/post_template_version.yml"
+
+    default:
+      $ref: "../../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/templates/tmpl_c94e83ca2cd5121/versions/vrsn_534e339882d2282 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Updated description"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const TemplateVersions = new TemplateVersionsApi(config);
+        const templateVersionData =  new TemplateVersionWritable({
+          description: "Newer Template",
+          html: "<html>Updated HTML for {{name}}</html>"
+        });
+
+        try {
+          const createTemplateVersion = await TemplateVersions.create(templateVersionData);
+          const updateData= new TemplateVersionUpdatable({
+            description: "updated template",
+          });
+          const updateTemplateVersion = await TemplatesVersions.update(createTemplateVersion.id, updateData);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR
+
+delete:
+  operationId: template_version_delete
+
+  summary: Delete
+
+  description: >-
+    Permanently deletes a template version. A template's `published_version` can not be deleted.
+
+  tags:
+    - Template Versions
+
+  responses:
+    "200":
+      $ref: "../../../shared/responses/template_version_deleted.yml"
+
+    default:
+      $ref: "../../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/templates/tmpl_4aa14648113e45b/versions/vrsn_534e339882d2282 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const deleteTemplateVersion = await new TemplateVersionsApi(config).delete("tmpl_xxxx","vrsn_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR

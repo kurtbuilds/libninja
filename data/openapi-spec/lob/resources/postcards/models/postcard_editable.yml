@@ -1,0 +1,63 @@
+allOf:
+  - $ref: "postcard_base.yml"
+  - $ref: "../../../shared/models/form_factor/input_to.yml"
+  - $ref: "../../../shared/models/form_factor/input_from_us.yml"
+
+  - type: object
+
+    required:
+      - to
+      - front
+      - back
+
+    properties:
+      front:
+        description: >
+          The artwork to use as the front of your postcard.
+
+
+          Notes:
+
+          - HTML merge variables should not include delimiting whitespace.
+
+          - PDF, PNG, and JPGs must be sized at 4.25"x6.25", 6.25"x9.25", or
+          6.25"x11.25" at 300 DPI, while supplied HTML will be rendered to the
+          specified `size`.
+
+
+          See [here](#section/HTML-Examples) for HTML examples.
+        oneOf:
+          - $ref: "../../../shared/attributes/html_string.yml"
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+          - $ref: "../../../shared/attributes/remote_file_url.yml"
+          - $ref: "../../../shared/attributes/local_file_path.yml"
+
+      back:
+        description: >
+          The artwork to use as the back of your postcard.
+
+
+          Notes:
+
+          - HTML merge variables should not include delimiting whitespace.
+
+          - PDF, PNG, and JPGs must be sized at 4.25"x6.25", 6.25"x9.25", or
+          6.25"x11.25" at 300 DPI, while supplied HTML will be rendered to the
+          specified `size`.
+
+          - Be sure to leave room for address and postage information by following the
+          templates provided here:
+            - [4x6 template](https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/postcards/4x6_postcard.pdf)
+            - [6x9 template](https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/postcards/6x9_postcard.pdf)
+            - [6x11 template](https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/postcards/6x11_postcard.pdf)
+
+
+          See [here](#section/HTML-Examples) for HTML examples.
+        oneOf:
+          - $ref: "../../../shared/attributes/html_string.yml"
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+          - $ref: "../../../shared/attributes/remote_file_url.yml"
+          - $ref: "../../../shared/attributes/local_file_path.yml"
+
+      billing_group_id:
+        $ref: "../../../shared/attributes/billing_group_id.yml"

@@ -1,0 +1,403 @@
+get:
+  operationId: letters_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your letters. The letters are returned sorted by
+    creation date, with the most recently created letters appearing first.
+
+  tags:
+    - Letters
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/metadata.yml"
+    - in: query
+      name: color
+      description: Set to `true` to return only color letters. Set to `false` to return only black & white letters.
+      schema:
+        type: boolean
+
+    - $ref: "../../shared/parameters/scheduled.yml"
+    - $ref: "../../shared/parameters/send_date.yml"
+    - $ref: "../../shared/parameters/mail_type.yml"
+    - $ref: "../../shared/parameters/sort_by.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_letters.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/letters?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: typescript
+      source: |
+        try {
+        const letters = await new LettersApi(config).list(2);
+        } catch (err: any) {
+        console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.letters.list({limit: 2}, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.letters.list(limit: 2)
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Letter.list(limit=2)
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->letters()->all(array(
+          'limit' => 2
+        ));
+    - lang: Java
+      source: |
+        Map<String, Object> params = new HashMap<>>();
+        params.put("limit", 2);
+
+        LobResponse<LetterCollection> response = Letter.list(params);
+        LetterCollection letters = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Letter.list(%{limit: 2})
+      label: ELIXIR
+
+post:
+  operationId: letter_create
+
+  summary: Create
+
+  description: >-
+    Creates a new letter given information
+
+  tags:
+    - Letters
+
+  parameters:
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-header"
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-query"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/letter_editable.yml"
+        example:
+          description: demo
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            name: Harry
+            address_line1: 210 King St
+            address_line2: "# 6100"
+            address_city: San Francisco
+            address_state: CA
+            address_zip: "94107"
+          file: "<html style='padding-top: 3in; margin: .5in;'>HTML Letter for {{name}}</html>"
+          color: true
+          cards:
+            - "card_c51ae96f5cebf3e"
+          double_sided: false
+          address_placement: bottom_first_page
+          mail_type: usps_first_class
+          return_envelope: true
+          perforated_page: 1
+          merge_variables:
+            name: Harry
+          metadata:
+            spiffy: "true"
+          send_date: "2017-11-01T00:00:00.000Z"
+          extra_service: registered
+          custom_envelope:
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/letter_editable.yml"
+        example:
+          description: demo
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            name: Harry
+            address_line1: 210 King St
+            address_line2: "# 6100"
+            address_city: San Francisco
+            address_state: CA
+            address_zip: "94107"
+          file: "<html style='padding-top: 3in; margin: .5in;'>HTML Letter for {{name}}</html>"
+          color: true
+          cards:
+            - "card_c51ae96f5cebf3e"
+          double_sided: false
+          address_placement: top_first_page
+          mail_type: usps_first_class
+          return_envelope: true
+          perforated_page: 1
+          merge_variables:
+            name: Harry
+          metadata:
+            spiffy: "true"
+          send_date: "2017-11-01T00:00:00.000Z"
+          extra_service: registered
+          custom_envelope:
+        encoding:
+          to:
+            style: deepObject
+            explode: true
+          from:
+            style: deepObject
+            explode: true
+          merge_variables:
+            style: deepObject
+            explode: true
+          metadata:
+            style: deepObject
+            explode: true
+
+      multipart/form-data:
+        schema:
+          $ref: "models/letter_editable.yml"
+        example:
+          description: demo
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            name: Harry
+            address_line1: 210 King St
+            address_line2: "# 6100"
+            address_city: San Francisco
+            address_state: CA
+            address_zip: "94107"
+          file: "<html style='padding-top: 3in; margin: .5in;'>HTML Letter for {{name}}</html>"
+          color: true
+          cards:
+            - "card_c51ae96f5cebf3e"
+          double_sided: false
+          address_placement: top_first_page
+          mail_type: usps_first_class
+          return_envelope: true
+          perforated_page: 1
+          merge_variables:
+            name: Harry
+          metadata:
+            spiffy: "true"
+          send_date: "2017-11-01T00:00:00.000Z"
+          extra_service: registered
+          custom_envelope:
+
+  responses:
+    "200":
+      $ref: responses/post_letter.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/letters \
+          -u YOUR_API_KEY \
+          -d "description=Demo Letter" \
+          -d "to[name]=Harry Zhang" \
+          -d "to[address_line1]=210 King St" \
+          -d "to[address_line2]=# 6100" \
+          -d "to[address_city]=San Francisco" \
+          -d "to[address_state]=CA" \
+          -d "to[address_zip]=94107" \
+          -d "from=adr_210a8d4b0b76d77b" \
+          --data-urlencode "file=<html style='padding-top: 3in; margin: .5in;'>HTML Letter for {{name}}</html>" \
+          -d "merge_variables[name]=Harry" \
+          -d "color=true" \
+          -d "cards[]=card_c51ae96f5cebf3e"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const letterCreate = new LetterEditable({
+          to: addressId,
+          from: addressId,
+          color: true,
+          extra_service: LetterEditableExtraServiceEnum.Certified,
+          file: "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/us_letter_1pg.pdf"
+        });
+
+        try {
+          const myLetter = await new LettersApi(config).create(letterCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.letters.create({
+          description: 'Demo Letter',
+          to: {
+            name: 'Harry Zhang',
+            address_line1: '210 King St',
+            address_line2: '# 6100',
+            address_city: 'San Francisco',
+            address_state: 'CA',
+            address_zip: '94107'
+          },
+          from: 'adr_210a8d4b0b76d77b',
+          file: '<html style="padding-top: 3in; margin: .5in;">HTML Letter for {{name}}</html>',
+          merge_variables: {
+            name: 'Harry'
+          },
+          color: true,
+          cards: ['card_c51ae96f5cebf3e']
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.letters.create(
+          description: "Demo Letter",
+          to: {
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_line2: "# 6100",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          file: "<html style='padding-top: 3in; margin: .5in;'>HTML Letter for {{name}}</html>",
+          merge_variables: {
+            name: "Harry"
+          },
+          color: true,
+          cards: ["card_c51ae96f5cebf3e"]
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Letter.create(
+          description = 'Demo Letter',
+          to_address = {
+              'name': 'Harry Zhang',
+              'address_line1': '210 King St',
+              'address_line2': '# 6100',
+              'address_city': 'San Francisco',
+              'address_state': 'CA',
+              'address_zip': '94107'
+          },
+          from_address = 'adr_210a8d4b0b76d77b',
+          file = '<html style="padding-top: 3in; margin: .5in;">HTML Letter for {{name}}</html>',
+          merge_variables = {
+            'name': 'Harry'
+          },
+          color = True,
+          cards = ['card_c51ae96f5cebf3e']
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->letters()->create(array(
+          'description'           => 'Demo Letter',
+          'to[name]'              => 'Harry Zhang',
+          'to[address_line1]'     => '210 King St',
+          'to[address_line2]'     => '# 6100',
+          'to[address_city]'      => 'San Francisco',
+          'to[address_zip]'       => '94107',
+          'to[address_state]'     => 'CA',
+          'from'                  => 'adr_210a8d4b0b76d77b',
+          'file'                  => '<html style="padding-top: 3in; margin: .5in;">HTML Letter for {{name}}</html>',
+          'merge_variables[name]' => 'Harry',
+          'color'                 => true,
+          'cards'                 => ['card_c51ae96f5cebf3e']
+        ));
+    - lang: Java
+      source: |
+        Map<String, String> mergeVariables = new HashMap<>();
+        mergeVariables.put("name", "Harry");
+
+        LobResponse<Letter> response = new Letter.RequestBuilder()
+                .setDescription("Demo Letter")
+                .setFile("<html style='padding-top: 3in; margin: .5in;'>HTML Letter for {{name}}</html>")
+                .setColor(true)
+                .setMergeVariables(mergeVariables)
+                .setTo(
+                        new Address.RequestBuilder()
+                                .setName("Harry Zhang")
+                                .setLine1("210 King St Ste 6100")
+                                .setCity("San Francisco")
+                                .setState("CA")
+                                .setZip("94107")
+                )
+                .setFrom("adr_210a8d4b0b76d77b")
+                .setCards("card_c51ae96f5cebf3e")
+                .create();
+
+        Letter letter = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Letter.create(%{
+          description: "Demo Letter",
+          to: %{
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_line2: "# 6100",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          file: "<html style='padding-top: 3in; margin: .5in;'>HTML Letter for {{name}}</html>",
+          merge_variables: %{
+            name: "Harry"
+          },
+          color: true,
+          cards: ["card_c51ae96f5cebf3e"]
+        })
+      label: ELIXIR

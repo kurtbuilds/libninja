@@ -1,0 +1,226 @@
+get:
+  operationId: bank_accounts_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your bank accounts. The bank accounts are returned sorted by
+    creation date, with the most recently created bank accounts appearing first.
+
+  tags:
+    - Bank Accounts
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/metadata.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_bank_accounts.yml
+
+    default:
+      $ref: responses/bank_account_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/bank_accounts?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const bankaccounts = await new BankaccountsApi(config).list(2);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.bankAccounts.list({limit: 2}, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.bank_accounts.list(limit: 2)
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.BankAccount.list(limit=2)
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->bankAccounts()->all(array(
+          'limit' => 2
+        ));
+    - lang: Java
+      source: |
+        Map<String, Object> params = new HashMap<>();
+        params.put("limit", 2);
+
+        LobResponse<BankAccountCollection> response = BankAccount.list(params);
+        BankAccountCollection bankAccounts = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.BankAccount.list(%{limit: 2})
+      label: ELIXIR
+
+post:
+  operationId: bank_account_create
+
+  summary: Create
+
+  description: >-
+    Creates a new bank account with the provided properties. Bank accounts
+    created in live mode will need to be verified via micro deposits before
+    being able to send live checks. The deposits will appear in the bank
+    account in 2-3 business days and have the description "VERIFICATION".
+
+  tags:
+    - Bank Accounts
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/bank_account_base.yml"
+        example:
+          description: "Test Bank Account"
+          routing_number: "322271627"
+          account_number: "123456789"
+          signatory: "Jane Doe"
+          account_type: "individual"
+          metadata:
+            spiffy: "true"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/bank_account_base.yml"
+        example:
+          description: "Test Bank Account"
+          routing_number: "322271627"
+          account_number: "123456789"
+          signatory: "Jane Doe"
+          account_type: "individual"
+          metadata:
+            spiffy: "true"
+        encoding:
+          metadata:
+            style: deepObject
+            explode: true
+
+      multipart/form-data:
+        schema:
+          $ref: "models/bank_account_base.yml"
+        example:
+          description: "Test Bank Account"
+          routing_number: "322271627"
+          account_number: "123456789"
+          signatory: "Jane Doe"
+          account_type: "individual"
+          metadata:
+            spiffy: "true"
+
+  responses:
+    "200":
+      $ref: responses/post_bank_account.yml
+
+    default:
+      $ref: responses/bank_account_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/bank_accounts \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Test Bank Account" \
+          -d "routing_number=322271627" \
+          -d "account_number=123456789" \
+          -d "signatory=John Doe" \
+          -d "account_type=company"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const bankAccountCreate = new BankAccountWritable({
+          description: "Test Bank Account",
+          routing_number: "322271627",
+          account_number: "123456789",
+          signatory: "Gomez Addams",
+          account_type: BankTypeEnum.Individual
+        });
+
+        try {
+          const myBankAcount = await new BankAccountsApi(config).create(bankAccountCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.bankAccounts.create({
+          description: 'Test Bank Account',
+          routing_number: 322271627,
+          account_number: 123456789,
+          signatory: 'John Doe',
+          account_type: 'company'
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.bank_accounts.create(
+          description: "Test Bank Account",
+          routing_number: "322271627",
+          account_number: "123456789",
+          signatory: "John Doe",
+          account_type: "company"
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.BankAccount.create(
+          description = 'Test Bank Account',
+          routing_number = '322271627',
+          account_number = '123456789',
+          signatory = 'John Doe',
+          account_type = 'company'
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->bankAccounts()->create(array(
+          'description'       => 'Test Bank Account',
+          'routing_number'    => '322271627',
+          'account_number'    => '123456789',
+          'signatory'         => 'John Doe',
+          'account_type'      => 'company'
+        ));
+    - lang: Java
+      source: |
+        LobResponse<BankAccount> response = new BankAccount.RequestBuilder()
+                .setDescription("Test Bank Account")
+                .setRoutingNumber("322271627")
+                .setAccountNumber("123456789")
+                .setSignatory("John Doe")
+                .setAccountType("company")
+                .create();
+
+        BankAccount bankAccount = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.BankAccount.create(%{
+          description: "Test Bank Account",
+          routing_number: "322271627",
+          account_number: "123456789",
+          signatory: "John Doe",
+          account_type: "company"
+        })
+      label: ELIXIR

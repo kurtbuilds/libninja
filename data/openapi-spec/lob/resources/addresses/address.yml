@@ -1,0 +1,127 @@
+parameters:
+  - in: path
+    name: adr_id
+    description: id of the address
+    required: true
+    schema:
+      $ref: "../../shared/attributes/model_ids/adr_id.yml"
+
+get:
+  operationId: address_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing address. You need only supply
+    the unique identifier that was returned upon address creation.
+
+  tags:
+    - Addresses
+
+  responses:
+    "200":
+      $ref: responses/address.yml
+
+    default:
+      $ref: responses/address_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/addresses/adr_fa85158b26c3eb7c \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const address = await new AddressesApi(config).get("adr_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.addresses.retrieve('adr_fa85158b26c3eb7c', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.addresses.find("adr_fa85158b26c3eb7c")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Address.retrieve('adr_fa85158b26c3eb7c')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->addresses()->get('adr_fa85158b26c3eb7c');
+    - lang: Java
+      source: |
+        LobResponse<Address> response = Address.retrieve("adr_fa85158b26c3eb7c");
+        Address address = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Address.retrieve("adr_fa85158b26c3eb7c")
+      label: ELIXIR
+
+delete:
+  operationId: address_delete
+
+  summary: Delete
+
+  description: >-
+    Deletes the details of an existing address. You need only supply
+    the unique identifier that was returned upon address creation.
+
+  tags:
+    - Addresses
+
+  responses:
+    "200":
+      $ref: ../../shared/responses/address_deleted.yml
+
+    default:
+      $ref: responses/address_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/addresses/adr_43769b47aed248c2 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const deleteAddress = await new AddressesApi(config).delete("adr_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.addresses.delete('adr_43769b47aed248c2', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.addresses.destroy("adr_43769b47aed248c2")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Address.delete('adr_43769b47aed248c2')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->addresses()->delete('adr_43769b47aed248c2');
+    - lang: Java
+      source: |
+        LobResponse<Address> response = Address.delete("adr_43769b47aed248c2");
+        Address address = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Address.delete("adr_43769b47aed248c2")
+      label: ELIXIR

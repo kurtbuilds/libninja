@@ -1,0 +1,40 @@
+allOf:
+  - $ref: "../../../shared/models/form_factor/editable_no_mailtype.yml"
+
+  - type: object
+
+    # add editable properties unique to this form factor
+    # that are stored as input (without transformation) here
+    properties:
+      mail_type:
+        description: Checks must be sent `usps_first_class`
+        type: string
+        enum:
+          - usps_first_class
+        default: usps_first_class
+
+      memo:
+        description: Text to include on the memo line of the check.
+        type: string
+        maxLength: 40
+        nullable: true
+
+      check_number:
+        description: >-
+          An integer that designates the check number.
+
+          If `check_number` is not provided, checks created from a new
+          `bank_account` will start at `10000` and increment with each check
+          created with the `bank_account`.
+
+          A provided `check_number` overrides the defaults. Subsequent checks
+          created with the same `bank_account` will increment from the provided
+          check number.
+        type: integer
+        minimum: 1
+        maximum: 500000000
+
+      message:
+        description: Max of 400 characters to be included at the bottom of the check page.
+        type: string
+        maxLength: 400

@@ -1,0 +1,83 @@
+parameters:
+  - in: path
+    name: bg_id
+    description: id of the billing_group
+    required: true
+    schema:
+      $ref: "attributes/bg_id.yml"
+
+get:
+  operationId: billing_group_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing billing_group. You need only supply
+    the unique billing_group identifier that was returned upon billing_group creation.
+
+  tags:
+    - Billing Groups
+
+  responses:
+    "200":
+      description: Returns a billing_group object.
+      content:
+        $ref: responses/billing_group.yml
+
+    default:
+      $ref: "../../shared/responses/billing_group_list_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/billing_groups/bg_4bb02b527a72667d0 \
+        -u <YOUR API KEY>:
+
+post:
+  operationId: billing_group_update
+
+  summary: Update
+
+  description: >-
+    Updates all editable attributes of the billing_group with the given id.
+
+  tags:
+    - Billing Groups
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/billing_group_base.yml"
+        example:
+          name: Marketing Dept
+          description: Usage group used for the Marketing Dept resource sends
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/billing_group_base.yml"
+        example:
+          name: Marketing Dept
+          description: Usage group used for the Marketing Dept resource sends
+
+      multipart/form-data:
+        schema:
+          $ref: "models/billing_group_base.yml"
+        example:
+          name: Marketing Dept
+          description: Usage group used for the Marketing Dept resource sends
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/billing_groups/bg_759954f540a1bfdb5 \
+        -u <YOUR API KEY>: \
+        -d "description=demo replacement" \
+
+  responses:
+    "200":
+      $ref: responses/post_billing_group.yml
+
+    default:
+      $ref: "../../shared/responses/billing_group_error.yml"

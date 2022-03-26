@@ -1,0 +1,8 @@
+in: query
+name: scheduled
+description: |
+  * `true` - only return orders (past or future) where `send_date` is
+  greater than `date_created`
+  * `false` - only return orders where `send_date` is equal to `date_created`
+schema:
+  type: boolean

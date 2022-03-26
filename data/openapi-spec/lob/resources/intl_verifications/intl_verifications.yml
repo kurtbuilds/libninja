@@ -1,0 +1,208 @@
+post:
+  operationId: intl_verification
+
+  summary: Single Verify
+
+  description: >-
+    Verify an international (except US or US territories) address _with a live
+    API key_. Requests to this endpoint with a test API key will return a dummy
+    response based on the primary line you input.
+
+  tags:
+    - Intl Verifications
+
+  parameters:
+    - $ref: "../../shared/parameters/lang_spec.yml"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/intl_verification_writable.yml"
+        examples:
+          basic:
+            value:
+              recipient: Harry Zhang
+              primary_line: 370 Water St
+              secondary_line: ""
+              city: Summerside
+              state: Prince Edward Island
+              postal code: C1N 1C4
+              country: CA
+          full_payload:
+            value:
+              recipient: Harry Zhang
+              primary_line: 370 Water St
+              secondary_line: ""
+              city: Summerside
+              state: Prince Edward Island
+              postal code: C1N 1C4
+              country: CA
+          single_line:
+            value:
+              address: "370 Water St C1N 1C4"
+              country: CA
+          test:
+            value:
+              primary_line: deliverable
+              country: CA
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/intl_verification_writable.yml"
+        examples:
+          basic:
+            value:
+              recipient: Harry Zhang
+              primary_line: 370 Water St
+              secondary_line: ""
+              city: Summerside
+              state: Prince Edward Island
+              postal code: C1N 1C4
+              country: CA
+          full_payload:
+            value:
+              recipient: Harry Zhang
+              primary_line: 370 Water St
+              secondary_line: ""
+              city: Summerside
+              state: Prince Edward Island
+              postal code: C1N 1C4
+              country: CA
+          single_line:
+            value:
+              address: "370 Water St C1N 1C4"
+              country: CA
+          test:
+            value:
+              primary_line: deliverable
+              country: CA
+
+      multipart/form-data:
+        schema:
+          $ref: "models/intl_verification_writable.yml"
+        examples:
+          basic:
+            value:
+              recipient: Harry Zhang
+              primary_line: 370 Water St
+              secondary_line: ""
+              city: Summerside
+              state: Prince Edward Island
+              postal code: C1N 1C4
+              country: CA
+          full_payload:
+            value:
+              recipient: Harry Zhang
+              primary_line: 370 Water St
+              secondary_line: ""
+              city: Summerside
+              state: Prince Edward Island
+              postal code: C1N 1C4
+              country: CA
+          single_line:
+            value:
+              address: "370 Water St C1N 1C4"
+              country: CA
+          test:
+            value:
+              primary_line: deliverable
+              country: CA
+
+  responses:
+    "200":
+      $ref: responses/intl_verifications.yml
+
+    default:
+      $ref: "../../shared/responses/intl_verifications_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/intl_verifications \
+          -u <YOUR_LIVE_API_KEY>: \
+          -d "primary_line=370 Water St" \
+          -d "city=Summerside" \
+          -d "state=Prince Edward Island" \
+          -d "postal_code=C1N 1C4" \
+          -d "country=CA"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const IntlVerifications = new IntlVerificationsApi(av_config);
+        let verificationData1: IntlVerificationWritable = {
+          primary_line: "370 WATER ST",
+          postal_code: "C1N 1C4",
+          country: CountryExtended.Ca
+        };
+
+        try {
+          const singleVerified = await IntlVerifications.verifySingle(verificationData!);   
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.intlVerifications.verify({
+          primary_line: '370 Water St',
+          city: 'Summerside',
+          state: 'Prince Edward Island',
+          postal_code: 'C1N 1C4',
+          country: 'CA'
+        }, function (err, res) {
+          console.log (err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.intl_verifications.verify(
+          primary_line: "370 Water St",
+          city:         "Summerside",
+          state:        "Prince Edward Island",
+          postal_code:  "C1N 1C4",
+          country:      "CA"
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.IntlVerification.create(
+          primary_line='370 Water St',
+          city='Summerside',
+          state='Prince Edward Island',
+          postal_code='C1N 1C4',
+          country='CA'
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->intlVerifications()->verify(array(
+          'primary_line' => '370 Water St',
+          'city'         => 'Summerside',
+          'state'        => 'Prince Edward Island',
+          'postal_code'  => 'C1N 1C4',
+          'country'      => 'CA',
+        ));
+    - lang: Java
+      source: |
+        LobResponse<IntlVerification> response = new IntlVerification.RequestBuilder()
+                .setPrimaryLine("370 Water St")
+                .setCity("Summerside")
+                .setState("Prince Edward Island")
+                .setPostalCode("C1N 1C4")
+                .setCountry("CA")
+                .verify();
+
+        IntlVerification intlVerification = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.IntlVerification.verify(%{
+          primary_line: "370 Water St",
+          city: "Summerside",
+          state: "Prince Edward Island",
+          postal_code: "C1N 1C4",
+          country: "CA"
+        })
+      label: ELIXIR

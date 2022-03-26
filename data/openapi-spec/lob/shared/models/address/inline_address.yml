@@ -1,0 +1,3 @@
+oneOf:
+  - $ref: inline_address_us.yml
+  - $ref: inline_address_intl.yml

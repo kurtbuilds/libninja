@@ -1,0 +1,44 @@
+allOf:
+  - $ref: address_fields_intl.yml
+  - type: object
+    anyOf:
+      - title: address obj with `name` defined
+        required:
+          - name
+      - title: address obj with `company` defined
+        required:
+          - company
+    properties:
+      description:
+        $ref: "../../../shared/attributes/resource_description.yml"
+
+      name:
+        type: string
+        description: >
+          Either `name` or `company` is required,
+          you may also add both. Must be no longer than 40 characters.
+          If both `name` and `company` are provided,
+          they will be printed on two separate lines above the rest of the address.
+        maxLength: 40
+        nullable: true
+
+      company:
+        $ref: "../../../shared/attributes/address/company.yml"
+
+      phone:
+        type: string
+        description: Must be no longer than 40 characters.
+        maxLength: 40
+        nullable: true
+
+      email:
+        type: string
+        description: Must be no longer than 100 characters.
+        maxLength: 100
+        nullable: true
+
+      address_country:
+        $ref: "../../../shared/attributes/country_extended.yml"
+
+      metadata:
+        $ref: "../../../shared/models/metadata.yml"

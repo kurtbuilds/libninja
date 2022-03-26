@@ -1,0 +1,8 @@
+description: >-
+  Specifies the address the return envelope will be sent back to. This is
+  an optional argument that is available if an account is signed up for the
+  return envelope tracking beta, and has `return_envelope`, and
+  `perforated_page` fields populated in the API request.
+oneOf:
+  - $ref: "../../../shared/attributes/model_ids/adr_id.yml"
+  - $ref: "../../../shared/models/address/inline_address.yml"

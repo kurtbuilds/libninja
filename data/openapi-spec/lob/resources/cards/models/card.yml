@@ -1,0 +1,93 @@
+allOf:
+  - $ref: "../../../shared/models/lob_base.yml"
+  - $ref: card_base.yml
+  - required:
+      - description
+  - type: object
+
+    required:
+      - id
+      - url
+      - auto_reorder
+      - reorder_quantity
+      - raw_url
+      - front_original_url
+      - back_original_url
+      - thumbnails
+      - available_quantity
+      - pending_quantity
+      - status
+      - orientation
+      - threshold_amount
+      - object
+
+    properties:
+      id:
+        $ref: "../../../shared/attributes/model_ids/card_id.yml"
+      url:
+        description: The signed link for the card.
+        maxLength: 2083
+        minLength: 1
+        type: string
+        format: uri
+      auto_reorder:
+        description: True if the cards should be auto-reordered.
+        type: boolean
+        default: false
+      reorder_quantity:
+        description: The number of cards to be reordered.
+        type: integer
+        nullable: true
+      raw_url:
+        description: The raw URL of the card.
+        maxLength: 2083
+        minLength: 1
+        type: string
+        format: uri
+      front_original_url:
+        description: The original URL of the front template.
+        maxLength: 2083
+        minLength: 1
+        type: string
+        format: uri
+      back_original_url:
+        description: The original URL of the back template.
+        maxLength: 2083
+        minLength: 1
+        type: string
+        format: uri
+      thumbnails:
+        type: array
+        items:
+          $ref: "../../../shared/models/thumbnail.yml"
+      available_quantity:
+        description: The available quantity of cards.
+        type: integer
+        default: 0
+      pending_quantity:
+        description: The pending quantity of cards.
+        type: integer
+        default: 0
+      status:
+        title: The status of the card.
+        enum:
+          - processed
+          - rendered
+        type: string
+      orientation:
+        description: The orientation of the card.
+        enum:
+          - horizontal
+          - vertical
+        type: string
+        default: horizontal
+      threshold_amount:
+        description: The threshold amount of the card
+        type: integer
+        default: 0
+      object:
+        description: object
+        enum:
+          - card
+        type: string
+        default: card

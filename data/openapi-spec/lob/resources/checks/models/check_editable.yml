@@ -1,0 +1,11 @@
+oneOf:
+  - title: words at check bottom
+    allOf:
+      - required:
+          - message
+      - $ref: check_editable_props.yml
+  - title: image at check bottom
+    allOf:
+      - required:
+          - check_bottom
+      - $ref: check_editable_props.yml

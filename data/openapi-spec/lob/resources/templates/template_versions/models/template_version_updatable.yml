@@ -1,0 +1,8 @@
+type: object
+
+properties:
+  description:
+    $ref: "../../../../shared/attributes/resource_description.yml"
+
+  engine:
+    $ref: "../../../../shared/attributes/engine.yml"

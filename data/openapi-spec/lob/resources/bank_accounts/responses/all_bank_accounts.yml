@@ -1,0 +1,55 @@
+description: >-
+  A dictionary with a data property that contains an array of
+  up to `limit` bank_accounts. Each entry in the array is a separate
+  bank_account. The previous and next page of bank_accounts can be retrieved
+  by calling the endpoint contained in the `previous_url` and
+  `next_url` fields in the API response respectively.<br>If no
+  more bank_accounts are available beyond the current set of returned results,
+  the `next_url` field will be empty.
+
+content:
+  application/json:
+    schema:
+      allOf:
+        - $ref: "../../../shared/models/list.yml"
+        - type: object
+          properties:
+            data:
+              type: array
+              description: list of bank_accounts
+              items:
+                $ref: "../models/bank_account.yml"
+
+    example:
+      data:
+        - id: bank_0e3fb07eba0b35b
+          signature_url: "https://lob-assets.com/letters/asd_asdfghjklqwertyu.pdf?version=45&expires=1234567890&signature=a"
+          description: Example bank account
+          metadata: {}
+          routing_number: "122100024"
+          account_number: "1234564789"
+          account_type: company
+          signatory: John Doe
+          bank_name: JPMORGAN CHASE BANK, NA
+          verified: true
+          date_created: "2019-03-30T13:13:22.200Z"
+          date_modified: "2019-03-30T13:13:23.385Z"
+          object: bank_account
+
+        - id: bank_eba93f7de3c02d9
+          description: Example bank account
+          metadata: {}
+          routing_number: "122100024"
+          account_number: "1234564789"
+          account_type: company
+          signatory: John Doe
+          bank_name: JPMORGAN CHASE BANK, NA
+          verified: true
+          date_created: "2019-03-30T13:11:06.809Z"
+          date_modified: "2019-03-30T13:11:07.872Z"
+          object: bank_account
+
+      object: list
+      next_url: https://api.lob.com/v1/bank_accounts?limit=2&after=eyJkYXRlT2Zmc2V0IjoiMjAxOS0wMy0zMFQxMzoxMTowNi44MDlaIiwiaWRPZmZzZXQiOiJiYW5rX2ViYTkzZjdkZTNjMDJkOSJ9
+      previous_url: null
+      count: 2

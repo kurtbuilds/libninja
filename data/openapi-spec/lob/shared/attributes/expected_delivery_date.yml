@@ -1,0 +1,6 @@
+type: string
+
+description: >-
+  A date in YYYY-MM-DD format of the mailpiece's expected delivery date based on its `send_date`.
+
+format: date

@@ -1,0 +1,13 @@
+type: object
+properties:
+  id:
+    type: string
+    description: The unique ID of the Return Envelope
+  alias:
+    type: string
+    description: A quick reference name for the Return Envelope
+  url:
+    type: string
+    description: The url of the  return envelope
+  object:
+    type: string

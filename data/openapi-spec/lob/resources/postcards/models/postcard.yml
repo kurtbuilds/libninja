@@ -1,0 +1,60 @@
+allOf:
+  - $ref: "postcard_base.yml"
+  - $ref: "../../../shared/models/form_factor/generated.yml"
+  - $ref: "../../../shared/models/form_factor/from_us.yml"
+
+  - type: object
+
+    required:
+      - id
+      - front_template_id
+      - back_template_id
+      - url
+
+    properties:
+      id:
+        $ref: "../attributes/psc_id.yml"
+
+      front_template_id:
+        type: string
+        description: The unique ID of the HTML template used for the front of the postcard. Only filled out when the request contains a valid postcard template ID.
+        pattern: "^tmpl_[a-zA-Z0-9]+$"
+        nullable: true
+
+      back_template_id:
+        type: string
+        description: The unique ID of the HTML template used for the back of the postcard. Only filled out when the request contains a valid postcard template ID.
+        pattern: "^tmpl_[a-zA-Z0-9]+$"
+        nullable: true
+
+      front_template_version_id:
+        type: string
+        description: The unique ID of the specific version of the HTML template used for the front of the postcard. Only filled out when the request contains a valid postcard template ID.
+        pattern: "^vrsn_[a-zA-Z0-9]+$"
+        nullable: true
+
+      back_template_version_id:
+        type: string
+        description: The unique ID of the specific version of the HTML template used for the back of the postcard. Only filled out when the request contains a valid postcard template ID.
+        pattern: "^vrsn_[a-zA-Z0-9]+$"
+        nullable: true
+
+      tracking_events:
+        # TODO: add tracking_event objs link
+        description: An array of tracking_event objects ordered by ascending `time`. Will not be populated for postcards created in test mode.
+        type: array
+        items:
+          $ref: "../../../shared/resources/tracking_events/models/tracking_event_normal.yml"
+        nullable: true
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - postcard
+        default: postcard
+
+      url:
+        allOf:
+          - description: A [signed link](#section/Asset-URLs) to the rendered postcard.
+          - $ref: "../../../shared/attributes/signed_link.yml"

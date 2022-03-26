@@ -1,0 +1,11 @@
+in: query
+
+name: offset
+
+required: false
+
+description: An integer that designates the offset at which to begin returning results. Defaults to 0.
+
+schema:
+  type: integer
+  default: 0

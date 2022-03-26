@@ -1,0 +1,29 @@
+allOf:
+  - $ref: "template_version_writable.yml"
+  - $ref: "../../../../shared/models/lob_base.yml"
+
+  - type: object
+
+    required:
+      - id
+
+    properties:
+      id:
+        $ref: "../../../../shared/attributes/model_ids/vrsn_id.yml"
+
+      suggest_json_editor:
+        type: boolean
+        description: >
+          Used by frontend, true if the template uses advanced features.
+
+      merge_variables:
+        type: object
+        description: >
+          Used by frontend, an object representing the keys of every merge variable present in the template. It has one key named 'keys', and its value is an array of strings.
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - version
+        default: version

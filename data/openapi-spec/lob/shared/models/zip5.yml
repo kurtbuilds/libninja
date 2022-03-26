@@ -1,0 +1,11 @@
+type: object
+
+required:
+  - zip_code
+
+properties:
+  zip_code:
+    type: string
+    description: A 5-digit ZIP code.
+    pattern: '^\d{5}$'
+    example: "94107"

@@ -1,0 +1,12 @@
+description: Error
+
+content:
+  application/json:
+    schema:
+      $ref: "../../../shared/models/error.yml"
+
+    example:
+      error:
+        code: not_found
+        message: address not found
+        status_code: 404

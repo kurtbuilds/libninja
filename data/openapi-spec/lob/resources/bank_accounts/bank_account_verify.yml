@@ -1,0 +1,111 @@
+parameters:
+  - in: path
+    name: bank_id
+    description: id of the bank account to be verified
+    required: true
+    schema:
+      $ref: "../../shared/attributes/model_ids/bank/bank_id.yml"
+
+post:
+  operationId: bank_account_verify
+
+  summary: Verify
+
+  description: Verify a bank account in order to create a check.
+
+  tags:
+    - Bank Accounts
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/bank_account_verify.yml"
+        example:
+          amounts:
+            - 1
+            - 100
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/bank_account_verify.yml"
+        example:
+          amounts:
+            - 1
+            - 100
+
+      multipart/form-data:
+        schema:
+          $ref: "models/bank_account_verify.yml"
+        example:
+          amounts:
+            - 1
+            - 100
+
+  responses:
+    "200":
+      $ref: responses/post_bank_account.yml
+
+    default:
+      $ref: responses/bank_account_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/bank_accounts/bank_dfceb4a2a05b57e/verify \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "amounts[]=25" \
+          -d "amounts[]=63"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const verificationData = new BankAccountVerify({
+          amounts: [11, 35],
+        });
+        const bankData = new BankAccountWritable({
+          description: "Test Bank Account",
+          routing_number: "322271627",
+          account_number: "123456789",
+          signatory: "Gomez Addams",
+          account_type: BankTypeEnum.Individual,
+        });
+
+        try {
+          const result = await new BankAccountsApi(config).create(bankData)
+          const verifiedAccount = await new BankAccountsApi(config).verify(result.id, verificationData);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.bankAccounts.verify('bank_dfceb4a2a05b57e', {
+          amounts: [25, 63]
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.bank_accounts.verify("bank_dfceb4a2a05b57e", amounts: [25, 63])
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.BankAccount.verify(id = 'bank_dfceb4a2a05b57e', amounts = [25, 63])
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->bankAccounts()->verify(array(
+          'id' => 'bank_dfceb4a2a05b57e',
+          'amounts' => array(25, 63)
+        ));
+    - lang: Java
+      source: |
+        LobResponse<BankAccount> response = BankAccount.verify(newBankAccount.getId(), Arrays.asList(25, 63));
+        BankAccount bankAccount = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.BankAccount.verify("bank_dfceb4a2a05b57e", %{amounts: [25, 63]})
+      label: ELIXIR

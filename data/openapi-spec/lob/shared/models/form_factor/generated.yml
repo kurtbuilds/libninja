@@ -1,0 +1,32 @@
+type: object
+
+required:
+  - to
+  - carrier
+
+properties:
+  to:
+    $ref: "../../../shared/models/address/address.yml"
+
+  carrier:
+    type: string
+    enum:
+      - USPS
+    default: USPS
+
+  thumbnails:
+    type: array
+    items:
+      $ref: "../../../shared/models/thumbnail.yml"
+
+  expected_delivery_date:
+    $ref: "../../attributes/expected_delivery_date.yml"
+
+  date_created:
+    $ref: "../../attributes/timestamps.yml#/date_created"
+
+  date_modified:
+    $ref: "../../attributes/timestamps.yml#/date_modified"
+
+  deleted:
+    $ref: "../../attributes/deleted.yml"

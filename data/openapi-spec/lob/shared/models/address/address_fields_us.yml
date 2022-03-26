@@ -1,0 +1,35 @@
+type: object
+
+required:
+  - address_line1
+  - address_city
+  - address_state
+  - address_zip
+
+properties:
+  address_line1:
+    type: string
+    description: The primary number, street name, and directional information.
+    maxLength: 64
+
+  address_line2:
+    type: string
+    description: An optional field containing any information which can't fit into line 1.
+    maxLength: 64
+    nullable: true
+
+  address_city:
+    type: string
+    maxLength: 200
+
+  address_state:
+    type: string
+    description: 2 letter state short-name code
+    pattern: "^[a-zA-Z]{2}$"
+
+  address_zip:
+    type: string
+    description: >
+      Must follow the ZIP format of `12345` or
+      ZIP+4 format of `12345-1234`.
+    pattern: '^\d{5}(-\d{4})?$'

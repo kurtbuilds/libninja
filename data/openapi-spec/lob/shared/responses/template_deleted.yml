@@ -1,0 +1,11 @@
+description: Deleted
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/deletion_models/template_deletion.yml"
+
+    example:
+      value:
+        id: tmpl_123456789
+        deleted: true

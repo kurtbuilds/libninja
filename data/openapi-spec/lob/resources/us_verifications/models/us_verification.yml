@@ -1,0 +1,59 @@
+type: object
+
+properties:
+  id:
+    $ref: "../attributes/us_ver_id.yml"
+
+  recipient:
+    $ref: "../../../shared/attributes/address/recipient.yml"
+
+  primary_line:
+    $ref: "../../../shared/attributes/address/primary_line_us.yml"
+
+  secondary_line:
+    $ref: "../../../shared/attributes/address/secondary_line.yml"
+
+  urbanization:
+    $ref: "../attributes/urbanization.yml"
+
+  last_line:
+    type: string
+    description: |
+      Combination of the following applicable `components`:
+      * City (`city`)
+      * State (`state`)
+      * ZIP code (`zip_code`)
+      * ZIP+4 (`zip_code_plus_4`)
+
+  deliverability:
+    type: string
+    enum:
+      - deliverable
+      - deliverable_unnecessary_unit
+      - deliverable_incorrect_unit
+      - deliverable_missing_unit
+      - undeliverable
+    description: |
+      Summarizes the deliverability of the `us_verification` object.
+      For full details, see the `deliverability_analysis` field. Possible values are:
+      * `deliverable` – The address is deliverable by the USPS.
+      * `deliverable_unnecessary_unit` – The address is deliverable, but the secondary unit information is unnecessary.
+      * `deliverable_incorrect_unit` – The address is deliverable to the building's default address but the secondary unit provided may not exist. There is a chance the mail will not reach the intended recipient.
+      * `deliverable_missing_unit` – The address is deliverable to the building's default address but is missing secondary unit information. There is a chance the mail will not reach the intended recipient.
+      * `undeliverable` – The address is not deliverable according to the USPS.
+
+  components:
+    $ref: "../models/us_components.yml"
+
+  deliverability_analysis:
+    $ref: "../models/deliverability_analysis.yml"
+
+  lob_confidence_score:
+    $ref: "../models/lob_confidence_score.yml"
+
+  object:
+    type: string
+    description: Value is resource type.
+    enum:
+      - us_verification
+    default: us_verification

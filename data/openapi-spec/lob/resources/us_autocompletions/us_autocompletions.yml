@@ -1,0 +1,179 @@
+post:
+  operationId: autocompletion
+
+  summary: Autocomplete
+
+  description: >-
+    Given an address prefix consisting of a partial primary line, as well as
+    optional input of city, state, and zip code, this functionality returns up
+    to 10 full US address suggestions. Not all of them will turn out to be valid
+    addresses; they'll need to be [verified](#operation/verification_us).
+
+  tags:
+    - US Autocompletions
+  parameters:
+    - in: query
+      name: case
+      schema:
+        type: string
+        enum:
+          - upper
+          - proper
+        default: upper
+      description: >-
+        Casing of the verified address. Possible values are `upper` and `proper` for
+        uppercased (e.g. "PO BOX") and proper-cased (e.g. "PO Box"),
+        respectively. Only affects `primary_line`, 
+        `city`, and `state`. Default casing is `upper`.
+      required: false
+    - in: query
+      name: valid_addresses
+      schema:
+        type: boolean
+        enum:
+          - true
+          - false
+        default: false
+      description: >-
+        Determines whether only pre-validated addresses will be suggested or all possible US addresses. Possible values are `true` and `false`.
+        Our list of possible addresses includes over 1.3 billion possible addresses(90% of which may be undeliverable), while validated addresses 
+        contains closer to 180 million possible addresses. Validated addresses will likely reduce the number of keystrokes needed before reaching 
+        an intended address.
+      required: false
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/us_autocompletions_writable.yml"
+        examples:
+          basic:
+            value:
+              address_prefix: 185 B
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+              geo_ip_sort: false
+          test:
+            value:
+              address_prefix: 1 sugg
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/us_autocompletions_writable.yml"
+        examples:
+          basic:
+            value:
+              address_prefix: 185 B
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+              geo_ip_sort: false
+          test:
+            value:
+              address_prefix: 1 sugg
+
+      multipart/form-data:
+        schema:
+          $ref: "models/us_autocompletions_writable.yml"
+        examples:
+          basic:
+            value:
+              address_prefix: 185 B
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+              geo_ip_sort: false
+          test:
+            value:
+              address_prefix: 1 sugg
+
+  responses:
+    "200":
+      $ref: "responses/us_autocompletions.yml"
+
+    default:
+      $ref: "responses/us_autocompletions_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/us_autocompletions \
+          -u <YOUR_LIVE_API_KEY>: \
+          -d "address_prefix=185 B" \
+          -d "city=San Francisco" \
+          -d "state=CA"
+          -d "zip_code=94107"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const UsAutocompletions = new USAutocompletionsApi(av_config);
+        const autocompletionData: UsAutocompletionsWritable = {
+          address_prefix: "185 B",
+          city: "SAN FRANCISCO"
+        };
+
+        try {
+          const autocompletedAddresses = await UsAutocompletions.autocomplete(autocompletionData);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.usAutocompletions.autocomplete({
+          address_prefix: '185 B',
+          city: 'San Francisco',
+          state: 'CA',
+          zip_code: '94107',
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.us_autocompletions.autocomplete(
+          address_prefix: "185 B",
+          city:           "San Francisco",
+          state:          "CA",
+          zip_code:       "94107"
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.USAutocompletion.create(
+          address_prefix='185 B',
+          city='San Francisco',
+          state='CA',
+          zip_code='94107'
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->usAutocompletions()->autocomplete(array(
+          'address_prefix' => '185 B',
+          'city'           => 'San Francisco',
+          'state'          => 'CA',
+          'zip_code'       => '94107'
+        ));
+    - lang: Java
+      source: |
+        LobResponse<USAutocompletion> response = new USAutocompletion.RequestBuilder()
+            .setAddressPrefix("185 B")
+            .setCity("San Francisco")
+            .setState("CA")
+            .setZipCode("94107")
+            .autocomplete();
+
+        USAutocompletion usAutocompletion = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.USAutocompletion.autocomplete(%{
+          address_prefix: "185 B",
+          city:           "San Francisco",
+          state:          "CA",
+          zip_code:       "94107"
+        })
+      label: ELIXIR

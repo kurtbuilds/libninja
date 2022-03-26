@@ -1,0 +1,11 @@
+application/json:
+  schema:
+    $ref: "../models/billing_group.yml"
+
+  example:
+    id: "bg_c94e83ca2cd5121"
+    name: "Marketing Dept"
+    description: "Usage group used for the Marketing Dept resource sends"
+    date_created: "2017-11-07T22:56:10.962Z"
+    date_modified: "2017-11-07T22:56:10.962Z"
+    object: "billing_group"

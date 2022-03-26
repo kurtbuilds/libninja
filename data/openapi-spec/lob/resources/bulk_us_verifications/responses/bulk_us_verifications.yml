@@ -1,0 +1,68 @@
+description: Returns a list of US verification objects.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/us_verifications.yml"
+
+    example:
+      addresses:
+        - id: us_ver_c7cb63d68f8d6
+          recipient: LOB.COM
+          primary_line: 210 KING ST STE 6100
+          secondary_line: ""
+          urbanization: ""
+          last_line: SAN FRANCISCO CA 94107-1728
+          deliverability: deliverable
+          components:
+            primary_number: "185"
+            street_predirection: ""
+            street_name: KING
+            street_suffix: ST
+            street_postdirection: ""
+            secondary_designator: STE
+            secondary_number: "6100"
+            pmb_designator: ""
+            pmb_number: ""
+            extra_secondary_designator: ""
+            extra_secondary_number: ""
+            city: SAN FRANCISCO
+            state: CA
+            zip_code: "94107"
+            zip_code_plus_4: "1728"
+            zip_code_type: standard
+            delivery_point_barcode: "941071728506"
+            address_type: commercial
+            record_type: highrise
+            default_building_address: false
+            county: SAN FRANCISCO
+            county_fips: "06075"
+            carrier_route: C001
+            carrier_route_type: city_delivery
+            latitude: 37.77597542841264
+            longitude: -122.3929557343685
+          deliverability_analysis:
+            dpv_confirmation: Y
+            dpv_cmra: N
+            dpv_vacant: N
+            dpv_active: Y
+            dpv_footnotes:
+              - AA
+              - BB
+            ews_match: false
+            lacs_indicator: ""
+            lacs_return_code: ""
+            suite_return_code: ""
+          lob_confidence_score:
+            score: 100
+            level: high
+          object: us_verification
+      errors: false

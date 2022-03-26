@@ -1,0 +1,8 @@
+allOf:
+  - $ref: "../../../shared/models/form_factor/editable.yml"
+
+  - type: object
+
+    properties:
+      size:
+        $ref: "../attributes/self_mailer_size.yml"

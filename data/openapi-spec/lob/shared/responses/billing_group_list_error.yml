@@ -1,0 +1,12 @@
+description: Error
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/error.yml"
+
+    example:
+      error:
+        code: not_found
+        message: billing_group not found
+        status_code: 404

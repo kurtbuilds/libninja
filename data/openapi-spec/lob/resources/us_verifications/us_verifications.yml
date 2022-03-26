@@ -1,0 +1,210 @@
+post:
+  operationId: us_verification
+
+  summary: Single Verify
+
+  description: >-
+    Verify a US or US territory address _with a live API key_. The
+    address can be in components (e.g. `primary_line` is
+    "210 King Street", `zip_code` is "94107") or as a
+    single string (e.g. "210 King Street 94107"), but not as both.
+    Requests using a test API key validate required fields but
+    return empty values unless specific `primary_line`
+    values are provided. See the [US Verifications Test
+    Environment](#section/US-Verifications-Test-Env) for details.
+
+  tags:
+    - US Verifications
+
+  parameters:
+    - in: query
+      name: case
+      schema:
+        type: string
+        enum:
+          - upper
+          - proper
+        default: upper
+      description: >-
+        Casing of the verified address. Possible values are `upper` and `proper` for
+        uppercased (e.g. "PO BOX") and proper-cased (e.g. "PO Box"),
+        respectively. Only affects `recipient`, `primary_line`, `secondary_line`,
+        `urbanization`, and `last_line`. Default casing is `upper`.
+      required: false
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/us_verifications_writable.yml"
+        examples:
+          basic:
+            value:
+              primary_line: 210 King Street
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+          full_payload:
+            value:
+              recipient: Walgreens
+              primary_line: Ave Wilson Churchill 123
+              secondary_line: ""
+              urbanization: URB FAIR OAKS
+              city: RIO PIEDRAS
+              state: PR
+              zip_code: "00926"
+          single_line:
+            value:
+              address: "210 King Street 94107"
+          test:
+            value:
+              primary_line: "po box"
+              zip_code: "11111"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/us_verifications_writable.yml"
+        examples:
+          basic:
+            value:
+              primary_line: 210 King Street
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+          full_payload:
+            value:
+              recipient: Walgreens
+              primary_line: Ave Wilson Churchill 123
+              secondary_line: ""
+              urbanization: URB FAIR OAKS
+              city: RIO PIEDRAS
+              state: PR
+              zip_code: "00926"
+          single_line:
+            value:
+              address: "210 King Street 94107"
+          test:
+            value:
+              primary_line: "po box"
+              zip_code: "11111"
+
+      multipart/form-data:
+        schema:
+          $ref: "models/us_verifications_writable.yml"
+        examples:
+          basic:
+            value:
+              primary_line: 210 King Street
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+          full_payload:
+            value:
+              recipient: Walgreens
+              primary_line: Ave Wilson Churchill 123
+              secondary_line: ""
+              urbanization: URB FAIR OAKS
+              city: RIO PIEDRAS
+              state: PR
+              zip_code: "00926"
+          single_line:
+            value:
+              address: "210 King Street 94107"
+          test:
+            value:
+              primary_line: "po box"
+              zip_code: "11111"
+
+  responses:
+    "200":
+      $ref: responses/us_verifications.yml
+
+    default:
+      $ref: "../../shared/responses/us_verifications_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/us_verifications \
+          -u <YOUR_LIVE_API_KEY>: \
+          -d "primary_line=210 King Street" \
+          -d "city=San Francisco" \
+          -d "state=CA" \
+          -d "zip_code=94107"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const UsVerification = new USVerificationsApi(av_config);
+        const verificationData1: UsVerificationsWritable = {
+          primary_line: "001 CEMETERY LANE",
+          city: "WESTFIELD",
+          state: "NJ",
+          zip_code: "07090",
+        };
+
+        try {
+          const singleVerified = await UsVerification.verifySingle(verificationData1);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.usVerifications.verify({
+          primary_line: '210 King Street',
+          city: 'San Francisco',
+          state: 'CA',
+          zip_code: '94107'
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.us_verifications.verify(
+          primary_line: "210 King Street",
+          city:         "San Francisco",
+          state:        "CA",
+          zip_code:     "94107"
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.USVerification.create(
+          primary_line='210 King Street',
+          city='San Francisco',
+          state='CA',
+          zip_code='94107'
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->usVerifications()->verify(array(
+          'primary_line' => '210 King Street',
+          'city'         => 'San Francisco',
+          'state'        => 'CA',
+          'zip_code'     => '94107'
+        ));
+    - lang: Java
+      source: |
+        LobResponse<USVerification> response = new USVerification.RequestBuilder()
+                .setRecipient("Donald")
+                .setPrimaryLine("210 King St")
+                .setSecondaryLine("Ste 6100")
+                .setCity("San Francisco")
+                .setState("CA")
+                .setZipCode("94107")
+                .verify();
+
+        USVerification usVerification = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.USVerification.verify(%{
+          primary_line: "210 King Street",
+          city: "San Francisco",
+          state: "CA",
+          zip_code: "94107"
+        })
+      label: ELIXIR

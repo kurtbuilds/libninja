@@ -1,0 +1,12 @@
+type: string
+
+enum:
+  - standard
+  - po_box
+  - unique
+  - military
+  - ""
+
+description: |
+  A description of the ZIP code type. For more detailed information about
+  each ZIP code type, see [US Verification Details](#tag/US-Verification-Types).

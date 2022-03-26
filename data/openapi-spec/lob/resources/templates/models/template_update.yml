@@ -1,0 +1,16 @@
+type: object
+
+properties:
+  description:
+    $ref: "../../../shared/attributes/resource_description.yml"
+
+  published_version:
+    allOf:
+      - description: >-
+          The ID of the published version of a template you'd like to update.
+          The published version is the one that will be used in any Print &
+          Mail API requests that reference the specified template.
+          Will err if the referenced `published_version` has been deleted or
+          does not exist.
+        type: string
+      - $ref: "../../../shared/attributes/model_ids/vrsn_id.yml"

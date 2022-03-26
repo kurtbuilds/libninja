@@ -1,0 +1,6 @@
+description: Returns an address object if a valid identifier was provided.
+
+content:
+  application/json:
+    schema:
+      $ref: "../../../shared/models/address/address.yml"

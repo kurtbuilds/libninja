@@ -1,0 +1,391 @@
+get:
+  operationId: postcards_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your postcards. The addresses are returned sorted by
+    creation date, with the most recently created addresses appearing first.
+
+  tags:
+    - Postcards
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/metadata.yml"
+    - in: query
+      name: size
+      description: Specifies the size of the postcard. Only `4x6` postcards can be sent to international destinations.
+      schema:
+        $ref: "attributes/postcard_size.yml"
+
+    - $ref: "../../shared/parameters/scheduled.yml"
+    - $ref: "../../shared/parameters/send_date.yml"
+    - $ref: "../../shared/parameters/mail_type.yml"
+    - $ref: "../../shared/parameters/sort_by.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_postcards.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/postcards?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: typescript
+      source: |
+        try {
+          const postcards = await new PostcardsApi(config).list(2);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.postcards.list({limit: 2}, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.postcards.list(limit: 2)
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Postcard.list(limit=2)
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->postcards()->all(array(
+          'limit' => 2
+        ));
+    - lang: Java
+      source: |
+        Map<String, Object> params = new HashMap<>>();
+        params.put("limit", 2);
+
+        LobResponse<PostcardCollection> response = Postcard.list(params);
+        PostcardCollection postcards = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Postcard.list(%{limit: 2})
+      label: ELIXIR
+
+post:
+  operationId: postcard_create
+
+  summary: Create
+
+  description: >-
+    Creates a new postcard given information
+
+  tags:
+    - Postcards
+
+  parameters:
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-header"
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-query"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/postcard_editable.yml"
+        example:
+          description: demo
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          front: tmpl_a1234dddg
+          back: tmpl_a1234dddg
+          size: "6x9"
+          mail_type: usps_first_class
+          merge_variables:
+            name: Harry
+          metadata:
+            spiffy: "true"
+          send_date: "2017-11-01T00:00:00.000Z"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/postcard_editable.yml"
+        example:
+          description: demo
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          front: tmpl_c94e83ca2cd5121
+          back: tmpl_c94e83ca2cd5121
+          size: "6x9"
+          mail_type: usps_first_class
+          merge_variables:
+            name: Harry
+          metadata:
+            spiffy: "true"
+          send_date: "2017-11-01T00:00:00.000Z"
+        encoding:
+          to:
+            style: deepObject
+            explode: true
+          from:
+            style: deepObject
+            explode: true
+          merge_variables:
+            style: deepObject
+            explode: true
+          metadata:
+            style: deepObject
+            explode: true
+
+      multipart/form-data:
+        schema:
+          $ref: "models/postcard_editable.yml"
+        example:
+          description: demo
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          front: tmpl_a1234dddg
+          back: tmpl_a1234dddg
+          size: "6x9"
+          mail_type: usps_first_class
+          merge_variables:
+            name: Harry
+          metadata:
+            spiffy: "true"
+          send_date: "2017-11-01T00:00:00.000Z"
+
+  responses:
+    "200":
+      $ref: responses/post_postcard.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/postcards \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Demo Postcard job" \
+          -d "to[name]=Harry Zhang" \
+          -d "to[address_line1]=210 King St" \
+          -d "to[address_line2]=# 6100" \
+          -d "to[address_city]=San Francisco" \
+          -d "to[address_state]=CA" \
+          -d "to[address_zip]=94107" \
+          -d "from=adr_210a8d4b0b76d77b" \
+          --data-urlencode "front=<html style='padding: 1in; font-size: 50;'>Front HTML for {{name}}</html>" \
+          --data-urlencode "back=<html style='padding: 1in; font-size: 20;'>Back HTML for {{name}}</html>" \
+          -d "merge_variables[name]=Harry"
+      label: CURL
+    - lang: typescript
+      source: |
+        const postcardCreate = new PostcardEditable({
+          to: addressId,
+          from: addressId,
+          front:
+          "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/4x6_pc_template.pdf",
+          back: "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/4x6_pc_template.pdf"
+        });
+
+        try {
+          const myPostcard = await new PostcardsApi(config).create(postcardCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.postcards.create({
+          description: 'Demo Postcard job',
+          to: {
+            name: 'Harry Zhang',
+            address_line1: '210 King St',
+            address_line2: '# 6100',
+            address_city: 'San Francisco',
+            address_state: 'CA',
+            address_zip: '94107'
+          },
+          from: 'adr_210a8d4b0b76d77b',
+          front: '<html style="padding: 1in; font-size: 50;">Front HTML for {{name}}</html>',
+          back: '<html style="padding: 1in; font-size: 20;">Back HTML for {{name}}</html>',
+          merge_variables: {
+            name: 'Harry'
+          }
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.postcards.create(
+          description: "Demo Postcard job",
+          to: {
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_line2: "# 6100",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          front: "<html style='padding: 1in; font-size: 50;'>Front HTML for {{name}}</html>",
+          back: "<html style='padding: 1in; font-size: 20;'>Back HTML for {{name}}</html>",
+          merge_variables: {
+            name: "Harry"
+          }
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Postcard.create(
+          description = 'Demo Postcard job',
+          to_address = {
+            'name': 'Harry Zhang',
+            'address_line1': '210 King St',
+            'address_line2': '# 6100',
+            'address_city': 'San Francisco',
+            'address_state': 'CA',
+            'address_zip': '94107'
+          },
+          from_address = 'adr_210a8d4b0b76d77b',
+          front = '<html style="padding: 1in; font-size: 50;">Front HTML for {{name}}</html>',
+          back = '<html style="padding: 1in; font-size: 20;">Back HTML for {{name}}</html>',
+          merge_variables = {
+            'name': 'Harry'
+          }
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->postcards()->create(array(
+          'description'           => 'Demo Postcard job',
+          'to[name]'              => 'Harry Zhang',
+          'to[address_line1]'     => '210 King St',
+          'to[address_line2]'     => '# 6100',
+          'to[address_city]'      => 'San Francisco',
+          'to[address_zip]'       => '94107',
+          'to[address_state]'     => 'CA',
+          'from'                  => 'adr_210a8d4b0b76d77b',
+          'front'                 => '<html style="padding: 1in; font-size: 50;">Front HTML for {{name}}</html>',
+          'back'                  => '<html style="padding: 1in; font-size: 20;">Back HTML for {{name}}</html>',
+          'merge_variables[name]' => 'Harry'
+        ));
+    - lang: Java
+      source: |
+        Map<String, String> mergeVariables = new HashMap<>();
+        mergeVariables.put("name", "Harry");
+
+        LobResponse<Postcard> response = new Postcard.RequestBuilder()
+                .setDescription("Demo Postcard job")
+                .setTo(
+                        new Address.RequestBuilder()
+                                .setName("Harry Zhang")
+                                .setLine1("210 King St")
+                                .setLine2("# 6100")
+                                .setCity("San Francisco")
+                                .setState("CA")
+                                .setZip("94107")
+                )
+                .setFrom("adr_210a8d4b0b76d77b")
+                .setFront("<html style='padding: 1in; font-size: 50;'>Front HTML for {{name}}</html>")
+                .setBack("<html style='padding: 1in; font-size: 20;'>Back HTML for {{name}}</html>")
+                .setMergeVariables(mergeVariables)
+                .create();
+
+        Postcard postcard = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Postcard.create(%{
+          description: "Demo Postcard job",
+          to: %{
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_line2: "# 6100",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          front: "<html style='padding: 1in; font-size: 50;'>Front HTML for {{name}}</html>",
+          back: "<html style='padding: 1in; font-size: 20;'>Back HTML for {{name}}</html>",
+          merge_variables: %{
+            name: "Harry"
+          }
+        })
+      label: ELIXIR

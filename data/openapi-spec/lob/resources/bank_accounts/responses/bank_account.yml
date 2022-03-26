@@ -1,0 +1,18 @@
+application/json:
+  schema:
+    $ref: "../models/bank_account.yml"
+
+  example:
+    id: bank_8cad8df5354d33f
+    signature_url: "https://lob-assets.com/letters/asd_asdfghjklqwertyu.pdf?version=45&expires=1234567890&signature=a"
+    description: Test Bank Account
+    metadata: {}
+    routing_number: "322271627"
+    account_number: "123456789"
+    account_type: company
+    signatory: John Doe
+    bank_name: J.P. MORGAN CHASE BANK, N.A.
+    verified: false
+    date_created: "2015-11-06T19:24:24.440Z"
+    date_modified: "2015-11-06T19:24:24.440Z"
+    object: bank_account

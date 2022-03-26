@@ -1,0 +1,130 @@
+parameters:
+  - in: path
+    name: sfm_id
+    description: id of the self_mailer
+    required: true
+    schema:
+      $ref: "attributes/sfm_id.yml"
+
+get:
+  operationId: self_mailer_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing self_mailer. You need only supply
+    the unique self_mailer identifier that was returned upon self_mailer creation.
+
+  tags:
+    - Self Mailers
+
+  responses:
+    "200":
+      description: Returns a self_mailer object
+      content:
+        $ref: responses/self_mailer.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/self_mailers/sfm_8ffbe811dea49dcf" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Javascript
+      source: |
+        Lob.selfMailers.retrieve('sfm_8ffbe811dea49dcf', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: typescript
+      source: |
+        try {
+          const selfMailer = await new SelfMailersApi(config).get("sfm_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Ruby
+      source: |
+        @lob.self_mailers.find("sfm_8ffbe811dea49dcf")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.SelfMailer.retrieve('sfm_8ffbe811dea49dcf')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->selfMailers()->get('sfm_8ffbe811dea49dcf');
+    - lang: Java
+      source: |
+        LobResponse<SelfMailer> response = SelfMailer.retrieve("sfm_8ffbe811dea49dcf");
+        SelfMailer selfMailer = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.SelfMailer.find("sfm_8ffbe811dea49dcf")
+      label: ELIXIR
+
+delete:
+  operationId: self_mailer_delete
+
+  summary: Delete
+
+  description: >-
+    Completely removes a self mailer from production. This can only be done if the self mailer's
+    `send_date` has not yet passed. If the self mailer is successfully canceled, you will not
+    be charged for it. This feature is exclusive to certain customers. Upgrade to the appropriate
+    [Print & Mail Edition](https://dashboard.lob.com/#/settings/editions) to gain access.
+
+  tags:
+    - Self Mailers
+
+  responses:
+    "200":
+      $ref: "../../shared/responses/self_mailer_deleted.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/self_mailers/sfm_8ffbe811dea49dcf \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: typescript
+      source: |
+        try {
+          const deleteSelfMailer = await new SelfMailersApi(config).delete("sfm_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.selfMailers.delete('sfm_8ffbe811dea49dcf', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.self_mailers.destroy("sfm_8ffbe811dea49dcf")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.SelfMailer.delete('sfm_8ffbe811dea49dcf')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->selfMailers()->delete('sfm_8ffbe811dea49dcf');
+    - lang: Java
+      source: |
+        LobResponse<SelfMailer> deleteResponse = SelfMailer.delete("sfm_8ffbe811dea49dcf");
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.SelfMailer.destroy("sfm_8ffbe811dea49dcf")
+      label: ELIXIR

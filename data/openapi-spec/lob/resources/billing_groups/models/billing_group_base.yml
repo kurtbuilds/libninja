@@ -1,0 +1,10 @@
+type: object
+
+# add editable properties unique to this form factor
+# that are stored as input (without transformation) here
+properties:
+  description:
+    $ref: "../attributes/bg_description.yml"
+
+  name:
+    $ref: "../attributes/name.yml"

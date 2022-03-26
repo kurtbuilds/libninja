@@ -1,0 +1,5 @@
+type: object
+
+properties:
+  from:
+    $ref: "../../../shared/models/address/address.yml"

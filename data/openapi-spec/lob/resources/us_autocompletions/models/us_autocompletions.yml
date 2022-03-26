@@ -1,0 +1,21 @@
+type: object
+
+properties:
+  id:
+    $ref: "../attributes/us_auto_id.yml"
+
+  suggestions:
+    type: array
+    description: >
+      An array of objects representing suggested addresses.
+    minItems: 0
+    maxItems: 10
+    items:
+      $ref: "suggestions.yml"
+
+  object:
+    type: string
+    description: Value is resource type.
+    enum:
+      - us_autocompletion
+    default: us_autocompletion

@@ -1,0 +1,13 @@
+type: string
+description: Unique identifier referring to status of self mailer
+enum:
+  - self_mailer.created
+  - self_mailer.rendered_pdf
+  - self_mailer.rendered_thumbnails
+  - self_mailer.deleted
+  - self_mailer.mailed
+  - self_mailer.in_transit
+  - self_mailer.in_local_area
+  - self_mailer.processed_for_delivery
+  - self_mailer.re-routed
+  - self_mailer.returned_to_sender

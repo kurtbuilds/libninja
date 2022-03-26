@@ -1,0 +1,135 @@
+parameters:
+  - in: path
+    name: ltr_id
+    description: id of the letter
+    required: true
+    schema:
+      $ref: "attributes/ltr_id.yml"
+
+get:
+  operationId: letter_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing letter. You need only supply
+    the unique letter identifier that was returned upon letter creation.
+
+  tags:
+    - Letters
+
+  responses:
+    "200":
+      description: Returns a letter object
+      content:
+        $ref: responses/letter.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/letters/ltr_4868c3b754655f90 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const letter= await new LettersApi(config).get("ltr_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: javascript
+      source: |
+        Lob.letters.retrieve('ltr_4868c3b754655f90', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.letters.find("ltr_4868c3b754655f90")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Letter.retrieve('ltr_4868c3b754655f90')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->letters()->get('ltr_4868c3b754655f90');
+    - lang: Java
+      source: |
+        LobResponse<Letter> response = Letter.retrieve("ltr_4868c3b754655f90");
+        Letter letter = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Letter.find("ltr_4868c3b754655f90")
+      label: ELIXIR
+
+delete:
+  operationId: letter_cancel
+
+  summary: Cancel
+
+  description: >-
+    Completely removes a letter from production. This can only be done if
+    the letter has a `send_date` and the `send_date` has not yet passed.
+    If the letter is successfully canceled, you will not be charged for it.
+    Read more on [cancellation windows](#section/Cancellation-Windows)
+    and [scheduling](#section/Scheduled-Mailings). Scheduling and
+    cancellation is a premium feature. Upgrade to the appropriate
+    [Print & Mail Edition](https://dashboard.lob.com/#/settings/editions)
+    to gain access.
+
+  tags:
+    - Letters
+
+  responses:
+    "200":
+      $ref: "../../shared/responses/letter_deleted.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/letters/ltr_4868c3b754655f90 \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: typescript
+      source: |
+        try {
+          const deleteLetter = await new LettersApi(config).delete("ltr_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.letters.delete('ltr_4868c3b754655f90', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.letters.destroy("ltr_4868c3b754655f90")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Letter.delete('ltr_4868c3b754655f90')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->letters()->delete('ltr_4868c3b754655f90');
+    - lang: Java
+      source: |
+        LobResponse<Letter> response = Letter.delete("ltr_4868c3b754655f90");
+        Letter letter= = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Letter.destroy("ltr_4868c3b754655f90")
+      label: ELIXIR

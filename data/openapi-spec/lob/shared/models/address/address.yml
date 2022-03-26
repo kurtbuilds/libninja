@@ -1,0 +1,3 @@
+oneOf:
+  - $ref: address_us.yml
+  - $ref: address_intl.yml

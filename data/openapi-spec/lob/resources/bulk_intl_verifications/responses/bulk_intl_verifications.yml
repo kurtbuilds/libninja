@@ -1,0 +1,34 @@
+description: Returns an array of international verification objects.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/intl_verifications.yml"
+
+    example:
+      addresses:
+        - id: intl_ver_c7cb63d68f8d6
+          recipient: null
+          primary_line: 370 WATER ST
+          secondary_line: ""
+          last_line: SUMMERSIDE PE C1N 1C4
+          country: CA
+          coverage: SUBBUILDING
+          deliverability: deliverable
+          status: LV4
+          components:
+            primary_number: "370"
+            street_name: WATER ST
+            city: SUMMERSIDE
+            state: PE
+            postal_code: C1N 1C4
+          object: intl_verification
+      errors: false

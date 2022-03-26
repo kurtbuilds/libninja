@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `us_reverse_geocode_`.
+
+pattern: "^us_reverse_geocode_[a-zA-Z0-9_]+$"

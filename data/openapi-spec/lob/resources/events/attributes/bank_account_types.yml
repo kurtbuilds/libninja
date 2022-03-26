@@ -1,0 +1,6 @@
+type: string
+description: Unique identifier referring to status of bank account
+enum:
+  - bank_account.created
+  - bank_account.deleted
+  - bank_account.verified

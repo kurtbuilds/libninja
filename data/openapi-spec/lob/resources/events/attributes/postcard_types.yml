@@ -1,0 +1,13 @@
+type: string
+description: Unique identifier referring to status of postcard
+enum:
+  - postcard.created
+  - postcard.rendered_pdf
+  - postcard.rendered_thumbnails
+  - postcard.deleted
+  - postcard.mailed
+  - postcard.in_transit
+  - postcard.in_local_area
+  - postcard.processed_for_delivery
+  - postcard.re-routed
+  - postcard.returned_to_sender

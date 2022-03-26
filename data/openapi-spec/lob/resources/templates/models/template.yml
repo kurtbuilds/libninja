@@ -1,0 +1,50 @@
+type: object
+
+required:
+  - id
+  - versions
+  - published_version
+
+properties:
+  description:
+    $ref: "../../../shared/attributes/resource_description.yml"
+
+  id:
+    $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+
+  versions:
+    type: array
+    description: >-
+      An array of all non-deleted [version objects](#tag/Template-Versions)
+      associated with the template.
+    items:
+      $ref: "../template_versions/models/template_version.yml"
+
+  published_version:
+    allOf:
+      - description: >-
+          The template's currently published version.
+          This version will be used in any Print &
+          Mail API requests that reference the specified template.
+      - $ref: "../template_versions/models/template_version.yml"
+
+  object:
+    type: string
+    description: Value is resource type.
+    enum:
+      - template
+    default: template
+
+  metadata:
+    $ref: "../../../shared/models/metadata.yml"
+
+  # the following added manually from lob_base to avoid "recursive" use of
+  # of lob_base in bank_account property
+  date_created:
+    $ref: "../../../shared/attributes/timestamps.yml#/date_created"
+
+  date_modified:
+    $ref: "../../../shared/attributes/timestamps.yml#/date_modified"
+
+  deleted:
+    $ref: "../../../shared/attributes/deleted.yml"

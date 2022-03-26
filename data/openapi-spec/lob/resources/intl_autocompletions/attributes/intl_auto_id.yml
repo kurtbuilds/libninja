@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `intl_auto_`.
+
+pattern: "^intl_auto_[a-zA-Z0-9]+$"

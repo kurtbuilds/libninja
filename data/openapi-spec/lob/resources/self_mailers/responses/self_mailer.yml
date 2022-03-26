@@ -1,0 +1,66 @@
+application/json:
+  schema:
+    $ref: "../models/self_mailer.yml"
+  example:
+    id: sfm_8ffbe811dea49dcf
+    description: April Campaign
+    metadata: {}
+    to:
+      id: adr_bae820679f3f536b
+      description:
+      name: HARRY ZHANG
+      company:
+      phone:
+      email:
+      address_line1: 210 KING ST STE 6100
+      address_line2:
+      address_city: SAN FRANCISCO
+      address_state: CA
+      address_zip: 94107-1741
+      address_country: UNITED STATES
+      metadata: {}
+      date_created: "2017-09-05T17:47:53.767Z"
+      date_modified: "2017-09-05T17:47:53.767Z"
+      deleted: true
+      object: address
+    from:
+      id: adr_210a8d4b0b76d77b
+      description:
+      name: LEORE AVIDAR
+      company:
+      phone:
+      email:
+      address_line1: 210 KING ST STE 6100
+      address_line2:
+      address_city: SAN FRANCISCO
+      address_state: CA
+      address_zip: 94107-1741
+      address_country: UNITED STATES
+      metadata: {}
+      date_created: "2017-09-05T17:47:53.767Z"
+      date_modified: "2017-09-05T17:47:53.767Z"
+      deleted: true
+      object: address
+    url: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf.pdf?version=v1&expires=1618512040&signature=qvyCqXI1ndBvc4AjvG8FlirqLXEcfmYo4sDrRtabaXMOsX88to9G3K49uIk_aqevvZXe8HoRYD_nWydbQHqaCA
+    outside_template_id: tmpl_a3cb937f26d7eec
+    inside_template_id: tmpl_a3cb937f26d7eec
+    inside_template_version_id: vrsn_bfdf70893b00a85
+    outside_template_version_id: vrsn_bfdf70893b00a85
+    carrier: USPS
+    tracking_events: []
+    thumbnails:
+      - small: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_small_1.png?version=v1&expires=1618512040&signature=-bipeUHP-hAMcCBSrWM0ZH1VwRdSPNVGGZN9hAZKr6Lh4ly6uxvratVd5LXJCK_zOEMYk_mTWASt0ge7OY6SDA
+        medium: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_medium_1.png?version=v1&expires=1618512040&signature=ryxN7bsXGtw_GRFSP3Cs3A3IYjxZi3cW9BHDCNgMt6p3nobVmsc_iFHt2e-S7ndAXhhN7nP-MQVov3bt3r37BQ
+        large: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_large_1.png?version=v1&expires=1618512040&signature=kBrm00xkyCkJNJRHxH8HshFaebtOxnzjVWOs1VVmGMuw8H6OBNcMAMxt9s49K0jlpHoh3Nr9uSncEZMQaaNjAg
+      - small: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_small_2.png?version=v1&expires=1618512040&signature=3gTgU7Fd3KoT_vNlQnTGptRps5ZgnkhSnPrAwk7L98higIzSwfKoLvuu_DIpMM48dHbxckKT9waR8euJ4KSDBQ
+        medium: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_medium_2.png?version=v1&expires=1618512040&signature=Ue1lw5CMj7KRx6cMQL8xPeazaHCdJzWcACd1w3acuYPnWkVIpSt62OIO7hAtpAQK9xm1dhhlFj0rqRZMdRMMBA
+        large: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_large_2.png?version=v1&expires=1618512040&signature=cICc7HEm1xG_eyM4a_wtvPk2FqoLRmtgGa29kJisWnMIYBL0OkyzG4ZCYGMhp-5cZpJlSpXfTgGKh_Qmeo1TDw
+    merge_variables:
+      name:
+    size: 6x18_bifold
+    mail_type: usps_first_class
+    expected_delivery_date: "2021-03-24"
+    date_created: "2021-03-16T18:40:40.504Z"
+    date_modified: "2021-03-16T18:40:40.504Z"
+    send_date: "2021-03-16T18:45:40.493Z"
+    object: self_mailer

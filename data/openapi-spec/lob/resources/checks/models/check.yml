@@ -1,0 +1,100 @@
+allOf:
+  - $ref: "check_base.yml"
+  - $ref: "../../../shared/models/form_factor/from_us.yml"
+
+  - type: object
+
+    required:
+      - bank_account
+      - id
+      - amount
+      - to
+      - url
+      - carrier
+      - date_created
+      - date_modified
+      - object
+
+    properties:
+      id:
+        $ref: "../attributes/chk_id.yml"
+
+      amount:
+        description: The payment amount to be sent in US dollars.
+        type: number
+        format: float
+        multipleOf: 0.01
+        maximum: 999999.99
+
+      bank_account:
+        $ref: "../../bank_accounts/models/bank_account.yml"
+
+      check_bottom_template_id:
+        allOf:
+          - description: The unique ID of the HTML template used for the check bottom.
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+
+      attachment_template_id:
+        allOf:
+          - description: The unique ID of the HTML template used for the attachment.
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+
+      check_bottom_template_version_id:
+        allOf:
+          - description: The unique ID of the specific version of the HTML template used for the check bottom.
+            type: string
+          - $ref: "../../../shared/attributes/model_ids/vrsn_id.yml"
+
+      attachment_template_version_id:
+        allOf:
+          - description: The unique ID of the specific version of the HTML template used for the attachment.
+            type: string
+          - $ref: "../../../shared/attributes/model_ids/vrsn_id.yml"
+
+      url:
+        allOf:
+          - description: A [signed link](#section/Asset-URLs) to the rendered check.
+          - $ref: "../../../shared/attributes/signed_link.yml"
+
+      to:
+        $ref: "../../../shared/models/address/address_us.yml"
+
+      carrier:
+        type: string
+        enum:
+          - USPS
+        default: USPS
+
+      thumbnails:
+        type: array
+        items:
+          $ref: "../../../shared/models/thumbnail.yml"
+
+      expected_delivery_date:
+        $ref: "../../../shared/attributes/expected_delivery_date.yml"
+
+      tracking_events:
+        # TODO: add tracking_event objs link
+        description: An array of tracking_event objects ordered by ascending `time`. Will not be populated for checks created in test mode.
+        type: array
+        items:
+          $ref: "../../../shared/resources/tracking_events/models/tracking_event_normal.yml"
+        nullable: true
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - check
+        default: check
+
+      # the following added manually from lob_base to avoid "recursive" use of
+      # of lob_base in bank_account property
+      date_created:
+        $ref: "../../../shared/attributes/timestamps.yml#/date_created"
+
+      date_modified:
+        $ref: "../../../shared/attributes/timestamps.yml#/date_modified"
+
+      deleted:
+        $ref: "../../../shared/attributes/deleted.yml"

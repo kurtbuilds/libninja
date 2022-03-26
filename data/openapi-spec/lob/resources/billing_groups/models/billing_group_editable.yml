@@ -1,0 +1,4 @@
+allOf:
+  - $ref: billing_group_base.yml
+  - required:
+      - name

@@ -1,0 +1,25 @@
+description: Returns a zip lookup object if a valid zip was provided.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/zip.yml"
+    example:
+      id: us_zip_c7cb63d68f8d6
+      cities:
+        - city: SAN FRANCISCO
+          state: CA
+          county: SAN FRANCISCO
+          county_fips: "06075"
+          preferred: true
+      zip_code_type: standard
+      object: us_zip_lookup
+      zip_code: "94107"

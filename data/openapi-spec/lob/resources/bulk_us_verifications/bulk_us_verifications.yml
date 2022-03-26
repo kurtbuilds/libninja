@@ -1,0 +1,208 @@
+post:
+  operationId: bulk_us_verifications
+
+  summary: Bulk Verify
+
+  description: >-
+    Verify a list of US or US territory addresses _with a live
+    API key_. Requests to this endpoint with a test API key will return a dummy
+    response based on the primary line you input.
+
+  tags:
+    - US Verifications
+
+  parameters:
+    - in: query
+      name: case
+      schema:
+        type: string
+        enum:
+          - upper
+          - proper
+        default: upper
+      description: >-
+        Casing of the verified address. Possible values are `upper` and `proper` for
+        uppercased (e.g. "PO BOX") and proper-cased (e.g. "PO Box"),
+        respectively. Only affects `recipient`, `primary_line`, `secondary_line`,
+        `urbanization`, and `last_line`. Default casing is `upper`.
+      required: false
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/multiple_components_list.yml"
+        example:
+          addresses:
+            - primary_line: 210 King Street
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+            - recipient: Walgreens
+              primary_line: Ave Wilson Churchill 123
+              secondary_line: ""
+              urbanization: URB FAIR OAKS
+              city: RIO PIEDRAS
+              state: PR
+              zip_code: "00926"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/multiple_components_list.yml"
+        example:
+          addresses:
+            - primary_line: 210 King Street
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+            - recipient: Walgreens
+              primary_line: Ave Wilson Churchill 123
+              secondary_line: ""
+              urbanization: URB FAIR OAKS
+              city: RIO PIEDRAS
+              state: PR
+              zip_code: "00926"
+
+      multipart/form-data:
+        schema:
+          $ref: "models/multiple_components_list.yml"
+        example:
+          addresses:
+            - primary_line: 210 King Street
+              city: San Francisco
+              state: CA
+              zip_code: "94107"
+            - recipient: Walgreens
+              primary_line: Ave Wilson Churchill 123
+              secondary_line: ""
+              urbanization: URB FAIR OAKS
+              city: RIO PIEDRAS
+              state: PR
+              zip_code: "00926"
+
+  responses:
+    "200":
+      $ref: responses/bulk_us_verifications.yml
+
+    default:
+      $ref: "../../shared/responses/us_verifications_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/bulk_us_verifications \
+          -u <YOUR_LIVE_API_KEY>: \
+          --data-raw '{
+            "addresses": [
+              {
+                "primary_line": "210 King Street",
+                "city": "San Francisco",
+                "state": "CA",
+                "zip_code": "94107"
+              }
+            ]
+          }'
+      label: CURL
+    - lang: Typescript
+      source: |
+        const UsVerifications = new USVerificationsApi(av_config);
+        const verificationData1: UsVerificationsWritable = {
+          primary_line: "001 CEMETERY LANE",
+          city: "WESTFIELD",
+          state: "NJ",
+          zip_code: "07090",
+        };
+        const verificationData2: UsVerificationsWritable = {
+          primary_line: "1515 CEMETERY LN",
+          city: "WESTFIELD",
+          state: "NJ",
+          zip_code: "07090",
+        };
+        const addressList: MultipleComponentsList = {
+          addresses: [verificationData1, verificationData2],
+        };
+
+        try {
+          const bulkVerified = await UsVerifications.verifyBulk(addressList);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.bulkUSVerifications.verify({
+          addresses: [{
+            primary_line: '210 King St',
+            city: 'San Francisco',
+            state: 'CA',
+            zip_code: '94107'
+          }]
+        }), function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.bulk_us_verifications.verify(
+          addresses: [
+            {
+            recipient: "LOB.COM",
+            primary_line: "185 BERRY ST STE 6600",
+            city: "SAN FRANCISCO",
+            state: "CA",
+            zip_code: "94107"
+            }
+          ]
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.BulkUSVerification.create(
+          addresses=[{
+          'primary_line'='210 King Street',
+          'city'='San Francisco',
+          'state'='CA',
+          'zip_code'='94107'
+          }]
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->bulkUSVerifications()->verify('addresses' => array(
+          array(
+            'primary_line' => '210 King Street',
+            'city'         => 'San Francisco',
+            'state'        => 'CA',
+            'zip_code'     => '94107'
+          )));
+    - lang: Java
+      source: |
+        List<USVerification.RequestBuilder> addresses = new ArrayList<USVerification.RequestBuilder>();
+        addresses.add(new USVerification.RequestBuilder()
+                .setRecipient("Donald")
+                .setPrimaryLine("deliverable")
+                .setSecondaryLine("Ste 6100")
+                .setUrbanization("")
+                .setCity("San Francisco")
+                .setState("CA")
+                .setZipCode("94107"));
+        LobResponse<BulkUSVerification> response = new BulkUSVerification.RequestBuilder()
+                .setAddresses(addresses)
+                .verify();
+        BulkUSVerification bulkUSVerification = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.BulkUSVerification.verify.verify(
+        %{
+          addresses:[
+            {
+              primary_line: "210 King Street",
+              city: "San Francisco",
+              state: "CA",
+              zip_code: "94107"
+            }
+         ]
+        })
+      label: ELIXIR

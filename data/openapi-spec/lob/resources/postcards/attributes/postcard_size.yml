@@ -1,0 +1,11 @@
+type: string
+
+enum:
+  - 4x6
+  - 6x9
+  - 6x11
+
+description: >
+  Specifies the size of the postcard. Only `4x6` postcards can be sent to international destinations.
+
+default: 4x6

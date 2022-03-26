@@ -1,0 +1,152 @@
+description: >-
+  A dictionary with a data property that contains an array of
+  up to `limit` self_mailers. Each entry in the array is a separate
+  self_mailer. The previous and next page of self_mailers can be retrieved
+  by calling the endpoint contained in the `previous_url` and
+  `next_url` fields in the API response respectively.<br>If no
+  more self_mailers are available beyond the current set of returned results,
+  the `next_url` field will be empty.
+
+content:
+  application/json:
+    schema:
+      allOf:
+        - $ref: "../../../shared/models/list.yml"
+        - type: object
+          properties:
+            data:
+              type: array
+              description: list of self_mailers
+              items:
+                $ref: "../models/self_mailer.yml"
+
+    example:
+      data:
+        - id: sfm_7239rhwqkrfaskas
+          description: April Campaign
+          metadata: {}
+          to:
+            id: adr_asdi2y3riuasasoi
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            phone: "5555555555"
+            email: "harry@lob.com"
+            metadata: {}
+            address_line1: "370 WATER ST"
+            address_line2: ""
+            address_city: "SUMMERSIDE"
+            address_state: "PRINCE EDWARD ISLAND"
+            address_zip: "C1N 1C4"
+            address_country: "CANADA"
+            recipient_moved: false
+            date_created: "2019-09-20T00:14:00.361Z"
+            date_modified: "2019-09-20T00:14:00.361Z"
+            object: address
+          from:
+            id: adr_210a8d4b0b76d77b
+            description: null
+            name: null
+            company: LOB
+            phone: null
+            email: null
+            address_line1: 210 KING ST STE 6100
+            address_line2: null
+            address_city: SAN FRANCISCO
+            address_state: CA
+            address_zip: 94107-1741
+            address_country: UNITED STATES
+            metadata: {}
+            date_created: "2018-12-08T03:01:07.651Z"
+            date_modified: "2018-12-08T03:01:07.651Z"
+            object: address
+          url: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf.pdf?version=v1&expires=1618781264&signature=YP_bCwrgVA2lz1Gr1YVCJN1f-WspUGsH0aJp2ihjfLXU7lDUV12_xRv4uPch0mfWeOOxEqpyP8hGpgvjmQKNAw
+          outside_template_id: tmpl_a3cb937f26d7eec
+          inside_template_id: tmpl_a3cb937f26d7eec
+          inside_template_version_id: vrsn_bfdf70893b00a85
+          outside_template_version_id: vrsn_bfdf70893b00a85
+          carrier: USPS
+          tracking_events: []
+          thumbnails:
+            - small: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_small_1.png?version=v1&expires=1618781264&signature=A7q5HbRO53sUYYnwGlmP5mTS6ylLE7kS2mYhfcEOdexjyqG7UseK0MD26DppE4Q0aE4u2msDVMxd5ukjMerYCg
+              medium: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_medium_1.png?version=v1&expires=1618781264&signature=b9pynuawVpU_vrhnT_mTpksdE-FLF_ZjdIBOFR_ltIzEGlx-VKD4VvZrqP98lG2D8V7UKQ7SdRr2nUAk4LxvCg
+              large: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_large_1.png?version=v1&expires=1618781264&signature=g2jifhCselPqIj8au6lsbJMNFN8ZX3aM6GkLoAXiHBCS8X5mF9nhVbmO0odpnmwNlV1CWIp-MXVsZkC3NmxqBQ
+            - small: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_small_2.png?version=v1&expires=1618781264&signature=biJY4-ZbNNRydPYg3cZkq7wxjILbPBK_nIVyoyQsg5X5q4jlsa-2fzeMa48V9jprUetsC6WEuYvasHosRfG_DQ
+              medium: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_medium_2.png?version=v1&expires=1618781264&signature=xEAX7bURyc8fSphacuo5yb7iVIpT8Xvq05KgMaNQS4r3aCpx0z1p42wbPmW758B5Ae0li1YDYvVyzS7qJIoWAw
+              large: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_large_2.png?version=v1&expires=1618781264&signature=NieHDnoQ7STZUvofHrFt7S987CzIkUJWpaSgpVQPZw-C3_wwTPsIrvxYdXEuFrr6ciTUcxRBFPlE0lurmMkyCA
+          merge_variables:
+            name:
+          size: 6x18_bifold
+          mail_type: usps_first_class
+          expected_delivery_date: "2021-03-24"
+          date_created: "2021-03-16T18:40:40.504Z"
+          date_modified: "2021-03-16T18:41:06.691Z"
+          send_date: "2021-03-16T18:45:40.493Z"
+          deleted: true
+          object: self_mailer
+        - id: sfm_8ffbe811dea49dcf
+          description: April Campaign
+          metadata: {}
+          to:
+            id: adr_f9228b743884ff98
+            description:
+            name: AYA
+            company:
+            phone:
+            email:
+            address_line1: 2812 PARK RD
+            address_line2:
+            address_city: CHARLOTTE
+            address_state: NC
+            address_zip: 28209-1314
+            address_country: UNITED STATES
+            metadata: {}
+            date_created: "2021-03-16T18:40:40.410Z"
+            date_modified: "2021-03-16T18:40:40.410Z"
+            deleted: true
+            object: address
+          from:
+            id: adr_210a8d4b0b76d77b
+            description: null
+            name: null
+            company: LOB
+            phone: null
+            email: null
+            address_line1: 210 KING ST STE 6100
+            address_line2: null
+            address_city: SAN FRANCISCO
+            address_state: CA
+            address_zip: 94107-1741
+            address_country: UNITED STATES
+            metadata: {}
+            date_created: "2018-12-08T03:01:07.651Z"
+            date_modified: "2018-12-08T03:01:07.651Z"
+            object: address
+          url: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf.pdf?version=v1&expires=1618781264&signature=YP_bCwrgVA2lz1Gr1YVCJN1f-WspUGsH0aJp2ihjfLXU7lDUV12_xRv4uPch0mfWeOOxEqpyP8hGpgvjmQKNAw
+          outside_template_id: tmpl_a3cb937f26d7eec
+          inside_template_id: tmpl_a3cb937f26d7eec
+          inside_template_version_id: vrsn_bfdf70893b00a85
+          outside_template_version_id: vrsn_bfdf70893b00a85
+          carrier: USPS
+          tracking_events: []
+          thumbnails:
+            - small: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_small_1.png?version=v1&expires=1618781264&signature=A7q5HbRO53sUYYnwGlmP5mTS6ylLE7kS2mYhfcEOdexjyqG7UseK0MD26DppE4Q0aE4u2msDVMxd5ukjMerYCg
+              medium: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_medium_1.png?version=v1&expires=1618781264&signature=b9pynuawVpU_vrhnT_mTpksdE-FLF_ZjdIBOFR_ltIzEGlx-VKD4VvZrqP98lG2D8V7UKQ7SdRr2nUAk4LxvCg
+              large: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_large_1.png?version=v1&expires=1618781264&signature=g2jifhCselPqIj8au6lsbJMNFN8ZX3aM6GkLoAXiHBCS8X5mF9nhVbmO0odpnmwNlV1CWIp-MXVsZkC3NmxqBQ
+            - small: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_small_2.png?version=v1&expires=1618781264&signature=biJY4-ZbNNRydPYg3cZkq7wxjILbPBK_nIVyoyQsg5X5q4jlsa-2fzeMa48V9jprUetsC6WEuYvasHosRfG_DQ
+              medium: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_medium_2.png?version=v1&expires=1618781264&signature=xEAX7bURyc8fSphacuo5yb7iVIpT8Xvq05KgMaNQS4r3aCpx0z1p42wbPmW758B5Ae0li1YDYvVyzS7qJIoWAw
+              large: https://lob-assets.com/self-mailers/sfm_8ffbe811dea49dcf_thumb_large_2.png?version=v1&expires=1618781264&signature=NieHDnoQ7STZUvofHrFt7S987CzIkUJWpaSgpVQPZw-C3_wwTPsIrvxYdXEuFrr6ciTUcxRBFPlE0lurmMkyCA
+          merge_variables:
+            name:
+          size: 6x18_bifold
+          mail_type: usps_first_class
+          expected_delivery_date: "2021-03-24"
+          date_created: "2021-03-16T18:40:40.504Z"
+          date_modified: "2021-03-16T18:41:06.691Z"
+          send_date: "2021-03-16T18:45:40.493Z"
+          deleted: true
+          object: self_mailer
+      object: list
+      next_url:
+      previous_url:
+      count: 2

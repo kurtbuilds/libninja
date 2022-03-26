@@ -1,0 +1,26 @@
+type: object
+
+required:
+  - latitude
+  - longitude
+
+properties:
+  latitude:
+    type: number
+    minimum: -90
+    maximum: 90
+    format: float
+    description: >
+      A positive or negative decimal indicating the geographic latitude of the address, specifying the north-to-south position of a
+      location. This should be input with `longitude` to pinpoint locations on a map.
+    nullable: true
+
+  longitude:
+    type: number
+    minimum: -180
+    maximum: 180
+    format: float
+    description: >
+      A positive or negative decimal indicating the geographic longitude of the address, specifying the north-to-south position of a
+      location. This should be input with `latitude` to pinpoint locations on a map.
+    nullable: true

@@ -1,0 +1,18 @@
+in: header
+
+name: x-lang-output
+
+required: false
+
+description: >
+  * `native` - Translate response to the native language of the country in the
+  request
+
+  * `match` - match the response to the language in the request
+
+
+  Default response is in English.
+
+schema:
+  type: string
+  enum: [native, match]

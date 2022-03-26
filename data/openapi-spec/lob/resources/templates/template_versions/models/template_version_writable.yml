@@ -1,0 +1,14 @@
+type: object
+
+required:
+  - html
+
+properties:
+  description:
+    $ref: "../../../../shared/attributes/resource_description.yml"
+
+  html:
+    $ref: "../../attributes/template_html.yml"
+
+  engine:
+    $ref: "../../../../shared/attributes/engine.yml"

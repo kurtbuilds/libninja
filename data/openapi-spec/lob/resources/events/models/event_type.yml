@@ -1,0 +1,40 @@
+type: object
+
+required:
+  - id
+  - enabled_for_test
+  - resource
+  - object
+
+properties:
+  id:
+    oneOf:
+      - $ref: "../attributes/postcard_types.yml"
+      - $ref: "../attributes/self_mailer_types.yml"
+      - $ref: "../attributes/letter_types.yml"
+      - $ref: "../attributes/check_types.yml"
+      - $ref: "../attributes/address_types.yml"
+      - $ref: "../attributes/bank_account_types.yml"
+
+  enabled_for_test:
+    type: boolean
+    description: >-
+      Value is `true` if the event type is enabled in both the test and live
+      environments and `false` if it is only enabled in the live environment.
+
+  resource:
+    type: string
+    enum:
+      - postcards
+      - self mailers
+      - letters
+      - checks
+      - addresses
+      - bank accounts
+
+  object:
+    type: string
+    description: Value is resource type.
+    enum:
+      - event_type
+    default: event_type

@@ -1,0 +1,31 @@
+description: Returns a zip lookup object if a valid zip was provided.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/reverse_geocode.yml"
+    example:
+      id: "us_reverse_geocode_8a013f3e"
+      addresses:
+        - components:
+            zip_code: "94107"
+            zip_code_plus_4: "1702"
+          location_analysis:
+            latitude: 37.78271
+            longitude: -122.416202
+            distance: 1.32
+        - components:
+            zip_code: "94107"
+            zip_code_plus_4: "1702"
+          location_analysis:
+            latitude: 37.782917
+            longitude: -122.416131
+            distance: 1.33

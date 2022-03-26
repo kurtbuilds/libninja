@@ -1,0 +1,10 @@
+description: Deleted
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/deletion_models/check_deletion.yml"
+
+    example:
+      id: chk_123456789
+      deleted: true

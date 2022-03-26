@@ -1,0 +1,127 @@
+description: Returns an international autocompletions object.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/intl_autocompletions.yml"
+    examples:
+      basic:
+        value:
+          id: intl_auto_a3ac97bcfbb2460ab20c
+          suggestions:
+            - primary_number_range: ""
+              primary_line: 340 WATERSTONE PL SE
+              city: AIRDRIE
+              state: AB
+              country: CA
+              zip_code: T4B 2G7
+            - primary_number_range: ""
+              primary_line: 340 WATT BLVD SW
+              city: EDMONTON
+              state: AB
+              country: CA
+              zip_code: T6X 1R7
+            - primary_number_range: ""
+              primary_line: 340 WATROUS ST
+              city: PRINCE GEORGE
+              state: BC
+              country: CA
+              zip_code: V2M 2B6
+            - primary_number_range: ""
+              primary_line: 340 WATERS RD
+              city: QUALICUM BEACH
+              state: BC
+              country: CA
+              zip_code: V9K 2B8
+            - primary_number_range: ""
+              primary_line: SUITE 340, 1510 WATT DR SW
+              city: EDMONTON
+              state: AB
+              country: CA
+              zip_code: T6X 2E6
+            - primary_number_range: ""
+              primary_line: WATERFRONT POINTE WEST SUITE 340, 5212 25 AVE NW
+              city: EDMONTON
+              state: AB
+              country: CA
+              zip_code: T6L 6R7
+            - primary_number_range: ""
+              primary_line: WATERFRONT POINTE EAST SUITE 340, 2520 52 ST NW
+              city: EDMONTON
+              state: AB
+              country: CA
+              zip_code: T6L 6S2
+            - primary_number_range: ""
+              primary_line: WATERSTONE SUITE 340, 6079 MAYNARD WAY NW
+              city: EDMONTON
+              state: AB
+              country: CA
+              zip_code: T6R 0S4
+            - primary_number_range: ""
+              primary_line: WATSON APTS. SUITE 340, 5207 39 ST
+              city: RED DEER
+              state: AB
+              country: CA
+              zip_code: T4N 0Z9
+            - primary_number_range: ""
+              primary_line: WATERS EDGE SUITE 3400..3409, 2600 FERGUSON RD
+              city: SAANICHTON
+              state: BC
+              country: CA
+              zip_code: V8M 2C1
+          object: "intl_autocompletion"
+      test:
+        value:
+          id: intl_auto_a3ac97bcfbb2460ab20c
+          suggestions:
+            - primary_number_range: ""
+              primary_line: 1 TWIN OAKS CT
+              city: GREENVILLE
+              state: SC
+              country: CA
+              zip_code: "29615"
+            - primary_number_range: ""
+              primary_line: 1 TEVA DR
+              city: STAR CITY
+              state: CA
+              country: CA
+              zip_code: "91355"
+            - primary_number_range: ""
+              primary_line: 1 TELEGRAM AVE
+              city: ELMONT
+              state: NY
+              country: CA
+              zip_code: "11003"
+            - primary_number_range: ""
+              primary_line: 1 TELEGRAM AVE
+              city: GARDEN CITY
+              state: KS
+              country: CA
+              zip_code: "67846"
+            - primary_number_range: ""
+              primary_line: 1 TELEGRAPH HILL RD
+              city: HOLMDEL
+              state: NJ
+              country: CA
+              zip_code: "07733"
+            - primary_number_range: ""
+              primary_line: 1 TELEGRAPH HILL RD S
+              city: HOLMDEL
+              state: NJ
+              country: CA
+              zip_code: "07733"
+            - primary_number_range: ""
+              primary_line: 1 TELEGRAPH HILL BLVD
+              city: SAN FRANCISCO
+              state: CA
+              country: CA
+              zip_code: "94133"
+          object: "intl_autocompletion"

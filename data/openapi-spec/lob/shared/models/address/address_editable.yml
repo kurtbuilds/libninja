@@ -1,0 +1,3 @@
+oneOf:
+  - $ref: address_editable_us.yml
+  - $ref: address_editable_intl.yml

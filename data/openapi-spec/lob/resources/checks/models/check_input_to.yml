@@ -1,0 +1,19 @@
+type: object
+
+properties:
+  to:
+    description: >-
+      Must either be an address ID or an inline object with correct address
+      parameters. Checks cannot be sent internationally (`address_country` must be
+      `US`). The total string of the sum of `address_line1` and `address_line2` must
+      be no longer than 50 characters combined. If an object is used, an address
+      will be created, corrected, and standardized for free whenever possible
+      using our US Address Verification engine, and returned back with an
+      ID. Depending on your [Print & Mail Edition](https://dashboard.lob.com/#/settings/editions),
+      addresses may also be run through [National Change of Address (NCOA)](https://lob.com/docs#ncoa).
+      If an address used does not meet your account’s
+      [US Mail Strictness Setting](https://dashboard.lob.com/#/settings/account), the request will
+      fail. [More about verification of mailing addresses](https://www.lob.com/guides#mailing_addresses)
+    oneOf:
+      - $ref: "../../../shared/attributes/model_ids/adr_id.yml"
+      - $ref: "../../../shared/models/address/inline_address_us.yml"

@@ -1,0 +1,12 @@
+type: object
+
+required:
+  - addresses
+
+properties:
+  addresses:
+    type: array
+    minItems: 1
+    maxItems: 10
+    items:
+      $ref: "../../us_verifications/models/multiple_components.yml"

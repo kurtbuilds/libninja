@@ -1,0 +1,186 @@
+parameters:
+  - in: path
+    name: card_id
+    description: id of the card
+    required: true
+    schema:
+      $ref: "../../shared/attributes/model_ids/card_id.yml"
+
+get:
+  operationId: card_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing card. You need only supply
+    the unique customer identifier that was returned upon card creation.
+
+  tags:
+    - Cards
+
+  responses:
+    "200":
+      description: Returns a card object
+      content:
+        $ref: "responses/card.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/cards/card_7a6d73c5c8457fc \
+          -u <YOUR API KEY>:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const card = await new CardsApi(config).get("card_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.cards.retrieve('card_7a6d73c5c8457fc', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Python
+      source: |
+        lob.Card.retrieve('card_7a6d73c5c8457fc')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->cards()->get('card_7a6d73c5c8457fc');
+
+post:
+  operationId: card_update
+
+  summary: Update
+
+  description: >-
+    Update the details of an existing card. You need only supply
+    the unique identifier that was returned upon card creation.
+
+  tags:
+    - Cards
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/card_updatable.yml"
+        example:
+          description: Test card
+          auto_reorder: true
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/card_updatable.yml"
+        example:
+          description: Test card
+          auto_reorder: true
+
+      multipart/form-data:
+        schema:
+          $ref: "models/card_updatable.yml"
+        example:
+          description: Test card
+          auto_reorder: true
+
+  responses:
+    "200":
+      description: Returns a card object
+      content:
+        $ref: "responses/card.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X POST https://api.lob.com/v1/cards/card_7a6d73c5c8457fc \
+          -u <YOUR API KEY>: \
+          -d "description=Awesome card" \
+          -d "auto_reorder=true"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const cardUpdatable =  new CardEditable ({
+          description: "Awesome card",
+          auto_reorder: true
+        });
+
+        try {
+          await new CardsApi(config).update(cardUpdatable);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.cards.update('card_7a6d73c5c8457fc', {
+          description: 'Awesome card',
+          auto_reorder: true
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    # - lang: Python
+    #   source: |
+    #     lob.Card.update('card_7a6d73c5c8457fc')
+    #   label: PYTHON
+    # - lang: PHP
+    #   source: |
+    #     $lob->cards()->update('card_7a6d73c5c8457fc');
+
+delete:
+  operationId: card_delete
+
+  summary: Delete
+
+  description: >-
+    Delete an existing card. You need only supply
+    the unique identifier that was returned upon card creation.
+
+  tags:
+    - Cards
+
+  responses:
+    "200":
+      $ref: "../../shared/responses/card_deleted.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/cards/card_7a6d73c5c8457fc \
+          -u <YOUR API KEY>:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const deleteCard = await new CardsApi(config).delete("card_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.cards.delete('card_7a6d73c5c8457fc', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Python
+      source: |
+        lob.Card.delete('card_7a6d73c5c8457fc')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->cards()->delete('card_7a6d73c5c8457fc');

@@ -1,0 +1,8 @@
+type: object
+
+properties:
+  components:
+    $ref: "./components.yml"
+
+  location_analysis:
+    $ref: "./location_analysis.yml"

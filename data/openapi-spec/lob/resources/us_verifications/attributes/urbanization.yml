@@ -1,0 +1,8 @@
+type: string
+
+description: >
+  Only present for addresses in Puerto Rico. An urbanization refers to an area, sector, or development within a city.
+  See [USPS documentation](https://pe.usps.com/text/pub28/28api_008.htm#:~:text=I51.,-4%20Urbanizations&text=In%20Puerto%20Rico%2C%20identical%20street,placed%20before%20the%20urbanization%20name.)
+  for clarification.
+
+maxLength: 500

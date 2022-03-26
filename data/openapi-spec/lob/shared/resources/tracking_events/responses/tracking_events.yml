@@ -1,0 +1,36 @@
+description: Returns a `tracking_event` object to the specified server.
+
+content:
+  application/json:
+    schema:
+      oneOf:
+        - $ref: "../models/tracking_event_normal.yml"
+        - $ref: "../models/tracking_event_certified.yml"
+
+    examples:
+      normal:
+        value:
+          id: evnt_9e84094c9368cfb
+          type: normal
+          name: In Local Area
+          details: null
+          location: "72231"
+          time: "2016-06-30T15:51:41.000Z"
+          date_created: "2016-06-30T17:41:59.771Z"
+          date_modified: "2016-06-30T17:41:59.771Z"
+          object: tracking_event
+      certified:
+        value:
+          id: evnt_9e84094c9368cfb
+          type: certified
+          name: Delivered
+          details:
+            event: delivered
+            description: Package has been delivered.
+            notes: Delivered, Front Desk/Reception/Mail Room
+            action_required: false
+          location: "33408"
+          time: "2019-10-08T19:41:00Z"
+          date_created: "2019-10-08T19:41:00Z"
+          date_modified: "2019-10-08T19:41:00Z"
+          object: tracking_event

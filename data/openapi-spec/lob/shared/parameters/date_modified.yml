@@ -1,0 +1,11 @@
+in: query
+
+name: date_modified
+
+description: Filter by date modified.
+
+schema:
+  $ref: "../models/date_filter.yml"
+
+style: deepObject
+explode: true

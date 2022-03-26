@@ -1,0 +1,31 @@
+in: query
+
+name: before/after
+
+required: false
+
+description: >
+  `before` and `after` are both optional but only one of them can be in the
+  query at a time.
+
+schema:
+  allOf:
+    - type: object
+      properties:
+        before:
+          type: string
+          description: >
+            A reference to a list entry used for paginating to the previous set
+            of entries. This field is pre-populated in the `previous_url` field
+            in the return response.
+        after:
+          type: string
+          description: >
+            A reference to a list entry used for paginating to the next set
+            of entries. This field is pre-populated in the `next_url` field
+            in the return response.
+    - oneOf:
+        - required:
+            - before
+        - required:
+            - after

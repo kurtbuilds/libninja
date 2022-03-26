@@ -1,0 +1,9 @@
+type: string
+
+description: An HTML string of under 10,000 characters.
+
+maxLength: 10000
+
+# replicating test in lob-api: html.indexOf('<') !== 1
+# so no anchors
+pattern: "<"

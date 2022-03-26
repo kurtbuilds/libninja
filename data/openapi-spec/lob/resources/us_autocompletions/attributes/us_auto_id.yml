@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `us_auto_`.
+
+pattern: "^us_auto_[a-zA-Z0-9]+$"

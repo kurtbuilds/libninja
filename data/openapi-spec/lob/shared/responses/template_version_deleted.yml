@@ -1,0 +1,11 @@
+description: Deleted
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/deletion_models/template_version_deletion.yml"
+
+    example:
+      value:
+        id: vrsn_123456789
+        deleted: true

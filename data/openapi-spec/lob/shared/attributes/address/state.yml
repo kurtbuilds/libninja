@@ -1,0 +1,7 @@
+type: string
+
+description: >
+  The [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) two letter code for
+  the state.
+
+maxLength: 2

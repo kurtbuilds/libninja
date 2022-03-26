@@ -1,0 +1,104 @@
+allOf:
+  - $ref: "../../../shared/models/form_factor/editable_no_mailtype.yml"
+
+  - type: object
+
+    required:
+      - color
+
+    properties:
+      mail_type:
+        $ref: "../../../shared/attributes/mail_type.yml"
+
+      color:
+        type: boolean
+        description: >-
+          Set this key to `true` if you would like to print in color.
+          Set to `false` if you would like to print in black and white.
+
+      double_sided:
+        type: boolean
+        description: >-
+          Set this attribute to `true` for double sided printing, or `false` for
+          for single sided printing. Defaults to `true`.
+        default: true
+
+      address_placement:
+        type: string
+        enum:
+          - top_first_page
+          - insert_blank_page
+          - bottom_first_page_center
+          - bottom_first_page
+        description: |
+          Specifies the location of the address information that will show through the double-window envelope. To see how this will impact your letter design, view our letter template.
+            * `top_first_page` - (default) print address information at the top of your provided first page
+            * `insert_blank_page` - insert a blank address page at the beginning of your file (you will be charged for the extra page)
+            * `bottom_first_page_center` - **(deprecation planned within a few months)** print address information at the bottom center of your provided first page
+            * `bottom_first_page` - print address information at the bottom of your provided first page
+        default: top_first_page
+
+      return_envelope:
+        oneOf:
+          - type: boolean
+          - $ref: "return_envelope.yml"
+
+        description: >-
+          Indicates if a return envelope is requested for the letter.
+          The value corresponding to this field is by default a boolean.
+          But if the account is signed up for custom return envelopes,
+          the value is of type string and is `no_9_single_window` for
+          a standard return envelope and a custom `return_envelope_id`
+          for non-standard return envelopes.
+
+
+          To include a return envelope with your letter, set to `true` and specify
+          the `perforated_page`. See
+          [pricing](https://www.lob.com/pricing/print-mail#compare) for extra costs
+          incurred.
+        default: false
+
+      perforated_page:
+        type: integer
+        description: >-
+          Required if `return_envelope` is `true`. The number of the page that should be
+          perforated for use with the return envelope. Must be greater than or equal
+          to `1`. The blank page added by `address_placement=insert_blank_page` will be
+          ignored when considering the perforated page number. To see how
+          perforation will impact your letter design, view our [perforation guide](https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/letter_perf_template.pdf).
+        nullable: true
+
+      custom_envelope:
+        type: object
+        description: >-
+          A nested custom envelope object containing more information about the
+          custom envelope used or `null` if a custom envelope was not used.
+
+
+          Accepts an envelope ID for any customized envelope with available
+          inventory. If no inventory is available for the specified ID, the letter
+          will not be sent, and an error will be returned. If the letter has more
+          than 6 sheets, it will be sent in a blank flat envelope. Custom envelopes
+          may be created and ordered from the dashboard. This feature is exclusive
+          to certain customers. Upgrade to the appropriate
+          [Print & Mail Edition](https://dashboard.lob.com/#/settings/editions)
+          to gain access.
+        required:
+          - id
+          - url
+          - object
+        properties:
+          id:
+            type: string
+            description: The unique identifier of the custom envelope used.
+            maxLength: 40
+          url:
+            type: string
+            description: The url of the envelope asset used.
+          object:
+            type: string
+            description: Value is resource type.
+            enum:
+              - envelope
+            default: envelope
+        nullable: true

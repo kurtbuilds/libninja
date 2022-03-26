@@ -1,0 +1,11 @@
+type: object
+
+required:
+  - quantity
+
+properties:
+  quantity:
+    type: integer
+    description: The quantity of cards in the order (minimum 10,000).
+    minimum: 10000
+    maximum: 10000000

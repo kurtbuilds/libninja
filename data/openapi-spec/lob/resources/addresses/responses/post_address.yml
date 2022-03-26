@@ -1,0 +1,90 @@
+description: Echos the writable fields of a newly created address object.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../../../shared/models/address/address.yml"
+
+    examples:
+      full_us:
+        value:
+          id: "adr_d3489cd64c791ab5"
+          description: "Harry - Office"
+          name: "HARRY ZHANG"
+          company: "LOB"
+          phone: "5555555555"
+          email: "harry@lob.com"
+          address_line1: "210 KING ST STE 6100"
+          address_city: "SAN FRANCISCO"
+          address_state: "CA"
+          address_zip: "94107"
+          address_country: "UNITED STATES"
+          metadata: {}
+          date_created: "2017-09-05T17:47:53.767Z"
+          date_modified: "2017-09-05T17:47:53.767Z"
+          object: "address"
+      full_intl:
+        value:
+          id: "adr_b9f49f464c836203"
+          description: "Harry - Office"
+          name: "HARRY ZHANG"
+          company: "LOB"
+          phone: "5555555555"
+          email: "harry@lob.com"
+          address_line1: "370 WATER ST"
+          address_city: "SUMMERSIDE"
+          address_state: "PRINCE EDWARD ISLAND"
+          address_zip: "C1N 1C4"
+          address_country: "CANADA"
+          metadata: {}
+          date_created: "2021-11-29T20:55:46.843Z"
+          date_modified: "2021-11-29T20:56:46.843Z"
+          object: "address"
+      ncoa_us_live:
+        value:
+          id: "adr_d3489cd64c791ab5"
+          description: "Harry - Office"
+          name: "HARRY ZHANG"
+          company: "LOB"
+          phone: "5555555555"
+          email: "harry@lob.com"
+          address_line1: "████"
+          address_line2: "████"
+          address_city: "SAN FRANCISCO"
+          address_state: "CA"
+          address_zip: "94107"
+          address_country: "UNITED STATES"
+          metadata: {}
+          date_created: "2017-09-05T17:47:53.767Z"
+          date_modified: "2017-09-05T17:47:53.767Z"
+          recipient_moved: true
+          inline: false
+          object: "address"
+      ncoa_us_test:
+        value:
+          id: "adr_e463565030210e12"
+          description: null
+          name: "TEST KEYS DO NOT VERIFY ADDRESSES"
+          company: null
+          phone: null
+          email: null
+          address_line1: "████"
+          address_line2: "████"
+          address_city: "SAN FRANCISCO"
+          address_state: "CA"
+          address_zip: "94107"
+          address_country: "UNITED STATES"
+          metadata: {}
+          date_created: "2019-12-05T19:39:19.932Z"
+          date_modified: "2019-12-05T19:39:19.932Z"
+          recipient_moved: true
+          inline: false
+          object: "address"

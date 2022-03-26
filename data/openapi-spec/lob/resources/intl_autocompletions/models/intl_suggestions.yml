@@ -1,0 +1,41 @@
+type: object
+
+required:
+  - primary_number_range
+  - primary_line
+  - city
+  - country
+  - state
+  - zip_code
+
+properties:
+  primary_number_range:
+    type: string
+    description: |
+      The primary number range of the address that identifies a building at street level.
+  primary_line:
+    type: string
+    description: |
+      The primary delivery line (usually the street address) of the address.
+      Combination of the following applicable `components` (primary number &
+      secondary information may be missing or inaccurate):
+      * `primary_number`
+      * `street_predirection`
+      * `street_name`
+      * `street_suffix`
+      * `street_postdirection`
+      * `secondary_designator`
+      * `secondary_number`
+      * `pmb_designator`
+      * `pmb_number`
+  city:
+    $ref: "../../../shared/attributes/address/city/city.yml"
+
+  country:
+    $ref: "../../../shared/attributes/country_extended.yml"
+
+  state:
+    $ref: "../../../shared/attributes/address/state.yml"
+
+  zip_code:
+    $ref: "../../../shared/attributes/address/postal_code.yml"

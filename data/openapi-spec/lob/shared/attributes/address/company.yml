@@ -1,0 +1,12 @@
+type: string
+
+description: >
+  Either `name` or `company` is required,
+  you may also add both. Must be no longer than 40 characters.
+  If both `name` and `company` are provided,
+  they will be printed on two separate lines above the rest of the address.
+  This field can be used for any secondary recipient information which is
+  not part of the actual mailing address (Company Name, Department,
+  Attention Line, etc).
+maxLength: 40
+nullable: true

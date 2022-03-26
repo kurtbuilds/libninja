@@ -1,0 +1,84 @@
+get:
+  operationId: billing_groups_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your billing_groups. The billing_groups are returned sorted by
+    creation date, with the most recently created billing_groups appearing first.
+
+  tags:
+    - Billing Groups
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/offset.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/date_modified.yml"
+    - $ref: "../../shared/parameters/sort_by.yml"
+
+  responses:
+    "200":
+      description: Returns a list of billing_groups.
+      content:
+        $ref: responses/all_billing_groups.yml
+
+    default:
+      $ref: "../../shared/responses/billing_group_list_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/billing_groups?limit=2" \
+        -u <YOUR API KEY>:
+
+post:
+  operationId: billing_group_create
+
+  summary: Create
+
+  description: >-
+    Creates a new billing_group with the provided properties.
+
+  tags:
+    - Billing Groups
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/billing_group_editable.yml"
+        example:
+          name: Marketing Dept
+          description: Usage group used for the Marketing Dept resource sends
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/billing_group_editable.yml"
+        example:
+          name: Marketing Dept
+          description: Usage group used for the Marketing Dept resource sends
+
+      multipart/form-data:
+        schema:
+          $ref: "models/billing_group_editable.yml"
+        example:
+          name: Marketing Dept
+          description: Usage group used for the Marketing Dept resource sends
+
+  responses:
+    "200":
+      $ref: responses/post_billing_group.yml
+
+    default:
+      $ref: "../../shared/responses/billing_group_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/billing_groups \
+        -u <YOUR API KEY>: \
+        -d "name=Marketing Department" \
+        -d "description=Usage group used for the Marketing Department's resource sends"

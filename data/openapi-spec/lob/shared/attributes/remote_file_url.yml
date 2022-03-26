@@ -1,0 +1,7 @@
+type: string
+
+description: >
+  The location of a remote file. Remote URLs have a 20 MB file size limit and
+  must be downloaded within 40 seconds.
+
+pattern: "^https://[-a-zA-Z0-9@:%._+~#=/]{1,256}.(html?|pdf|png|jpg)$"

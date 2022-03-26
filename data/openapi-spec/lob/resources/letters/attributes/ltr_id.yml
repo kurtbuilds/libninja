@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `ltr_`.
+
+pattern: "^ltr_[a-zA-Z0-9]+$"

@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `vrsn_`.
+
+pattern: "^vrsn_[a-zA-Z0-9]+$"

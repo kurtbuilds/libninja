@@ -1,0 +1,17 @@
+allOf:
+  - $ref: "address_editable_intl.yml"
+
+  - type: object
+
+    required:
+      - address_line1
+      - address_country
+
+  - type: object
+
+    oneOf:
+      - required:
+          - address_city
+          - address_state
+      - required:
+          - address_zip

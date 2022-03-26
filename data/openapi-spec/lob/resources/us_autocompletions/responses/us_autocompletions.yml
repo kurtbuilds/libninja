@@ -1,0 +1,82 @@
+description: Returns a US autocompletion object.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/us_autocompletions.yml"
+
+    examples:
+      basic:
+        value:
+          id: us_auto_a3ac97bcfbb2460ab20c
+          suggestions:
+            - primary_line: 185 BAYSIDE VILLAGE PL
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94107"
+            - primary_line: 185 BRANNAN ST
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94107"
+            - primary_line: 185 BONIFACIO ST
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94107"
+            - primary_line: 185 BLAIR TER
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94107"
+            - primary_line: 185 BLUXOME ST
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94107"
+            - primary_line: 210 KING ST
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94107"
+            - primary_line: 185 BRYANT ST
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94107"
+          object: "us_autocompletion"
+      test:
+        value:
+          id: us_auto_a3ac97bcfbb2460ab20c
+          suggestions:
+            - primary_line: 1 TELEPHONE RD
+              city: OXFORD
+              state: AR
+              zip_code: "72565"
+            - primary_line: 1 TELEGA PL
+              city: PALMDALE
+              state: CA
+              zip_code: "93550"
+            - primary_line: 1 TELEGRAM AVE
+              city: ELMONT
+              state: NY
+              zip_code: "11003"
+            - primary_line: 1 TELEGRAM AVE
+              city: GARDEN CITY
+              state: KS
+              zip_code: "67846"
+            - primary_line: 1 TELEGRAPH HILL RD
+              city: HOLMDEL
+              state: NJ
+              zip_code: "07733"
+            - primary_line: 1 TELEGRAPH HILL RD S
+              city: HOLMDEL
+              state: NJ
+              zip_code: "07733"
+            - primary_line: 1 TELEGRAPH HILL BLVD
+              city: SAN FRANCISCO
+              state: CA
+              zip_code: "94133"
+          object: "us_autocompletion"

@@ -1,0 +1,98 @@
+post:
+  operationId: zip_lookup
+
+  summary: Lookups
+
+  description: >-
+    Returns information about a ZIP code
+
+  tags:
+    - Zip Lookups
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../shared/models/zip5.yml"
+        example:
+          zip_code: "94107"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "../../shared/models/zip5.yml"
+        example:
+          zip_code: "94107"
+
+      multipart/form-data:
+        schema:
+          $ref: "../../shared/models/zip5.yml"
+        example:
+          zip_code: "94107"
+
+  responses:
+    "200":
+      $ref: responses/zip_lookups.yml
+
+    default:
+      $ref: responses/zip_lookups_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/us_zip_lookups \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "zip_code=94107"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const ZipLookup = new ZipLookupsApi(av_config);
+        const zipRequest : ZipEditable = {
+          zip_code: "07090"
+        }
+        try {
+          const zipLookup : Zip = await ZipLookup.lookup(zipRequest);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.usZipLookups.lookup({
+          zip_code: '94107'
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.us_zip_lookups.lookup(
+          zip_code: "94107"
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.USZipLookup.create(
+          zip_code='94107'
+        )
+      label: Python
+    - lang: PHP
+      source: |
+        $lob->usZipLookups()->lookup(array(
+          'zip_code' => '94107'
+        ));
+      label: PHP
+    - lang: Java
+      source: |
+        LobResponse<USZipLookup> response = new USZipLookup.RequestBuilder()
+                .setZipCode("94107")
+                .lookup();
+
+        USZipLookup usZipLookup = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.USZipLookup.lookup(%{
+          zip_code: "94107"
+        })
+      label: ELIXIR

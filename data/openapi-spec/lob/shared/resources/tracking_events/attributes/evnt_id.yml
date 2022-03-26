@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `evnt_`.
+
+pattern: "^evnt_[a-zA-Z0-9]+$"

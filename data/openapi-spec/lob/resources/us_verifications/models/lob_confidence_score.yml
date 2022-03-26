@@ -1,0 +1,36 @@
+type: object
+
+description: >-
+  Lob Confidence Score is a nested object that provides a numerical value
+  between 0-100 of the likelihood that an address is deliverable based on Lob’s
+  mail delivery data to over half of US households.
+
+required:
+  - score
+  - level
+
+properties:
+  score:
+    type: number
+    nullable: true
+    format: float
+    description: >
+      A numerical score between 0 and 100 that represents the percentage of mailpieces Lob has sent to this addresses that
+      have been delivered successfully over the past 2 years. Will be `null` if no tracking data exists for this address.
+    default: null
+    minimum: 0
+    maximum: 100
+
+  level:
+    type: string
+    enum:
+      - high
+      - medium
+      - low
+      - ""
+    description: |
+      Indicates the likelihood that the address is a valid, mail-receiving address. Possible values are:
+        - `high` — Over 70% of mailpieces Lob has sent to this address were delivered successfully and recent mailings were also successful.
+        - `medium` — Between 40% and 70% of mailpieces Lob has sent to this address were delivered successfully.
+        - `low` — Less than 40% of mailpieces Lob has sent to this address were delivered successfully and recent mailings weren't successful.
+        - `""` — No tracking data exists for this address or lob deliverability was unable to find a corresponding level of mail success.

@@ -1,0 +1,3 @@
+type: string
+
+pattern: "^bank_[a-zA-Z0-9]+$"

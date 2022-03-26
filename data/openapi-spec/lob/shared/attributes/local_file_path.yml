@@ -1,0 +1,5 @@
+type: string
+
+description: The path to a local file.
+
+pattern: "^(?!https://)[a-zA-Z0-9@:%._+~#=/]{1,256}.(html?|pdf|png|jpg)$"

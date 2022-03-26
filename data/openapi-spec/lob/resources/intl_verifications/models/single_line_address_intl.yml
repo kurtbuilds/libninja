@@ -1,0 +1,15 @@
+type: object
+
+required:
+  - address
+  - country
+
+properties:
+  address:
+    type: string
+    description: >
+      The entire address in one string (e.g., "370 Water St C1N 1C4").
+    maxLength: 500
+
+  country:
+    $ref: "../../../shared/attributes/country_extended.yml"

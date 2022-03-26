@@ -1,0 +1,5 @@
+type: string
+
+description: The postal code.
+
+maxLength: 12

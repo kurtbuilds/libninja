@@ -1,0 +1,44 @@
+type: object
+
+required:
+  - primary_line
+  - city
+  - state
+  - zip_code
+
+properties:
+  primary_line:
+    type: string
+    description: |
+      The primary delivery line (usually the street address) of the address.
+      Combination of the following applicable `components` (primary number &
+      secondary information may be missing or inaccurate):
+      * `primary_number`
+      * `street_predirection`
+      * `street_name`
+      * `street_suffix`
+      * `street_postdirection`
+      * `secondary_designator`
+      * `secondary_number`
+      * `pmb_designator`
+      * `pmb_number`
+
+  city:
+    $ref: "../../../shared/attributes/address/city/city.yml"
+
+  state:
+    $ref: "../../../shared/attributes/address/state.yml"
+
+  zip_code:
+    allOf:
+      - description: >
+          Must be formatted as a US ZIP or ZIP+4 (e.g. `94107`,
+          `941072282`, `94107-2282`).
+      - $ref: "../../../shared/attributes/address/zip_code.yml"
+
+  object:
+    type: string
+    description: Value is resource type.
+    enum:
+      - us_autocompletion
+    default: us_autocompletion

@@ -1,0 +1,117 @@
+description: Returns a US verification object.
+
+headers:
+  ratelimit-limit:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-limit"
+  ratelimit-remaining:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+  ratelimit-reset:
+    $ref: "../../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/us_verification.yml"
+
+    examples:
+      basic:
+        value:
+          id: us_ver_c7cb63d68f8d6
+          recipient: LOB.COM
+          primary_line: 210 KING ST STE 6100
+          secondary_line: ""
+          urbanization: ""
+          last_line: SAN FRANCISCO CA 94107-1728
+          deliverability: deliverable
+          components:
+            primary_number: "185"
+            street_predirection: ""
+            street_name: KING
+            street_suffix: ST
+            street_postdirection: ""
+            secondary_designator: STE
+            secondary_number: "6100"
+            pmb_designator: ""
+            pmb_number: ""
+            extra_secondary_designator: ""
+            extra_secondary_number: ""
+            city: SAN FRANCISCO
+            state: CA
+            zip_code: "94107"
+            zip_code_plus_4: "1728"
+            zip_code_type: standard
+            delivery_point_barcode: "941071728506"
+            address_type: commercial
+            record_type: highrise
+            default_building_address: false
+            county: SAN FRANCISCO
+            county_fips: "06075"
+            carrier_route: C001
+            carrier_route_type: city_delivery
+            latitude: 37.77597542841264
+            longitude: -122.3929557343685
+          deliverability_analysis:
+            dpv_confirmation: Y
+            dpv_cmra: N
+            dpv_vacant: N
+            dpv_active: Y
+            dpv_footnotes:
+              - AA
+              - BB
+            ews_match: false
+            lacs_indicator: ""
+            lacs_return_code: ""
+            suite_return_code: ""
+          lob_confidence_score:
+            score: 100
+            level: high
+          object: us_verification
+      test:
+        value:
+          id: us_ver_po_box
+          recipient: TEST KEYS DO NOT VERIFY ADDRESSES
+          primary_line: PO BOX 720114
+          secondary_line: ""
+          urbanization: ""
+          last_line: SAN FRANCISCO CA 94172-0114
+          deliverability: deliverable
+          components:
+            primary_number: "720114"
+            street_predirection: ""
+            street_name: PO BOX
+            street_suffix: ""
+            street_postdirection: ""
+            secondary_designator: ""
+            secondary_number: ""
+            pmb_designator: ""
+            pmb_number: ""
+            extra_secondary_designator: ""
+            extra_secondary_number: ""
+            city: SAN FRANCISCO
+            state: CA
+            zip_code: "94172"
+            zip_code_plus_4: "0114"
+            zip_code_type: po_box
+            delivery_point_barcode: "941720114146"
+            address_type: residential
+            record_type: po_box
+            default_building_address: false
+            county: SAN FRANCISCO
+            county_fips: "06075"
+            carrier_route: BOO2
+            carrier_route_type: po_box
+            latitude: 37.75971500260575
+            longitude: -122.69397561170017
+          deliverability_analysis:
+            dpv_confirmation: Y
+            dpv_cmra: N
+            dpv_vacant: N
+            dpv_active: Y
+            dpv_footnotes:
+              - AA
+              - BB
+            ews_match: false
+            lacs_indicator: ""
+            lacs_return_code: ""
+            suite_return_code: ""
+          object: us_verification

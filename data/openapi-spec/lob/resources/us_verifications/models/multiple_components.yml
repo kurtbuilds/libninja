@@ -1,0 +1,48 @@
+allOf:
+  - anyOf:
+      - title: US verification object with `city` and `state`
+        required:
+          - city
+          - state
+      - title: US verification object with `zip_code`
+        required:
+          - zip_code
+
+  - type: object
+    required:
+      - primary_line
+
+    properties:
+      recipient:
+        $ref: "../../../shared/attributes/address/recipient.yml"
+
+      primary_line:
+        $ref: "../../../shared/attributes/address/primary_line_us.yml"
+
+      secondary_line:
+        $ref: "../../../shared/attributes/address/secondary_line.yml"
+
+      urbanization:
+        $ref: "../attributes/urbanization.yml"
+
+      city:
+        allOf:
+          - $ref: "../../../shared/attributes/address/city/city_no_description.yml"
+          - type: string
+            description: >-
+              The name of the city. `city` and `state` are required if no `zip_code` is passed.
+
+      state:
+        type: string
+        description: >-
+          The [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2:US) two letter code or subdivision name for
+          the state. `city` and `state` are required if no `zip_code` is passed.
+        maxLength: 50
+
+      zip_code:
+        allOf:
+          - description: >-
+              Required if `city` and `state` are not passed in.
+              If included, must be formatted as a US ZIP or ZIP+4 (e.g. `94107`,
+              `941072282`, `94107-2282`).
+          - $ref: "../../../shared/attributes/address/zip_code.yml"

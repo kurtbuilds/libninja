@@ -1,0 +1,10 @@
+description: Deleted
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/deletion_models/self_mailer_deletion.yml"
+
+    example:
+      id: sfm_123456789
+      deleted: true

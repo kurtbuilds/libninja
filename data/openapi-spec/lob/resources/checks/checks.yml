@@ -1,0 +1,404 @@
+get:
+  operationId: checks_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your checks. The checks are returned sorted by
+    creation date, with the most recently created checks appearing first.
+
+  tags:
+    - Checks
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/metadata.yml"
+    - $ref: "../../shared/parameters/scheduled.yml"
+    - $ref: "../../shared/parameters/send_date.yml"
+    - $ref: "../../shared/parameters/mail_type.yml"
+    - $ref: "../../shared/parameters/sort_by.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_checks.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/checks?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: typescript
+      source: |
+        try {
+          const checks = await new ChecksApi(config).list(2);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.checks.list({limit: 2}, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.checks.list(limit: 2)
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Check.list(limit=2)
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->checks()->all(array(
+          'limit' => 2
+        ));
+    - lang: Java
+      source: |
+        Map<String, Object> params = new HashMap<>();
+        params.put("limit", 2);
+
+        LobResponse<CheckCollection> response = Check.list(params);
+        CheckCollection checks = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Check.list(%{limit: 2})
+      label: ELIXIR
+
+post:
+  operationId: check_create
+
+  summary: Create
+
+  description: >-
+    Creates a new check with the provided properties.
+
+  tags:
+    - Checks
+
+  parameters:
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-header"
+    - $ref: "../../shared/parameters/idempotency.yml#/idem-query"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/check_editable.yml"
+        example:
+          description: Demo Check
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            name: Leore Avidar
+            address_line1: 210 King St
+            address_line2: "# 6100"
+            address_city: San Francisco
+            address_state: CA
+            address_zip: "94107-1741"
+          bank_account: bank_8cad8df5354d33f
+          amount: 22.50
+          memo: rent
+          logo: "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png"
+          check_bottom: tmpl_23668b406d5afef
+          merge_variables:
+            name: Harry
+          metadata:
+            memo: rafting trip
+          attachment: "./cool.pdf"
+          send_date: "2017-11-01T00:00:00.000Z"
+          mail_type: usps_first_class
+          check_number: 10001
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/check_editable.yml"
+        example:
+          description: Demo Check
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            name: Leore Avidar
+            address_line1: 210 King St
+            address_line2: "# 6100"
+            address_city: San Francisco
+            address_state: CA
+            address_zip: "94107-1741"
+          bank_account: bank_8cad8df5354d33f
+          amount: 22.50
+          memo: rent
+          logo: "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png"
+          check_bottom: tmpl_23668b406d5afef
+          merge_variables:
+            name: Harry
+          metadata:
+            memo: rafting trip
+          attachment: "./cool.pdf"
+          send_date: "2017-11-01T00:00:00.000Z"
+          mail_type: usps_first_class
+          check_number: 10001
+        encoding:
+          to:
+            style: deepObject
+            explode: true
+          from:
+            style: deepObject
+            explode: true
+          merge_variables:
+            style: deepObject
+            explode: true
+          metadata:
+            style: deepObject
+            explode: true
+
+      multipart/form-data:
+        schema:
+          $ref: "models/check_editable.yml"
+        example:
+          description: Demo Check
+          to:
+            description: "Harry - Office"
+            name: "Harry Zhang"
+            company: "Lob"
+            email: "harry@lob.com"
+            phone: "5555555555"
+            address_line1: "210 King St"
+            address_line2: "# 6100"
+            address_city: "San Francisco"
+            address_state: "CA"
+            address_zip: "94107"
+            address_country: "US"
+          from:
+            name: Leore Avidar
+            address_line1: 210 King St
+            address_line2: "# 6100"
+            address_city: San Francisco
+            address_state: CA
+            address_zip: "94107-1741"
+          bank_account: bank_8cad8df5354d33f
+          amount: 22.50
+          memo: rent
+          logo: "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png"
+          check_bottom: tmpl_23668b406d5afef
+          merge_variables:
+            name: Harry
+          metadata:
+            memo: rafting trip
+          attachment: "./cool.pdf"
+          send_date: "2017-11-01T00:00:00.000Z"
+          mail_type: usps_first_class
+          check_number: 10001
+        encoding:
+          logo:
+            contentType: image/png, image/jpeg
+
+  responses:
+    "200":
+      $ref: responses/post_check.yml
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/checks \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Demo Check" \
+          -d "to[name]=Harry Zhang" \
+          -d "to[address_line1]=210 King St" \
+          -d "to[address_line2]=# 6100" \
+          -d "to[address_city]=San Francisco" \
+          -d "to[address_state]=CA" \
+          -d "to[address_zip]=94107" \
+          -d "from=adr_210a8d4b0b76d77b" \
+          -d "bank_account=bank_8cad8df5354d33f" \
+          -d "amount=22.50" \
+          -d "memo=rent" \
+          --data-urlencode "logo=https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png" \
+          --data-urlencode "check_bottom=<h1 style='padding-top:4in;'>Demo Check for {{name}}</h1>" \
+          -d "merge_variables[name]=Harry"
+      label: CURL
+    - lang: typescript
+      source: |
+        const checkCreate: CheckEditable = new CheckEditable({
+          to: addressId,
+          from: addressId,
+          bank_account: bankAccountId,
+          amount: 100
+        });
+
+        try {
+          const myCheck = await new ChecksApi(config).create(checkCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.checks.create({
+          description: 'Demo Check',
+          bank_account: 'bank_8cad8df5354d33f',
+          to: {
+            name: 'Harry Zhang',
+            address_line1: '210 King St',
+            address_line2: '# 6100',
+            address_city: 'San Francisco',
+            address_state: 'CA',
+            address_zip: '94107'
+          },
+          from: 'adr_210a8d4b0b76d77b',
+          amount: 22.50,
+          memo: 'rent',
+          logo: 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png',
+          check_bottom: '<h1 style="padding-top:4in;">Demo Check for {{name}}</h1>',
+          merge_variables: {
+            name: 'Harry'
+          }
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.checks.create(
+          description: "Demo Check",
+          bank_account: "bank_8cad8df5354d33f",
+          to: {
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_line2: "# 6100",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          amount: 22.50,
+          memo: "rent",
+          logo: "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png",
+          check_bottom: "<h1 style='padding-top:4in;'>Demo Check for {{name}}</h1>",
+          merge_variables: {
+            name: "Harry"
+          }
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Check.create(
+          description = 'Demo Check',
+          to_address = {
+            'name': 'Harry Zhang',
+            'address_line1': '210 King St',
+            'address_line2': '# 6100',
+            'address_city': 'San Francisco',
+            'address_state': 'CA',
+            'address_zip': '94107'
+          },
+          from_address = 'adr_210a8d4b0b76d77b',
+          bank_account = 'bank_8cad8df5354d33f',
+          amount = 22.50,
+          memo = 'rent',
+          logo = 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png',
+          check_bottom = '<h1 style="padding-top:4in;">Demo Check for {{name}}</h1>',
+          merge_variables = {
+            'name': 'Harry'
+          }
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->checks()->create(array(
+          'description'           => 'Demo Check',
+          'to[name]'              => 'Harry Zhang',
+          'to[address_line1]'     => '210 King St',
+          'to[address_line2]'     => '# 6100',
+          'to[address_city]'      => 'San Francisco',
+          'to[address_zip]'       => '94107',
+          'to[address_state]'     => 'CA',
+          'from'                  => 'adr_210a8d4b0b76d77b',
+          'bank_account'          => 'bank_8cad8df5354d33f',
+          'amount'                => 22.50,
+          'memo'                  => 'rent',
+          'logo'                  => 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png',
+          'check_bottom'          => '<h1 style="padding-top:4in;">Demo Check for {{name}}</h1>',
+          'merge_variables[name]' => 'Harry'
+        ));
+    - lang: Java
+      source: |
+        Map<String, String> mergeVariables = new HashMap<>();
+        mergeVariables.put("name", "Harry");
+
+        LobResponse<Check> response = new Check.RequestBuilder()
+                .setDescription("Demo Check")
+                .setCheckBottom("<h1 style='padding-top:4in;'>Demo Check for {{name}}</h1>")
+                .setMergeVariables(mergeVariables)
+                .setAmount(22.50f)
+                .memo("rent")
+                .setLogo("https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png")
+                .setTo(
+                        new Address.RequestBuilder()
+                                .setName("Harry Zhang")
+                                .setLine1("210 King St Ste 6100")
+                                .setCity("San Francisco")
+                                .setState("CA")
+                                .setZip("94107")
+                )
+                .setFrom("adr_210a8d4b0b76d77b")
+                .setBankAccount("bank_8cad8df5354d33f")
+                .create();
+
+        Check check = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Check.create(%{
+          description: "Demo Check",
+          bank_account: "bank_8cad8df5354d33f",
+          to: %{
+            name: "Harry Zhang",
+            address_line1: "210 King St",
+            address_line2: "# 6100",
+            address_city: "San Francisco",
+            address_state: "CA",
+            address_zip: "94107"
+          },
+          from: "adr_210a8d4b0b76d77b",
+          amount: 22.50,
+          memo: "rent",
+          logo: "https://s3-us-west-2.amazonaws.com/public.lob.com/assets/check_logo.png",
+          check_bottom: "<h1 style='padding-top:4in;'>Demo Check for {{name}}</h1>",
+          merge_variables: %{
+            name: "Harry"
+          }
+        })
+      label: ELIXIR

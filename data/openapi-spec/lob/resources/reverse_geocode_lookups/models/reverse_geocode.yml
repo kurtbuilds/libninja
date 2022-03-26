@@ -1,0 +1,28 @@
+type: object
+
+properties:
+  id:
+    $ref: "../attributes/reverse_geocode_id.yml"
+
+  addresses:
+    type: array
+    description: |
+      list of addresses
+    items:
+      $ref: "./addresses.yml"
+
+  # components:
+  #   $ref: "../models/components_us.yml"
+
+  # deliverability_analysis:
+  #   $ref: "../models/deliverability_analysis.yml"
+
+  # lob_confidence_score:
+  #   $ref: "../models/lob_confidence_score.yml"
+
+  object:
+    type: string
+    description: Value is resource type.
+    enum:
+      - us_reverse_geocode_lookup
+    default: us_reverse_geocode_lookup

@@ -1,0 +1,4 @@
+type: string
+description: Description of the card.
+maxLength: 255
+nullable: true

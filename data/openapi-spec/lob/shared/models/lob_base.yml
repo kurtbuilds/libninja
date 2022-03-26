@@ -1,0 +1,19 @@
+type: object
+
+required:
+  - date_created
+  - date_modified
+  - object
+
+properties:
+  date_created:
+    $ref: "../attributes/timestamps.yml#/date_created"
+
+  date_modified:
+    $ref: "../attributes/timestamps.yml#/date_modified"
+
+  deleted:
+    $ref: "../attributes/deleted.yml"
+
+  object:
+    $ref: "../attributes/object.yml"

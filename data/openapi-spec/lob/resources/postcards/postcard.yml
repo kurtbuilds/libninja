@@ -1,0 +1,134 @@
+parameters:
+  - in: path
+    name: psc_id
+    description: id of the postcard
+    required: true
+    schema:
+      $ref: "attributes/psc_id.yml"
+
+get:
+  operationId: postcard_retrieve
+
+  summary: Retrieve
+
+  description: >-
+    Retrieves the details of an existing postcard. You need only supply
+    the unique customer identifier that was returned upon postcard creation.
+
+  tags:
+    - Postcards
+
+  responses:
+    "200":
+      description: Returns a postcard object
+      content:
+        $ref: "responses/postcard.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/postcards/psc_5c002b86ce47537a \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Javascript
+      source: |
+        try {
+          const postcard = await new PostCardsApi(config).get("psc_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.postcards.retrieve('psc_5c002b86ce47537a', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.postcards.find("psc_5c002b86ce47537a")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Postcard.retrieve('psc_5c002b86ce47537a')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->postcards()->get('psc_5c002b86ce47537a');
+    - lang: Java
+      source: |
+        LobResponse<Postcard> response = Postcard.retrieve("psc_5c002b86ce47537a");
+        Postcard postcard = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Postcard.find("psc_5c002b86ce47537a")
+      label: ELIXIR
+
+delete:
+  operationId: postcard_delete
+
+  summary: Cancel
+
+  description: >-
+    Completely removes a postcard from production. This can only be done if
+    the postcard has a `send_date` and the `send_date` has not yet passed.
+    If the postcard is successfully canceled, you will not be charged for it.
+    Read more on [cancellation windows](#section/Cancellation-Windows)
+    and [scheduling](#section/Scheduled-Mailings). Scheduling and
+    cancellation is a premium feature. Upgrade to the appropriate
+    [Print & Mail Edition](https://dashboard.lob.com/#/settings/editions)
+    to gain access.
+
+  tags:
+    - Postcards
+
+  responses:
+    "200":
+      $ref: "../../shared/responses/postcard_deleted.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X DELETE https://api.lob.com/v1/postcards/psc_5c002b86ce47537a \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: typescript
+      source: |
+        try {
+          const deletePostcard = await new PostcardsApi(config).delete("psc_xxxx");
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.postcards.delete('psc_5c002b86ce47537a', function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.postcards.destroy("psc_5c002b86ce47537a")
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Postcard.delete('psc_5c002b86ce47537a')
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->postcards()->delete('psc_5c002b86ce47537a');
+    - lang: Java
+      source: |
+        LobResponse<Postcard> deleteResponse = Postcard.delete("psc_5c002b86ce47537a");
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Postcard.destroy("psc_5c002b86ce47537a")
+      label: ELIXIR

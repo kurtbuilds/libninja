@@ -1,0 +1,6 @@
+type: string
+
+description: |
+  The primary delivery line (usually the street address) of the address.
+
+maxLength: 200

@@ -1,0 +1,10 @@
+description: Deleted the card
+
+content:
+  application/json:
+    schema:
+      $ref: "../models/deletion_models/card_deletion.yml"
+
+    example:
+      id: card_123456789
+      deleted: true

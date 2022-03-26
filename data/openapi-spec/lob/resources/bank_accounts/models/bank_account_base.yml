@@ -1,0 +1,42 @@
+type: object
+
+required:
+  - routing_number
+  - account_number
+  - account_type
+  - signatory
+
+# add editable properties unique to this form factor
+# that are stored as input (without transformation) here
+properties:
+  description:
+    $ref: "../../../shared/attributes/resource_description.yml"
+
+  routing_number:
+    description: Must be a [valid US routing number](https://www.frbservices.org/index.html).
+    type: string
+    minLength: 9
+    maxLength: 9
+
+  account_number:
+    type: string
+    maxLength: 17
+
+  account_type:
+    type: string
+    enum:
+      - company
+      - individual
+    description: The type of entity that holds the account.
+
+  signatory:
+    description: >-
+      The signatory associated with your account. This name will be printed on
+      checks created with this bank account. If you prefer to use a custom
+      signature image on your checks instead, please create your bank account
+      from the [Dashboard](https://dashboard.lob.com/#/login).
+    type: string
+    maxLength: 30
+
+  metadata:
+    $ref: "../../../shared/models/metadata.yml"

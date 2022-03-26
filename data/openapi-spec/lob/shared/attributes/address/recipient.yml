@@ -1,0 +1,7 @@
+type: string
+
+description: The intended recipient, typically a person's or firm's name.
+
+nullable: true
+
+maxLength: 500

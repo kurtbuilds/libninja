@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `chk_`.
+
+pattern: "^chk_[a-zA-Z0-9]+$"

@@ -1,0 +1,13 @@
+type: string
+description: Unique identifier referring to status of check
+enum:
+  - check.created
+  - check.rendered_pdf
+  - check.rendered_thumbnails
+  - check.deleted
+  - check.mailed
+  - check.in_transit
+  - check.in_local_area
+  - check.processed_for_delivery
+  - check.re-routed
+  - check.returned_to_sender

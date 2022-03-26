@@ -1,0 +1,14 @@
+date_created:
+  type: string
+  format: date-time
+  description: A timestamp in ISO 8601 format of the date the resource was created.
+
+date_modified:
+  type: string
+  format: date-time
+  description: A timestamp in ISO 8601 format of the date the resource was last modified.
+
+date_deleted:
+  type: string
+  format: date-time
+  description: A timestamp in ISO 8601 format of the date the resource was deleted.

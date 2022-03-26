@@ -1,0 +1,5 @@
+type: string
+
+description: Generic identifier prefixed with `xxx_`.
+
+pattern: "^xxx_[a-zA-Z0-9]+$"

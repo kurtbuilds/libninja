@@ -1,0 +1,363 @@
+get:
+  operationId: addresses_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your addresses. The addresses are returned sorted by
+    creation date, with the most recently created addresses appearing first.
+
+  tags:
+    - Addresses
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/metadata.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_addresses.yml
+
+    default:
+      $ref: responses/address_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/addresses/?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const addresses = await new AddressesApi(config).list(2);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.addresses.list({limit: 2}, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.addresses.list(limit: 2)
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Address.list(limit=2)
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->addresses()->all(array(
+          'limit' => 2
+        ));
+    - lang: Java
+      source: |
+        Map<String, Object> params = new HashMap<>();
+        params.put("limit", 2);
+
+        LobResponse<AddressCollection> response = Address.list(params);
+        AddressCollection addresses = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Address.list(%{limit: 2})
+      label: ELIXIR
+
+post:
+  operationId: address_create
+
+  summary: Create
+
+  description: >-
+    Creates a new address given information
+
+  tags:
+    - Addresses
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../shared/models/address/address_editable.yml"
+        examples:
+          full_us:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "210 King St"
+              address_line2: "# 6100"
+              address_city: "San Francisco"
+              address_state: "CA"
+              address_zip: "94107"
+              address_country: "US"
+          ncoa_us_test:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "NCOA"
+              address_line2: "#6100"
+              address_city: "San Francisco"
+              address_state: "CA"
+              address_zip: "94107"
+              address_country: "US"
+          full_intl:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "370 WATER ST"
+              address_line2: ""
+              address_city: "SUMMERSIDE"
+              address_state: "PRINCE EDWARD ISLAND"
+              address_zip: "C1N 1C4"
+              address_country: "CA"
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "../../shared/models/address/address_editable.yml"
+        examples:
+          full_us:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "210 King St"
+              address_line2: "# 6100"
+              address_city: "San Francisco"
+              address_state: "CA"
+              address_zip: "94107"
+              address_country: "US"
+          ncoa_us_test:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "NCOA"
+              address_line2: "# 6100"
+              address_city: "San Francisco"
+              address_state: "CA"
+              address_zip: "94107"
+              address_country: "US"
+          full_intl:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "370 WATER ST"
+              address_line2: ""
+              address_city: "SUMMERSIDE"
+              address_state: "PRINCE EDWARD ISLAND"
+              address_zip: "C1N 1C4"
+              address_country: "CA"
+        encoding:
+          metadata:
+            style: deepObject
+            explode: true
+
+      multipart/form-data:
+        schema:
+          $ref: "../../shared/models/address/address_editable.yml"
+        examples:
+          full_us:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "210 King St"
+              address_line2: "# 6100"
+              address_city: "San Francisco"
+              address_state: "CA"
+              address_zip: "94107"
+              address_country: "US"
+          ncoa_us_test:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "NCOA"
+              address_line2: "# 6100"
+              address_city: "San Francisco"
+              address_state: "CA"
+              address_zip: "94107"
+              address_country: "US"
+          full_intl:
+            value:
+              description: "Harry - Office"
+              name: "Harry Zhang"
+              company: "Lob"
+              email: "harry@lob.com"
+              phone: "5555555555"
+              address_line1: "370 WATER ST"
+              address_line2: ""
+              address_city: "SUMMERSIDE"
+              address_state: "PRINCE EDWARD ISLAND"
+              address_zip: "C1N 1C4"
+              address_country: "CA"
+
+  responses:
+    "200":
+      $ref: "responses/post_address.yml"
+
+    default:
+      $ref: responses/address_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/addresses \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Harry - Office" \
+          -d "name=Harry Zhang" \
+          -d "company=Lob" \
+          -d "email=harry@lob.com" \
+          -d "phone=5555555555" \
+          -d "address_line1=210 King St" \
+          -d "address_line2=# 6100" \
+          -d "address_city=San Francisco" \
+          -d "address_state=CA" \
+          -d "address_zip=94107" \
+          -d "address_country=US"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const addressCreate = new AddressEditable({
+          name: "Thing T. Thing",
+          address_line1: "1313 CEMETERY LN",
+          address_line2: ""
+          address_city: "WESTFIELD",
+          address_state: "NJ",
+          address_zip: "07090",
+          address_county: "US"
+        });
+
+        try {
+          const myAddress = await new AddressesApi(config).create(addressCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.addresses.create({
+          description: 'Harry - Office',
+          name: 'Harry Zhang',
+          company: 'Lob',
+          email: 'harry@lob.com',
+          phone: '5555555555',
+          address_line1: '210 King St',
+          address_line2: '# 6100',
+          address_city: 'San Francisco',
+          address_state: 'CA',
+          address_zip: '94107',
+          address_country: 'US',
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.addresses.create(
+          description: "Harry - Office",
+          name: "Harry Zhang",
+          company: "Lob",
+          email: "harry@lob.com",
+          phone: "5555555555",
+          address_line1: "210 King St",
+          address_line2: "# 6100",
+          address_city: "San Francisco",
+          address_state: "CA",
+          address_country: "US",
+          address_zip: "94107"
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.Address.create(
+          description='Harry - Office',
+          name='Harry Zhang',
+          company='Lob',
+          email='harry@lob.com',
+          phone='5555555555',
+          address_line1='210 King St',
+          address_line2='# 6100',
+          address_city='San Francisco',
+          address_state='CA',
+          address_zip='94107',
+          address_country='US',
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->addresses()->create(array(
+          'description'       => 'Harry - Office',
+          'name'              => 'Harry Zhang',
+          'company'           => 'Lob',
+          'address_line1'     => '210 King St',
+          'address_line2'     => '# 6100',
+          'address_city'      => 'San Francisco',
+          'address_state'     => 'CA',
+          'address_country'   => 'US',
+          'address_zip'       => '94107',
+          'email'             => 'harry@lob.com',
+          'phone'             => '5555555555'
+        ));
+    - lang: Java
+      source: |
+        LobResponse<Address> response = new Address.RequestBuilder()
+                .setDescription("Harry - Office")
+                .setName("Harry Zhang")
+                .setCompany("Lob")
+                .setLine1("210 King St")
+                .setLine2("# 6100")
+                .setCity("San Francisco")
+                .setState("CA")
+                .setZip("94107")
+                .setCountry("US")
+                .setPhone("555-555-5555")
+                .setEmail("harry@lob.com")
+                .create();
+
+        Address address = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.Address.create(%{
+          description: "Harry - Office",
+          name: "Harry Zhang",
+          company: "Lob",
+          email: "harry@lob.com",
+          phone: "5555555555",
+          address_line1: "210 King St",
+          address_line2: "# 6100",
+          address_city: "San Francisco",
+          address_state: "CA",
+          address_country: "US",
+          address_zip: "94107"
+        })
+      label: ELIXIR

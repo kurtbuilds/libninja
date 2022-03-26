@@ -1,0 +1,174 @@
+get:
+  operationId: templates_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your templates. The templates are returned sorted by
+    creation date, with the most recently created templates appearing first.
+
+  tags:
+    - Templates
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/include.yml"
+    - $ref: "../../shared/parameters/date_created.yml"
+    - $ref: "../../shared/parameters/metadata.yml"
+
+  responses:
+    "200":
+      $ref: responses/all_templates.yml
+
+    default:
+      $ref: "../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/templates?limit=2" \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const templates = await new TemplatesApi(config).list(2);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR
+
+post:
+  operationId: create_template
+
+  summary: Create
+
+  description: >-
+    Creates a new template for use with the Print & Mail API. In Live mode,
+    you can only have as many non-deleted templates as allotted in your
+    current [Print & Mail Edition](https://dashboard.lob.com/#/settings/editions).
+    If you attempt to create a template past your limit, you will receive a
+    `403` error. There is no limit in Test mode.
+
+  tags:
+    - Templates
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/template_writable.yml"
+        example:
+          description: demo
+          html: "<html>HTML for {{name}}</html>"
+          metadata:
+            spiffy: "true"
+          engine: handlebars
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/template_writable.yml"
+        example:
+          description: demo
+          html: "<html>HTML for {{name}}</html>"
+          metadata:
+            spiffy: "true"
+          engine: handlebars
+
+      multipart/form-data:
+        schema:
+          $ref: "models/template_writable.yml"
+        example:
+          description: demo
+          html: "<html>HTML for {{name}}</html>"
+          metadata:
+            spiffy: "true"
+          engine: handlebars
+
+  responses:
+    "200":
+      description: Returns a template object
+
+      headers:
+        ratelimit-limit:
+          $ref: "../../shared/headers/ratelimit.yml#/ratelimit-limit"
+        ratelimit-remaining:
+          $ref: "../../shared/headers/ratelimit.yml#/ratelimit-remaining"
+        ratelimit-reset:
+          $ref: "../../shared/headers/ratelimit.yml#/ratelimit-reset"
+
+      content:
+        $ref: responses/template.yml
+
+    default:
+      $ref: "../../shared/responses/template_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/templates \
+          -u test_0dc8d51e0acffcb1880e0f19c79b2f5b0cc: \
+          -d "description=Test Template" \
+          --data-urlencode "html=<html>HTML for {{name}}</html>"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const templateCreate = new TemplateWritable({
+          description: "Newer Template",
+          html: "<html>Updated HTML for {{name}}</html>"
+        });
+
+        try {
+          const myTemplate = await new TemplatesApi(config).create(templateCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        This feature is not currently supported by this library.
+      label: NODE
+    - lang: Ruby
+      source: |
+        This feature is not currently supported by this library.
+      label: RUBY
+    - lang: Python
+      source: |
+        This feature is not currently supported by this library.
+      label: PYTHON
+    - lang: PHP
+      source: |
+        This feature is not currently supported by this library.
+    - lang: Java
+      source: |
+        This feature is not currently supported by this library.
+      label: JAVA
+    - lang: Elixir
+      source: |
+        This feature is not currently supported by this library.
+      label: ELIXIR

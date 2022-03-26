@@ -1,0 +1,10 @@
+type: string
+
+enum:
+  - 6x18_bifold
+  - 11x9_bifold
+  - 12x9_bifold
+
+description: Specifies the size of the self mailer.
+
+default: 6x18_bifold

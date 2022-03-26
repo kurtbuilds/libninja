@@ -1,0 +1,24 @@
+allOf:
+  - $ref: "billing_group_base.yml"
+
+  - type: object
+    # Add any properties that are specific to this form factor
+    # that are generated when a new mailpiece is created here.
+    # Be sure to include the stored versions of any form factor
+    # specific input properties you added to the 'editable' schema.
+    properties:
+      id:
+        $ref: "../attributes/bg_id.yml"
+
+      date_created:
+        $ref: "../../../shared/attributes/timestamps.yml#/date_created"
+
+      date_modified:
+        $ref: "../../../shared/attributes/timestamps.yml#/date_modified"
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - "billing_group"
+        default: "billing_group"

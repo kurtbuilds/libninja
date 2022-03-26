@@ -1,0 +1,27 @@
+type: object
+
+required:
+  - address_prefix
+  - country
+
+properties:
+  address_prefix:
+    type: string
+    description: >
+      Only accepts numbers and street names in an alphanumeric format.
+  city:
+    type: string
+    description: >
+      An optional city input used to filter suggestions. Case insensitive and
+      does not match partial abbreviations.
+  state:
+    type: string
+    description: >
+      An optional state input used to filter suggestions. Case insensitive and does not match
+      partial abbreviations.
+  zip_code:
+    type: string
+    description: >
+      An optional Zip Code input used to filter suggestions. Matches partial entries.
+  country:
+    $ref: "../../../shared/attributes/country_extended.yml"

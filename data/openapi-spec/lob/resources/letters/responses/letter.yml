@@ -1,0 +1,94 @@
+application/json:
+  schema:
+    $ref: "../models/letter.yml"
+  example:
+    id: ltr_4868c3b754655f90
+    description: Demo Letter
+    metadata: {}
+    to:
+      id: adr_d3489cd64c791ab5
+      description: null
+      name: HARRY ZHANG
+      company: null
+      phone: null
+      email: null
+      address_line1: 210 KING ST STE 6100
+      address_line2: null
+      address_city: SAN FRANCISCO
+      address_state: CA
+      address_zip: 94107-1741
+      address_country: UNITED STATES
+      metadata: {}
+      date_created: "2017-09-05T15:54:53.264Z"
+      date_modified: "2017-09-05T15:54:53.264Z"
+      deleted: true
+      object: address
+    from:
+      id: adr_b8fb5acf3a2b55db
+      description: null
+      name: LEORE AVIDAR
+      company: null
+      phone: null
+      email: null
+      address_line1: 210 KING ST STE 6100
+      address_line2: null
+      address_city: SAN FRANCISCO
+      address_state: CA
+      address_zip: 94107-1741
+      address_country: UNITED STATES
+      metadata: {}
+      date_created: "2017-09-05T15:54:53.264Z"
+      date_modified: "2017-09-05T15:54:53.264Z"
+      deleted: true
+      object: address
+    color: true
+    double_sided: true
+    address_placement: top_first_page
+    return_envelope: false
+    perforated_page: null
+    custom_envelope: null
+    extra_service: null
+    mail_type: usps_first_class
+    url: https://lob-assets.com/letters/ltr_4868c3b754655f90.pdf?expires=1540372221&signature=8r94fse8uam7wGWmW5baxXulU88X2CA
+    carrier: USPS
+    tracking_number: null
+    tracking_events: []
+    thumbnails:
+      - small: https://lob-assets.com/letters/ltr_4868c3b754655f90_thumb_small_1.png?expires=1540372221&signature=a5fRBJ22ZA78Vgpg34M9UfmHWTS3eha
+        medium: https://lob-assets.com/letters/ltr_4868c3b754655f90_thumb_medium_1.png?expires=1540372221&signature=bAzL8sv935PY09FWSkpDpWKkyvGSWYF
+        large: https://lob-assets.com/letters/ltr_4868c3b754655f90_thumb_large_1.png?expires=1540372221&signature=gsKvxXgrm4v4iZD3bOibK7jApNkEMdW
+    merge_variables:
+      name: Harry
+    expected_delivery_date: "2017-09-12"
+    date_created: "2017-09-05T15:54:53.346Z"
+    date_modified: "2017-09-05T15:54:53.346Z"
+    send_date: "2017-09-05T15:54:53.346Z"
+    cards:
+      - id: "card_c51ae96f5cebf3e"
+        account_id: "fa9ea650fc7b31a89f92"
+        description: null
+        url: "https://lob-assets.com/cards/card_c51ae96f5cebf3e.pdf?version=v1&expires=1636910992&signature=mnsDH2DAxdkN9VibdlLMxJC86sME5WYDqkNtmvGwdNsAaUWfbnv0rJhJ1mR8Ol4uxQq61j5wYZ0r3s-lBkQfDA"
+        size: "2.125x3.375"
+        auto_reorder: false
+        reorder_quantity: null
+        raw_url: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_raw.pdf?version=v1&expires=1636910992&signature=-bZo31FMAp2vmNaZKyXn_Qa4APqwtNinw76FrQ7uyQejFZw6VBQQYfoiQ642iXh0H2K5i2aOo8_BAkt3UJdVDw"
+        front_original_url: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_raw.pdf?version=v1&expires=1636910992&signature=-bZo31FMAp2vmNaZKyXn_Qa4APqwtNinw76FrQ7uyQejFZw6VBQQYfoiQ642iXh0H2K5i2aOo8_BAkt3UJdVDw"
+        back_original_url: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_raw.pdf?version=v1&expires=1636910992&signature=-bZo31FMAp2vmNaZKyXn_Qa4APqwtNinw76FrQ7uyQejFZw6VBQQYfoiQ642iXh0H2K5i2aOo8_BAkt3UJdVDw"
+        thumbnails:
+          - small: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_thumb_small_1.png?version=v1&expires=1636910992&signature=mrv8JDvpZK4I8WUGH0tPdtK-My5oes0Ltj_gL7BDw96SpCTTeZFHkz81SzclyFP9dQRtlsvAsjcuGcTBvCvOCg"
+            medium: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_thumb_medium_1.png?version=v1&expires=1636910992&signature=VgL_2Ckm_kxKiWGgWtdNoy9HHOn8dGYSVOn7UqyCbwdbVlUtx28TRN4Bo8Iru3n0keKp9He0YhKT1ILotznMDA"
+            large: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_thumb_large_1.png?version=v1&expires=1636910992&signature=FKSzymA13j-CQ0uk20cGHZTzT3vimzNBYrgp-xifLFg4mMdo1BZALR5O0aF_jVhsX614hKP35ONdYl47TQxXAw"
+          - small: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_thumb_small_2.png?version=v1&expires=1636910992&signature=IWsmPa_ULlv2yyqjX564d_YfHHY_M7i9YxDnw-WXDr2jtOFcArmRZQbnHeE9g_rYxnddJbgosuv8-c2utiu7Cg"
+            medium: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_thumb_medium_2.png?version=v1&expires=1636910992&signature=zxK7VKGiTvz5Ywrkaydd0v3GcYf58R7A08J4tNfI7-aiNODDcTF3l0MqY13n9Pyc8RXSdD0XVBY-OpbA1VM-Ag"
+            large: "https://lob-assets.com/cards/card_c51ae96f5cebf3e_thumb_large_2.png?version=v1&expires=1636910992&signature=r0OFUhh315ZwN0raMZdIwJd2oCIEYsz0BABaMxIuO1PKTD0ckGWrhcGdzk2dlWQ6vSvp0CUQ5k1RXGqkIIqkDw"
+        available_quantity: 10000
+        pending_quantity: 0
+        countries: null
+        status: "rendered"
+        mode: "test"
+        orientation: "horizontal"
+        threshold_amount: 0
+        date_created: "2017-08-05T15:54:53.346Z"
+        date_modified: "2017-08-05T15:54:53.346Z"
+        object: "card"
+    object: letter

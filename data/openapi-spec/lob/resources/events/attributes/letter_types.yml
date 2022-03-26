@@ -1,0 +1,28 @@
+type: string
+description: Unique identifier referring to status of letter
+enum:
+  - letter.created
+  - letter.rendered_pdf
+  - letter.rendered_thumbnails
+  - letter.deleted
+  - letter.mailed
+  - letter.in_transit
+  - letter.in_local_area
+  - letter.processed_for_delivery
+  - letter.re-routed
+  - letter.returned_to_sender
+  - letter.certified.mailed
+  - letter.certified.in_transit
+  - letter.certified.in_local_area
+  - letter.certified.processed_for_delivery
+  - letter.certified.re-routed
+  - letter.certified.returned_to_sender
+  - letter.certified.delivered
+  - letter.certified.pickup_available
+  - letter.certified.issue
+  - letter.return_envelope.created
+  - letter.return_envelope.in_transit
+  - letter.return_envelope.in_local_area
+  - letter.return_envelope.processed_for_delivery
+  - letter.return_envelope.re_routed
+  - letter.return_envelope.returned_to_sender

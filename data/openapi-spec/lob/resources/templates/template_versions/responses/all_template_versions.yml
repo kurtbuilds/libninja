@@ -1,0 +1,37 @@
+description: >-
+  A dictionary with a data property that contains an array of up to `limit`
+  template versions. Each entry in the array is a separate template version
+  object. The previous and next page of template versions can be retrieved by
+  calling the endpoint contained in the `previous_url` and `next_url` fields in
+  the API response respectively.<br>If no more template versions are available
+  beyond the current set of returned results, the `next_url` field will be
+  empty.
+
+content:
+  application/json:
+    schema:
+      allOf:
+        - $ref: "../../../../shared/models/list.yml"
+        - type: object
+          properties:
+            data:
+              type: array
+              description: list of template versions
+              items:
+                $ref: "../models/template_version.yml"
+    example:
+      data:
+        - id: vrsn_4d6ff5d868bf630
+          description: Second Version
+          html: "Second HTML for "
+          date_created: "2017-11-09T05:09:03.665Z"
+          date_modified: "2018-05-22T22:01:10.479Z"
+          object: version
+        - id: vrsn_2a17159c1911919
+          description: Test Template
+          html: "HTML for "
+          date_created: "2017-11-09T05:08:40.004Z"
+          date_modified: "2018-05-22T22:01:11.309Z"
+          object: version
+      object: list
+      count: 2

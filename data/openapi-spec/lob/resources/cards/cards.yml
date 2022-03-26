@@ -1,0 +1,159 @@
+get:
+  operationId: cards_list
+
+  summary: List
+
+  description: >-
+    Returns a list of your cards. The cards are returned sorted by
+    creation date, with the most recently created addresses appearing first.
+
+  tags:
+    - Cards
+
+  parameters:
+    - $ref: "../../shared/parameters/limit.yml"
+    - $ref: "../../shared/parameters/before_after.yml"
+    - $ref: "../../shared/parameters/sort_by.yml"
+
+  responses:
+    "200":
+      description: Returns a list of card objects
+      content:
+        $ref: "responses/all_cards.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl -X GET "https://api.lob.com/v1/cards?limit=2" \
+          -u <YOUR API KEY>:
+      label: CURL
+    - lang: Typescript
+      source: |
+        try {
+          const cards = await new CardsApi(config).list(2);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.cards.list({limit: 2}, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Python
+      source: |
+        lob.Card.list(limit=2)
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->cards()->all(array(
+          'limit' => 2
+        ));
+
+post:
+  operationId: card_create
+
+  summary: Create
+
+  description: >-
+    Creates a new card given information
+
+  tags:
+    - Cards
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "models/card_editable.yml"
+        example:
+          description: Test card
+          front: https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf
+          back: https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf
+          size: 2.125x3.375
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "models/card_editable.yml"
+        example:
+          description: Test card
+          front: https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf
+          back: https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf
+          size: 2.125x3.375
+
+      multipart/form-data:
+        schema:
+          $ref: "models/card_editable.yml"
+        example:
+          description: Test card
+          front: https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf
+          back: https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf
+          size: 2.125x3.375
+
+  responses:
+    "200":
+      description: Card created successfully
+      content:
+        $ref: "responses/card.yml"
+
+    default:
+      $ref: "../../shared/responses/mailpiece_error.yml"
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/cards \
+          -u <YOUR API KEY>: \
+          -d "description=Test card" \
+          -d "front=https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf" \
+          -d "back=https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf" \
+          -d "size=2.125x3.375"
+      label: CURL
+    - lang: Typescript
+      source: |
+        const cardsCreate = new CardEditable({
+          front: 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          back: 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          size: CardEditableSizeEnum._2125x3375,
+          description: "Test card",
+        });
+
+        try {
+          const myCard = await new CardsApi(config).create(cardsCreate);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.cards.create({
+          description: 'Test card',
+          front: 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          back: 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          size: '2.125x3.375'
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Python
+      source: |
+        lob.Card.create(
+          description = 'Test card',
+          front = 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          back = 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          size = '2.125x3.375'
+        )
+      label: PYTHON
+    - lang: PHP
+      source: |
+        $lob->cards()->create(array(
+          'description'           => 'Test card',
+          'front'                 => 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          'back'                  => 'https://s3-us-west-2.amazonaws.com/public.lob.com/assets/card_horizontal.pdf',
+          'size' =>               => '2.125x3.375'
+        ));

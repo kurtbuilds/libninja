@@ -1,0 +1,60 @@
+allOf:
+  - $ref: "self_mailer_base.yml"
+  - $ref: "../../../shared/models/form_factor/input_to.yml"
+  - $ref: "../../../shared/models/form_factor/input_from_us.yml"
+
+  - type: object
+
+    required:
+      - to
+      - inside
+      - outside
+
+    properties:
+      inside:
+        description: >
+          The artwork to use as the inside of your self mailer.
+
+
+          Notes:
+
+          - HTML merge variables should not include delimiting whitespace.
+
+          - PDF, PNG, and JPGs must be sized at 6"x18" at 300 DPI, while supplied
+          HTML will be rendered to the specified `size`.
+
+          - Be sure to leave room for address and postage information by following
+          the templates provided here:
+            - [6x18 bifold template](https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/self_mailers/6x18_sfm_bifold_template.pdf)
+            - [12x9 bifold template](https://s3-us-west-2.amazonaws.com/public.lob.com/assets/templates/self_mailers/12x9_sfm_bifold_template.pdf)
+
+
+          See [here](#section/HTML-Examples) for HTML examples.
+        oneOf:
+          - $ref: "../../../shared/attributes/html_string.yml"
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+          - $ref: "../../../shared/attributes/remote_file_url.yml"
+          - $ref: "../../../shared/attributes/local_file_path.yml"
+
+      outside:
+        description: >
+          The artwork to use as the outside of your self mailer.
+
+
+          Notes:
+
+          - HTML merge variables should not include delimiting whitespace.
+
+          - PDF, PNG, and JPGs must be sized at 6"x18" at 300 DPI, while supplied
+          HTML will be rendered to the specified `size`.
+
+
+          See [here](#section/HTML-Examples) for HTML examples.
+        oneOf:
+          - $ref: "../../../shared/attributes/html_string.yml"
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+          - $ref: "../../../shared/attributes/remote_file_url.yml"
+          - $ref: "../../../shared/attributes/local_file_path.yml"
+
+      billing_group_id:
+        $ref: "../../../shared/attributes/billing_group_id.yml"

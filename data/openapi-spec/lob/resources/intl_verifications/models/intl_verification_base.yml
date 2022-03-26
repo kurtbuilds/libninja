@@ -1,0 +1,11 @@
+type: object
+
+properties:
+  recipient:
+    $ref: "../../../shared/attributes/address/recipient.yml"
+
+  primary_line:
+    $ref: "../../../shared/attributes/address/primary_line.yml"
+
+  secondary_line:
+    $ref: "../../../shared/attributes/address/secondary_line.yml"

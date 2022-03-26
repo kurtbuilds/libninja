@@ -1,0 +1,76 @@
+application/json:
+  schema:
+    $ref: "../models/check.yml"
+
+  example:
+    id: chk_534f10783683daa0
+    description: Demo Check
+    metadata: {}
+    check_number: 10062
+    memo: rent
+    amount: 22.5
+    url: https://lob-assets.com/checks/chk_534f10783683daa0.pdf?expires=1540372221&signature=Ty3IV2bGPEoQfrdraYHlNYTaarnHLXb
+    to:
+      id: adr_bae820679f3f536b
+      description: Harry - Office
+      name: HARRY ZHANG
+      company: LOB
+      email: harry@lob.com
+      phone: "5555555555"
+      address_line1: 210 KING ST STE 6100
+      address_line2: ""
+      address_city: SAN FRANCISCO
+      address_state: CA
+      address_zip: 94107-1741
+      address_country: UNITED STATES
+      metadata: {}
+      date_created: "2018-12-08T03:08:43.446Z"
+      date_modified: "2018-12-08T03:08:43.446Z"
+      object: address
+      recipient_moved: false
+    from:
+      id: adr_b8fb5acf3a2b55db
+      name: LEORE AVIDAR
+      address_line1: 210 KING ST STE 6100
+      address_city: SAN FRANCISCO
+      address_state: CA
+      address_zip: 94107-1741
+      address_country: UNITED STATES
+      metadata: {}
+      date_created: "2017-09-05T17:47:53.767Z"
+      date_modified: "2017-09-05T17:47:53.767Z"
+      object: address
+    bank_account:
+      id: bank_8cad8df5354d33f
+      description: Test Bank Account
+      metadata: {}
+      routing_number: "322271627"
+      account_number: "123456789"
+      signatory: John Doe
+      bank_name: J.P. MORGAN CHASE BANK, N.A.
+      verified: true
+      account_type: company
+      date_created: "2015-11-06T19:24:24.440Z"
+      date_modified: "2015-11-06T19:41:28.312Z"
+      object: bank_account
+      signature_url: https://lob-assets.com/bank-accounts/asd_asdfghjkqwertyui.pdf?expires=1234567890&signature=aksdf
+    carrier: USPS
+    tracking_events: []
+    thumbnails:
+      - small: https://lob-assets.com/checks/chk_534f10783683daa0_thumb_small_1.png?expires=1540372221&signature=ShhPpH74wYkNiAj7Il9B6q8ZKkzlGd4
+        medium: https://lob-assets.com/checks/chk_534f10783683daa0_thumb_medium_1.png?expires=1540372221&signature=tmIOq6aAyKgzAECp7STj1rvJuMS5Svd
+        large: https://lob-assets.com/checks/chk_534f10783683daa0_thumb_large_1.png?expires=1540372221&signature=04nLEwE9d2qgQJNgJYWSOgPnU0FZbEv
+    merge_variables:
+      name: Harry
+    expected_delivery_date: "2017-09-12"
+    mail_type: usps_first_class
+    date_created: "2017-09-05T17:47:53.896Z"
+    date_modified: "2017-09-05T17:47:53.896Z"
+    send_date: "2017-09-05T17:47:53.896Z"
+    object: check
+    message: pancakes are good
+    check_bottom_template_id: tmpl_a
+    attachment_template_id: tmpl_a
+    check_bottom_template_version_id: vrsn_a
+    attachment_template_version_id: vrsn_a
+    deleted: true

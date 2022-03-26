@@ -1,0 +1,31 @@
+allOf:
+  - $ref: "../../../shared/models/form_factor/generated.yml"
+  - $ref: "../../../shared/models/form_factor/from.yml"
+
+  - type: object
+
+    required:
+      - id
+      - from
+
+    properties:
+      id:
+        $ref: "../attributes/ltr_id.yml"
+
+      template_id:
+        allOf:
+          - description: The unique ID of the HTML template used for the letter.
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+
+      template_version_id:
+        allOf:
+          - description: The unique ID of the specific version of the HTML template used for the letter.
+            type: string
+          - $ref: "../../../shared/attributes/model_ids/vrsn_id.yml"
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - letter
+        default: letter

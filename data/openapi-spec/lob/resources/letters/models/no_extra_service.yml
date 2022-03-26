@@ -1,0 +1,22 @@
+allOf:
+  - type: object
+
+    properties:
+      tracking_events:
+        description: An array of tracking events ordered by ascending `time`.
+        type: array
+        items:
+          $ref: "../../../shared/resources/tracking_events/models/tracking_event_normal.yml"
+
+      cards:
+        description: An array of cards associated with a specific letter
+        type: array
+        items:
+          $ref: "../../cards/models/card.yml"
+        nullable: true
+
+      return_address:
+        $ref: "../attributes/return_address.yml"
+
+  - $ref: "letter_base.yml"
+  - $ref: "letter_generated_base.yml"

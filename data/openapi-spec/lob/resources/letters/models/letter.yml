@@ -1,0 +1,9 @@
+oneOf:
+  - title: certified
+    $ref: "certified.yml"
+
+  - title: registered
+    $ref: "registered.yml"
+
+  - title: regular
+    $ref: "no_extra_service.yml"

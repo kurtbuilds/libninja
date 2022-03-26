@@ -1,0 +1,116 @@
+description: >-
+  A dictionary with a data property that contains an array of
+  up to `limit` postcards. Each entry in the array is a separate
+  postcard. The previous and next page of postcards can be retrieved
+  by calling the endpoint contained in the `previous_url` and
+  `next_url` fields in the API response respectively.<br>If no
+  more postcards are available beyond the current set of returned results,
+  the `next_url` field will be empty.
+
+content:
+  application/json:
+    schema:
+      allOf:
+        - $ref: "../../../shared/models/list.yml"
+        - type: object
+          properties:
+            data:
+              type: array
+              description: list of postcards
+              items:
+                $ref: "../models/postcard.yml"
+
+    example:
+      data:
+        - id: "psc_208e45e48d271294"
+          description: null
+          metadata: {}
+          to:
+            id: adr_210a8d4b0b76d77b
+            description: null
+            name: LEORE AVIDAR
+            company: null
+            phone: null
+            email: null
+            address_line1: 210 KING ST STE 6100
+            address_line2:
+            address_city: SAN FRANCISCO
+            address_state: CA
+            address_zip: 94107-1741
+            address_country: UNITED STATES
+            metadata: {}
+            date_created: "2018-12-08T03:01:07.651Z"
+            date_modified: "2018-12-08T03:01:07.651Z"
+            object: address
+          url: "https://lob-assets.com/postcards/psc_208e45e48d271294.pdf?version=v1&expires=1619218302&signature=NfHHLBSr5tOHA_Z4kij4dKqZG8f3vMDtwvuFVeeF9pV_lylcjLsVVODhNCE5hR6-2slUr6t9WMNsi429Pj7_DA"
+          carrier: USPS
+          front_template_id: null
+          back_template_id: null
+          front_template_version_id: null
+          back_template_version_id: null
+          date_created: "2021-03-24T22:51:42.838Z"
+          date_modified: "2021-03-24T22:51:42.838Z"
+          send_date: "2021-03-24T22:51:42.838Z"
+          object: "postcard"
+
+        - id: "psc_0e03d1ad7d31f151"
+          description: null
+          metadata: {}
+          to:
+            id: adr_c7cb63d68f8d6
+            description: null
+            name: JANE DOE
+            company: LOB
+            phone: "5555555555"
+            email: jane.doe@lob.com
+            address_line1: 370 WATER ST
+            address_line2: ""
+            address_city: SUMMERSIDE
+            address_state: PE
+            address_zip: C1N 1C4
+            address_country: CANADA
+            metadata: {}
+            date_created: "2018-12-08T03:01:07.651Z"
+            date_modified: "2018-12-08T03:01:07.651Z"
+            object: address
+            recipient_moved: false
+          from:
+            id: adr_210a8d4b0b76d77b
+            description: null
+            name: LEORE AVIDAR
+            company: null
+            phone: null
+            email: null
+            address_line1: 210 KING ST STE 6100
+            address_line2: null
+            address_city: SAN FRANCISCO
+            address_state: CA
+            address_zip: 94107-1741
+            address_country: UNITED STATES
+            metadata: {}
+            date_created: "2018-12-08T03:01:07.651Z"
+            date_modified: "2018-12-08T03:01:07.651Z"
+            object: address
+          url: "https://lob-assets.com/postcards/psc_208e45e48d271294.pdf?version=v1&expires=1619218302&signature=NfHHLBSr5tOHA_Z4kij4dKqZG8f3vMDtwvuFVeeF9pV_lylcjLsVVODhNCE5hR6-2slUr6t9WMNsi429Pj7_DA"
+          carrier: USPS
+          front_template_id: null
+          back_template_id: null
+          front_template_version_id: null
+          back_template_version_id: null
+          tracking_events: []
+          size: 6x11
+          mail_type: usps_first_class
+          merge_variables: {}
+          thumbnails:
+            - small: https://lob-assets.com/letters/ltr_4868c3b754655f90_thumb_small_1.png?expires=1540372221&signature=a5fRBJ22ZA78Vgpg34M9UfmHWTS3eha
+              medium: https://lob-assets.com/letters/ltr_4868c3b754655f90_thumb_medium_1.png?expires=1540372221&signature=bAzL8sv935PY09FWSkpDpWKkyvGSWYF
+              large: https://lob-assets.com/letters/ltr_4868c3b754655f90_thumb_large_1.png?expires=1540372221&signature=gsKvxXgrm4v4iZD3bOibK7jApNkEMdW
+          expected_delivery_date: "2021-03-30"
+          date_created: "2021-03-24T22:51:42.838Z"
+          date_modified: "2021-03-24T22:51:42.838Z"
+          send_date: "2021-03-24T22:51:42.838Z"
+          object: "postcard"
+      object: list
+      previous_url:
+      next_url:
+      count: 2

@@ -1,0 +1,18 @@
+type: object
+description: Multiple items returned in order
+properties:
+  object:
+    $ref: "../attributes/object.yml"
+
+  next_url:
+    type: string
+    description: Url of next page of items in list.
+    nullable: true
+
+  previous_url:
+    type: string
+    description: Url of previous page of items in list.
+    nullable: true
+
+  count:
+    $ref: "../attributes/count.yml"

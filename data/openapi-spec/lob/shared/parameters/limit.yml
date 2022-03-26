@@ -1,0 +1,14 @@
+in: query
+
+name: limit
+
+required: false
+
+description: How many results to return.
+
+schema:
+  type: integer
+  minimum: 1
+  default: 10
+  maximum: 100
+  example: 10

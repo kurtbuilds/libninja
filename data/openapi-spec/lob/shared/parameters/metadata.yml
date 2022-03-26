@@ -1,0 +1,11 @@
+in: query
+
+name: metadata
+
+description: Filter by metadata key-value pair`.
+
+schema:
+  $ref: "../models/metadata.yml"
+
+style: deepObject
+explode: true

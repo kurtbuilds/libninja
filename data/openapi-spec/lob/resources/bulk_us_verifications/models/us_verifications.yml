@@ -1,0 +1,17 @@
+type: object
+
+required:
+  - addresses
+  - errors
+
+properties:
+  addresses:
+    type: array
+    items:
+      oneOf:
+        - $ref: "../../us_verifications/models/us_verification.yml"
+        - $ref: "../../../shared/models/error.yml"
+
+  errors:
+    description: Indicates whether any errors occurred during the verification process.
+    type: boolean

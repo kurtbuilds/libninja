@@ -1,0 +1,124 @@
+post:
+  operationId: reverse_geocode_lookup
+
+  summary: Reverse Geocode Lookup
+
+  description: >-
+    Reverse geocode a valid US location with a live API key.
+
+  tags:
+    - Reverse Geocode Lookups
+
+  parameters:
+    - in: query
+      name: size
+      schema:
+        type: integer
+        minimum: 1
+        default: 5
+        maximum: 50
+        example: 5
+      description: >-
+        Determines the number of locations returned. Possible values are between 1 and 50 and any number higher
+        will be rounded down to 50. Default size is a list of 5 reverse geocoded locations.
+      required: false
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "./models/location.yml"
+        example:
+          latitude: 37.7749
+          longitude: 122.4194
+
+      application/x-www-form-urlencoded:
+        schema:
+          $ref: "./models/location.yml"
+        example:
+          latitude: 37.7749
+          longitude: 122.4194
+
+      multipart/form-data:
+        schema:
+          $ref: "./models/location.yml"
+        example:
+          latitude: 37.7749
+          longitude: 122.4194
+
+  responses:
+    "200":
+      $ref: responses/reverse_geocode_lookups.yml
+
+    default:
+      $ref: responses/reverse_geocode_lookups_error.yml
+
+  x-codeSamples:
+    - lang: Shell
+      source: |
+        curl https://api.lob.com/v1/us_reverse_geocode_lookups \
+          -u <YOUR_LIVE_API_KEY>: \
+          -d "latitude=37.7749" \
+          -d "longitude=122.4194" \
+      label: CURL
+    - lang: Typescript
+      source: |
+        const ReverseGeocodeLookup = new ReverseGeocodeLookupsApi(av_config);
+        const coordinates: Location = {
+          Latitude: 37.777456,
+          longitude: -122.393039
+        };
+        try {
+          const geocode = await ReverseGeocodeLookup.lookup(coordinates);
+        } catch (err: any) {
+          console.error(err);
+        }
+      label: TYPESCRIPT
+    - lang: Javascript
+      source: |
+        Lob.reverseGeocodeLookups.lookup({
+          latitude: 37.7749,
+          longitude: 122.4194
+        }, function (err, res) {
+          console.log(err, res);
+        });
+      label: NODE
+    - lang: Ruby
+      source: |
+        @lob.reverse_geocode_lookups.lookup(
+          latitude: 37.7749,
+          longitude: 122.4194
+        )
+      label: RUBY
+    - lang: Python
+      source: |
+        lob.ReverseGeocodeLookups.create(
+          latitude= 37.7749,
+          longitude= 122.4194
+        )
+      label: Python
+    - lang: PHP
+      source: |
+        $lob->reverseGeocodeLookups()->lookup(array(
+          'latitude' => 37.7749,
+          'longitude' => 122.4194
+
+        ));
+      label: PHP
+    - lang: Java
+      source: |
+        LobResponse<ReverseGeocodeLookup> response = new ReverseGeocodeLookup.RequestBuilder()
+                .setLatitude(37.7749)
+                .setLongitude(122.4194)
+                .lookup();
+
+        ReverseGeocodeLookup reverseGeocodeLookup = response.getResponseBody();
+      label: JAVA
+    - lang: Elixir
+      source: |
+        Lob.ReverseGeocodeLookup.lookup(%{
+          latitude: 37.7749,
+          longitude: 122.4194
+        })
+      label: ELIXIR

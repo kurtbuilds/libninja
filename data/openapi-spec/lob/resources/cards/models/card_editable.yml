@@ -1,0 +1,19 @@
+allOf:
+  - $ref: card_base.yml
+  - type: object
+    required:
+      - front
+
+    properties:
+      front:
+        description: A PDF template for the front of the card
+        oneOf:
+          - $ref: "../../../shared/attributes/remote_file_url.yml"
+          - $ref: "../../../shared/attributes/local_file_path.yml"
+
+      back:
+        description: A PDF template for the back of the card
+        oneOf:
+          - $ref: "../../../shared/attributes/remote_file_url.yml"
+          - $ref: "../../../shared/attributes/local_file_path.yml"
+        default: https://s3.us-west-2.amazonaws.com/public.lob.com/assets/card_blank_horizontal.pdf

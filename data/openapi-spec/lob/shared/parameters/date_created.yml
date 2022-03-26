@@ -1,0 +1,11 @@
+in: query
+
+name: date_created
+
+description: Filter by date created.
+
+schema:
+  $ref: "../models/date_filter.yml"
+
+style: deepObject
+explode: true

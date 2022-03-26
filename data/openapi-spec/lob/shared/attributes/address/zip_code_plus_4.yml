@@ -1,0 +1,3 @@
+type: string
+
+pattern: ^\d{4}$

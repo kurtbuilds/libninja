@@ -1,0 +1,65 @@
+allOf:
+  - $ref: "self_mailer_base.yml"
+  - $ref: "../../../shared/models/form_factor/generated.yml"
+  - $ref: "../../../shared/models/form_factor/from_us.yml"
+
+  - type: object
+
+    required:
+      - id
+      - outside_template_id
+      - inside_template_id
+      - outside_template_version_id
+      - inside_template_version_id
+      - url
+
+    properties:
+      id:
+        $ref: "../attributes/sfm_id.yml"
+
+      outside_template_id:
+        description: The unique ID of the HTML template used for the outside of the self mailer.
+        allOf:
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+          - type: string
+            nullable: true
+
+      inside_template_id:
+        description: The unique ID of the HTML template used for the inside of the self mailer.
+        allOf:
+          - $ref: "../../../shared/attributes/model_ids/tmpl_id.yml"
+          - type: string
+            nullable: true
+
+      outside_template_version_id:
+        description: The unique ID of the specific version of the HTML template used for the outside of the self mailer.
+        allOf:
+          - $ref: "../../../shared/attributes/model_ids/vrsn_id.yml"
+          - type: string
+            nullable: true
+
+      inside_template_version_id:
+        description: The unique ID of the specific version of the HTML template used for the inside of the self mailer.
+        allOf:
+          - $ref: "../../../shared/attributes/model_ids/vrsn_id.yml"
+          - type: string
+            nullable: true
+
+      object:
+        type: string
+        description: Value is resource type.
+        enum:
+          - self_mailer
+        default: self_mailer
+
+      tracking_events:
+        description: >-
+          An array of certified tracking events ordered by ascending `time`. Not populated in test mode.
+        type: array
+        items:
+          $ref: "../../../shared/resources/tracking_events/models/tracking_event_certified.yml"
+
+      url:
+        allOf:
+          - description: A [signed link](#section/Asset-URLs) to the rendered self mailer.
+          - $ref: "../../../shared/attributes/signed_link.yml"

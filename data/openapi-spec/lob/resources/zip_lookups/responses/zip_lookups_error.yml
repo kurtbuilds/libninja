@@ -1,0 +1,12 @@
+description: Error
+
+content:
+  application/json:
+    schema:
+      $ref: "../../../shared/models/error.yml"
+
+    example:
+      error:
+        code: invalid
+        message: zip_code is required
+        status_code: 422

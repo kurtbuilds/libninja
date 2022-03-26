@@ -1,0 +1,33 @@
+type: object
+
+required:
+  - address_line1
+  - address_country
+
+properties:
+  address_line1:
+    type: string
+    description: The primary number, street name, and directional information.
+    maxLength: 200
+
+  address_line2:
+    type: string
+    description: An optional field containing any information which can't fit into line 1.
+    maxLength: 200
+    nullable: true
+
+  address_city:
+    type: string
+    maxLength: 200
+    nullable: true
+
+  address_state:
+    type: string
+    maxLength: 200
+    nullable: true
+
+  address_zip:
+    type: string
+    description: Optional postal code.
+    maxLength: 40
+    nullable: true

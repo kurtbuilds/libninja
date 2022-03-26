@@ -1,0 +1,5 @@
+type: string
+
+description: Unique identifier prefixed with `intl_ver_`.
+
+pattern: "^intl_ver_[a-zA-Z0-9]+$"
