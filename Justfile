@@ -52,5 +52,7 @@ gen:
     cargo run
 
 client:
-    env
     cd gen/plaid && cargo run --bin client
+
+doc:
+    cd gen/plaid && cargo doc --open

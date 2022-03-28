@@ -19,6 +19,76 @@
         "connection": "keep-alive",
         "content-length": "1077",
         "content-type": "application/json; charset=utf-8",
+        "date": "Mon, 28 Mar 2022 16:11:08 GMT",
+        "plaid-version": "2017-03-08",
+        "server": "nginx",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "x-xss-protection": "1; mode=block"
+      },
+      "data": {
+        "item": {
+          "available_products": [
+            "assets",
+            "balance",
+            "identity",
+            "income",
+            "investments",
+            "liabilities"
+          ],
+          "billed_products": [
+            "auth",
+            "transactions"
+          ],
+          "consent_expiration_time": null,
+          "error": {
+            "display_message": null,
+            "error_code": "ITEM_LOGIN_REQUIRED",
+            "error_message": "the login details of this item have changed (credentials, MFA, or required user action) and a user login is required to update this information. use Link's update mode to restore the item to a good state",
+            "error_type": "ITEM_ERROR"
+          },
+          "institution_id": "ins_3",
+          "item_id": "XAqazoM46Pfzr5qQEZbQUkAmG8AKd5hd9KMza",
+          "optional_products": null,
+          "products": [
+            "auth",
+            "transactions"
+          ],
+          "update_type": "background",
+          "webhook": ""
+        },
+        "request_id": "xYOA0fOTfLt3rMl",
+        "status": {
+          "last_webhook": null,
+          "transactions": {
+            "last_failed_update": "2022-03-11T22:51:30.507Z",
+            "last_successful_update": "2022-03-10T22:31:42.784Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "https://sandbox.plaid.com/item/get",
+      "headers": {
+        "content-type": "application/json",
+        "user-agent": "httpclient/0.1.8"
+      },
+      "data": {
+        "access_token": "access-sandbox-aba1243f-9647-4ae2-ada6-a7f87f0684b0",
+        "client_id": "590c94144e95b84d2545e72e",
+        "secret": "3a8a6bcc0e782411f281102f501cb8"
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "1077",
+        "content-type": "application/json; charset=utf-8",
         "date": "Mon, 28 Mar 2022 13:38:18 GMT",
         "plaid-version": "2017-03-08",
         "server": "nginx",
