@@ -1,5 +1,5 @@
 use convert_case::{Case, Casing};
-use openapiv3::{OpenAPI, ReferenceOr, Schema, SchemaKind};
+use openapiv3::{OpenAPI, ReferenceOr, Schema, SchemaKind, StatusCode};
 use proc_macro2::TokenStream;
 use quote::quote;
 use crate::codegen::util;
@@ -30,7 +30,7 @@ pub fn struct_ServiceClient(service_name: &str) -> TokenStream {
 pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStream> + '_ {
     spec.paths.iter()
         // .filter(|(path, _)| path.as_str() == "/item/get")
-        .map(move |(path, item)| {
+        .filter_map(move |(path, item)| {
             let item = item.as_item().unwrap();
             let operation = item.post.as_ref().unwrap();
             let name = operation.operation_id.as_ref().unwrap().to_case(Case::Snake);
@@ -70,8 +70,29 @@ pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStrea
                 quote!(#k: #iden)
             })
                 .collect::<Vec<_>>();
-            quote! {
-                pub async fn #name(&self, #(#fn_args),*) -> anyhow::Result<ItemGetResponse> {
+            let mut doc_pieces = vec![];
+            if let Some(summary) = operation.summary.as_ref() {
+                doc_pieces.push(summary.clone());
+            }
+            if let Some(description) = operation.description.as_ref() {
+                doc_pieces.push(description.clone());
+            }
+            if let Some(external_docs) = operation.external_docs.as_ref() {
+                doc_pieces.push(format!("See full Plaid docs at <https://plaid.com/docs{}>", external_docs.url));
+            }
+            let docstring = doc_pieces.join("\n\n");
+            let response_success = operation.responses.responses
+                .get(&StatusCode::Code(200))
+                .unwrap()
+                .as_item()
+                .unwrap();
+            let response_success_schema_name = match response_success.content.get("application/json") {
+                Some(r) => r.schema.as_ref().unwrap().as_ref().to_token(spec),
+                None => return None,
+            };
+            Some(quote! {
+                #[doc = #docstring]
+                pub async fn #name(&self, #(#fn_args),*) -> anyhow::Result<#response_success_schema_name> {
                     {
                          let res = self.client.post("/item/get")
                             .json(json!({
@@ -97,7 +118,7 @@ pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStrea
                         }
                     }
                 }
-            }
+            })
         })
 }
 
