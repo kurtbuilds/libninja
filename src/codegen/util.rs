@@ -1,5 +1,6 @@
+use convert_case::{Case, Casing};
 use openapiv3::{OpenAPI, ReferenceOr, Schema, SchemaKind};
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
 
 
@@ -15,8 +16,9 @@ impl ToToken for Schema {
             SchemaKind::Type(openapiv3::Type::Integer(_)) => quote!(i64),
             SchemaKind::Type(openapiv3::Type::Boolean{}) => quote!(bool),
             SchemaKind::Type(openapiv3::Type::Object(o)) => {
-                println!("{:?}", o);
-                unimplemented!()
+                quote!(serde_json::Value)
+                // println!("object: {:?}, self: {:?}", o, self);
+                // unimplemented!()
             }
             SchemaKind::Type(openapiv3::Type::Array(a)) => {
                 let inside = a.items
@@ -51,5 +53,36 @@ impl ToToken for ReferenceOr<&Schema> {
             }
             ReferenceOr::Item(s) => s.to_token(spec),
         }
+    }
+}
+
+
+pub trait ToIdent {
+    fn to_struct_name(&self) -> syn::Ident;
+    fn to_ident(&self) -> syn::Ident;
+    fn is_restricted(&self) -> bool;
+}
+
+impl ToIdent for str {
+    fn to_struct_name(&self) -> syn::Ident {
+        let s = if self.is_restricted() {
+            self.to_case(Case::Pascal) + "Struct"
+        } else {
+            self.to_case(Case::Pascal)
+        };
+        syn::Ident::new(&s, Span::call_site())
+    }
+
+    fn to_ident(&self) -> Ident {
+        let s = if self.is_restricted() {
+            self.to_case(Case::Snake) + "Struct"
+        } else {
+            self.to_case(Case::Snake)
+        };
+        syn::Ident::new(&s, Span::call_site())
+    }
+
+    fn is_restricted(&self) -> bool {
+        ["type", "use"].contains(&self)
     }
 }

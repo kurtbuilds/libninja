@@ -4,6 +4,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use crate::codegen::util;
 use crate::codegen::util::ToToken;
+use crate::codegen::util::ToIdent;
 
 pub fn service_auth_struct_name(service_name: &str) -> syn::Ident {
     quote::format_ident!("{}Authentication", service_name)
@@ -28,7 +29,7 @@ pub fn struct_ServiceClient(service_name: &str) -> TokenStream {
 
 pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStream> + '_ {
     spec.paths.iter()
-        .filter(|(path, _)| path.as_str() == "/item/get")
+        // .filter(|(path, _)| path.as_str() == "/item/get")
         .map(move |(path, item)| {
             let item = item.as_item().unwrap();
             let operation = item.post.as_ref().unwrap();
@@ -59,13 +60,13 @@ pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStrea
                 })
                 .collect::<Vec<_>>();
             let fn_args = params.iter().map(|(k, prop_schema)| {
-                let k = syn::Ident::new(k, proc_macro2::Span::call_site());
+                let k = k.to_ident();
                 let tok = prop_schema.to_token(spec);
                 quote!(#k: #tok)
             })
                 .collect::<Vec<_>>();
             let json_fields = params.iter().map(|(k, prop_schema)| {
-                let iden = syn::Ident::new(k, proc_macro2::Span::call_site());
+                let iden = k.to_ident();
                 quote!(#k: #iden)
             })
                 .collect::<Vec<_>>();
@@ -123,7 +124,7 @@ pub fn impl_ServiceClient(service_name: &str, spec: &OpenAPI) -> TokenStream {
             }
 
             pub fn with_middleware<M: httpclient::Middleware + 'static>(mut self, middleware: M) -> Self {
-                self.client = self.client.with(middleware);
+                self.client = self.client.with_middleware(middleware);
                 self
             }
 
@@ -137,7 +138,8 @@ pub fn struct_ServiceAuthentication(service_name: &str, spec: &OpenAPI) -> Token
 
     let variants = spec.security.as_ref().unwrap().iter().map(|security| {
         let args = security.iter().map(|(k, scopes)| {
-            syn::Ident::new(&k.to_case(Case::Snake), proc_macro2::Span::call_site())
+            println!("security arg {:?}, {:?}", k, k.to_ident());
+            k.to_ident()
         });
         let (name, scopes) = security.iter().next().unwrap();
         let variant_name = syn::Ident::new(&name.to_case(Case::Pascal), proc_macro2::Span::call_site());

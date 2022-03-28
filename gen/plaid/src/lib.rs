@@ -3,7 +3,8 @@
 
 use serde_json::json;
 use serde::{Serialize, Deserialize};
-use httpclient::RequestBuilder;pub struct PlaidClient {
+use httpclient::RequestBuilder;
+pub struct PlaidClient {
     client: httpclient::Client,
     authentication: Option<PlaidAuthentication>,
 }
@@ -21,8 +22,87 @@ impl PlaidClient {
         mut self,
         middleware: M,
     ) -> Self {
-        self.client = self.client.with(middleware);
+        self.client = self.client.with_middleware(middleware);
         self
+    }
+    pub async fn item_application_list(
+        &self,
+        access_token: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn item_application_scopes_update(
+        &self,
+        access_token: String,
+        application_id: String,
+        scopes: serde_json::Value,
+        state: String,
+        context: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "application_id" :
+                        application_id, "scopes" : scopes, "state" : state, "context" :
+                        context }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn application_get(
+        &self,
+        application_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "application_id" : application_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
     }
     pub async fn item_get(
         &self,
@@ -33,6 +113,2882 @@ impl PlaidClient {
                 .client
                 .post("/item/get")
                 .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn auth_get(
+        &self,
+        access_token: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token, "options" : options }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transactions_get(
+        &self,
+        options: serde_json::Value,
+        access_token: String,
+        start_date: String,
+        end_date: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "options" : options, "access_token" : access_token,
+                        "start_date" : start_date, "end_date" : end_date }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transactions_refresh(
+        &self,
+        access_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transactions_recurring_get(
+        &self,
+        access_token: String,
+        account_ids: Vec<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!({ "access_token" : access_token, "account_ids" : account_ids }),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transactions_sync(
+        &self,
+        access_token: String,
+        cursor: String,
+        count: i64,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "cursor" : cursor, "count" :
+                        count }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn institutions_get(
+        &self,
+        count: i64,
+        offset: i64,
+        country_codes: Vec<CountryCode>,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "count" : count, "offset" : offset, "country_codes" :
+                        country_codes, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn institutions_search(
+        &self,
+        query: String,
+        products: Option<Vec<Products>>,
+        country_codes: Vec<CountryCode>,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "query" : query, "products" : products, "country_codes" :
+                        country_codes, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn institutions_get_by_id(
+        &self,
+        institution_id: String,
+        country_codes: Vec<CountryCode>,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "institution_id" : institution_id, "country_codes" :
+                        country_codes, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn item_remove(
+        &self,
+        access_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn accounts_get(
+        &self,
+        access_token: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token, "options" : options }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn categories_get(&self) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({}))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_processor_token_create(
+        &self,
+        institution_id: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "institution_id" : institution_id, "options" : options }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_public_token_create(
+        &self,
+        institution_id: String,
+        initial_products: Vec<Products>,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "institution_id" : institution_id, "initial_products" :
+                        initial_products, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_item_fire_webhook(
+        &self,
+        access_token: String,
+        webhook_code: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "webhook_code" : webhook_code }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn accounts_balance_get(
+        &self,
+        access_token: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token, "options" : options }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn identity_get(
+        &self,
+        access_token: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token, "options" : options }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn processor_auth_get(
+        &self,
+        processor_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "processor_token" : processor_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn processor_bank_transfer_create(
+        &self,
+        idempotency_key: String,
+        processor_token: String,
+        typeStruct: String,
+        network: String,
+        amount: String,
+        iso_currency_code: String,
+        description: String,
+        ach_class: String,
+        user: serde_json::Value,
+        custom_tag: Option<String>,
+        metadata: Option<serde_json::Value>,
+        origination_account_id: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "idempotency_key" : idempotency_key, "processor_token" :
+                        processor_token, "type" : typeStruct, "network" : network,
+                        "amount" : amount, "iso_currency_code" : iso_currency_code,
+                        "description" : description, "ach_class" : ach_class, "user" :
+                        user, "custom_tag" : custom_tag, "metadata" : metadata,
+                        "origination_account_id" : origination_account_id }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn processor_identity_get(
+        &self,
+        processor_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "processor_token" : processor_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn processor_balance_get(
+        &self,
+        processor_token: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!({ "processor_token" : processor_token, "options" : options }),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn item_webhook_update(
+        &self,
+        access_token: String,
+        webhook: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token, "webhook" : webhook }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn item_access_token_invalidate(
+        &self,
+        access_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn webhook_verification_key_get(
+        &self,
+        key_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "key_id" : key_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn liabilities_get(
+        &self,
+        access_token: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token, "options" : options }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn payment_initiation_recipient_create(
+        &self,
+        name: String,
+        iban: Option<String>,
+        bacs: Option<serde_json::Value>,
+        address: Option<serde_json::Value>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "name" : name, "iban" : iban, "bacs" : bacs, "address" :
+                        address }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn payment_initiation_payment_reverse(
+        &self,
+        payment_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "payment_id" : payment_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn payment_initiation_recipient_get(
+        &self,
+        recipient_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "recipient_id" : recipient_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn payment_initiation_recipient_list(
+        &self,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({}))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn payment_initiation_payment_create(
+        &self,
+        recipient_id: String,
+        reference: String,
+        amount: serde_json::Value,
+        schedule: serde_json::Value,
+        options: Option<serde_json::Value>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "recipient_id" : recipient_id, "reference" : reference,
+                        "amount" : amount, "schedule" : schedule, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn create_payment_token(
+        &self,
+        payment_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "payment_id" : payment_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_item_reset_login(
+        &self,
+        access_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_item_set_verification_status(
+        &self,
+        access_token: String,
+        account_id: String,
+        verification_status: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "account_id" : account_id,
+                        "verification_status" : verification_status }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn item_public_token_exchange(
+        &self,
+        public_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "public_token" : public_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn item_create_public_token(
+        &self,
+        access_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn payment_initiation_payment_get(
+        &self,
+        payment_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "payment_id" : payment_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn payment_initiation_payment_list(
+        &self,
+        count: Option<i64>,
+        cursor: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "count" : count, "cursor" : cursor }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_create(
+        &self,
+        access_tokens: Vec<AccessToken>,
+        days_requested: i64,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_tokens" : access_tokens, "days_requested" :
+                        days_requested, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_refresh(
+        &self,
+        asset_report_token: String,
+        days_requested: Option<i64>,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "asset_report_token" : asset_report_token, "days_requested" :
+                        days_requested, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_remove(
+        &self,
+        asset_report_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "asset_report_token" : asset_report_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_filter(
+        &self,
+        asset_report_token: String,
+        account_ids_to_exclude: Vec<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "asset_report_token" : asset_report_token,
+                        "account_ids_to_exclude" : account_ids_to_exclude }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_get(
+        &self,
+        asset_report_token: String,
+        include_insights: bool,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "asset_report_token" : asset_report_token, "include_insights" :
+                        include_insights }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_pdf_get(
+        &self,
+        asset_report_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "asset_report_token" : asset_report_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_audit_copy_create(
+        &self,
+        asset_report_token: String,
+        auditor_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "asset_report_token" : asset_report_token, "auditor_id" :
+                        auditor_id }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_audit_copy_remove(
+        &self,
+        audit_copy_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "audit_copy_token" : audit_copy_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn investments_holdings_get(
+        &self,
+        access_token: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token, "options" : options }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn investments_transactions_get(
+        &self,
+        access_token: String,
+        start_date: String,
+        end_date: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "start_date" : start_date,
+                        "end_date" : end_date, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn processor_token_create(
+        &self,
+        access_token: String,
+        account_id: String,
+        processor: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "account_id" : account_id,
+                        "processor" : processor }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn processor_stripe_bank_account_token_create(
+        &self,
+        access_token: String,
+        account_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!({ "access_token" : access_token, "account_id" : account_id }),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn processor_apex_processor_token_create(
+        &self,
+        access_token: String,
+        account_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!({ "access_token" : access_token, "account_id" : account_id }),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn deposit_switch_create(
+        &self,
+        target_access_token: String,
+        target_account_id: String,
+        country_code: Option<String>,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "target_access_token" : target_access_token,
+                        "target_account_id" : target_account_id, "country_code" :
+                        country_code, "options" : options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn item_import(
+        &self,
+        products: Vec<Products>,
+        user_auth: serde_json::Value,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "products" : products, "user_auth" : user_auth, "options" :
+                        options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn deposit_switch_token_create(
+        &self,
+        deposit_switch_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "deposit_switch_id" : deposit_switch_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn link_token_create(
+        &self,
+        client_name: String,
+        language: String,
+        country_codes: Vec<CountryCode>,
+        user: serde_json::Value,
+        products: Vec<Products>,
+        webhook: String,
+        access_token: String,
+        link_customization_name: String,
+        redirect_uri: String,
+        android_package_name: String,
+        account_filters: serde_json::Value,
+        eu_config: serde_json::Value,
+        institution_id: String,
+        payment_initiation: serde_json::Value,
+        deposit_switch: serde_json::Value,
+        income_verification: serde_json::Value,
+        auth: serde_json::Value,
+        transfer: serde_json::Value,
+        update: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "client_name" : client_name, "language" : language,
+                        "country_codes" : country_codes, "user" : user, "products" :
+                        products, "webhook" : webhook, "access_token" : access_token,
+                        "link_customization_name" : link_customization_name,
+                        "redirect_uri" : redirect_uri, "android_package_name" :
+                        android_package_name, "account_filters" : account_filters,
+                        "eu_config" : eu_config, "institution_id" : institution_id,
+                        "payment_initiation" : payment_initiation, "deposit_switch" :
+                        deposit_switch, "income_verification" : income_verification,
+                        "auth" : auth, "transfer" : transfer, "update" : update }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn link_token_get(
+        &self,
+        link_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "link_token" : link_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn asset_report_audit_copy_get(
+        &self,
+        audit_copy_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "audit_copy_token" : audit_copy_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn deposit_switch_get(
+        &self,
+        deposit_switch_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "deposit_switch_id" : deposit_switch_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_get(
+        &self,
+        transfer_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "transfer_id" : transfer_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_get(
+        &self,
+        bank_transfer_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "bank_transfer_id" : bank_transfer_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_authorization_create(
+        &self,
+        access_token: String,
+        account_id: String,
+        typeStruct: String,
+        network: String,
+        amount: String,
+        ach_class: String,
+        user: serde_json::Value,
+        device: serde_json::Value,
+        origination_account_id: String,
+        iso_currency_code: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "account_id" : account_id,
+                        "type" : typeStruct, "network" : network, "amount" : amount,
+                        "ach_class" : ach_class, "user" : user, "device" : device,
+                        "origination_account_id" : origination_account_id,
+                        "iso_currency_code" : iso_currency_code }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_create(
+        &self,
+        idempotency_key: String,
+        access_token: String,
+        account_id: String,
+        authorization_id: String,
+        typeStruct: String,
+        network: String,
+        amount: String,
+        description: String,
+        ach_class: String,
+        user: serde_json::Value,
+        metadata: Option<serde_json::Value>,
+        origination_account_id: Option<String>,
+        iso_currency_code: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "idempotency_key" : idempotency_key, "access_token" :
+                        access_token, "account_id" : account_id, "authorization_id" :
+                        authorization_id, "type" : typeStruct, "network" : network,
+                        "amount" : amount, "description" : description, "ach_class" :
+                        ach_class, "user" : user, "metadata" : metadata,
+                        "origination_account_id" : origination_account_id,
+                        "iso_currency_code" : iso_currency_code }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_create(
+        &self,
+        idempotency_key: String,
+        access_token: String,
+        account_id: String,
+        typeStruct: String,
+        network: String,
+        amount: String,
+        iso_currency_code: String,
+        description: String,
+        ach_class: String,
+        user: serde_json::Value,
+        custom_tag: Option<String>,
+        metadata: Option<serde_json::Value>,
+        origination_account_id: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "idempotency_key" : idempotency_key, "access_token" :
+                        access_token, "account_id" : account_id, "type" : typeStruct,
+                        "network" : network, "amount" : amount, "iso_currency_code" :
+                        iso_currency_code, "description" : description, "ach_class" :
+                        ach_class, "user" : user, "custom_tag" : custom_tag, "metadata" :
+                        metadata, "origination_account_id" : origination_account_id }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_list(
+        &self,
+        start_date: Option<String>,
+        end_date: Option<String>,
+        count: i64,
+        offset: i64,
+        origination_account_id: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "start_date" : start_date, "end_date" : end_date, "count" :
+                        count, "offset" : offset, "origination_account_id" :
+                        origination_account_id }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_list(
+        &self,
+        start_date: Option<String>,
+        end_date: Option<String>,
+        count: i64,
+        offset: i64,
+        origination_account_id: Option<String>,
+        direction: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "start_date" : start_date, "end_date" : end_date, "count" :
+                        count, "offset" : offset, "origination_account_id" :
+                        origination_account_id, "direction" : direction }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_cancel(
+        &self,
+        transfer_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "transfer_id" : transfer_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_cancel(
+        &self,
+        bank_transfer_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "bank_transfer_id" : bank_transfer_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_event_list(
+        &self,
+        start_date: Option<String>,
+        end_date: Option<String>,
+        transfer_id: Option<String>,
+        account_id: Option<String>,
+        transfer_type: Option<String>,
+        event_types: Vec<TransferEventType>,
+        sweep_id: String,
+        count: Option<i64>,
+        offset: Option<i64>,
+        origination_account_id: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "start_date" : start_date, "end_date" : end_date, "transfer_id"
+                        : transfer_id, "account_id" : account_id, "transfer_type" :
+                        transfer_type, "event_types" : event_types, "sweep_id" :
+                        sweep_id, "count" : count, "offset" : offset,
+                        "origination_account_id" : origination_account_id }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_event_list(
+        &self,
+        start_date: Option<String>,
+        end_date: Option<String>,
+        bank_transfer_id: Option<String>,
+        account_id: Option<String>,
+        bank_transfer_type: Option<String>,
+        event_types: Vec<BankTransferEventType>,
+        count: Option<i64>,
+        offset: Option<i64>,
+        origination_account_id: Option<String>,
+        direction: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "start_date" : start_date, "end_date" : end_date,
+                        "bank_transfer_id" : bank_transfer_id, "account_id" : account_id,
+                        "bank_transfer_type" : bank_transfer_type, "event_types" :
+                        event_types, "count" : count, "offset" : offset,
+                        "origination_account_id" : origination_account_id, "direction" :
+                        direction }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_event_sync(
+        &self,
+        after_id: i64,
+        count: Option<i64>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "after_id" : after_id, "count" : count }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_event_sync(
+        &self,
+        after_id: i64,
+        count: Option<i64>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "after_id" : after_id, "count" : count }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_sweep_get(
+        &self,
+        sweep_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "sweep_id" : sweep_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_sweep_get(
+        &self,
+        sweep_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "sweep_id" : sweep_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_sweep_list(
+        &self,
+        start_date: Option<String>,
+        end_date: Option<String>,
+        count: Option<i64>,
+        offset: i64,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "start_date" : start_date, "end_date" : end_date, "count" :
+                        count, "offset" : offset }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_sweep_list(
+        &self,
+        origination_account_id: Option<String>,
+        start_time: Option<String>,
+        end_time: Option<String>,
+        count: Option<i64>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "origination_account_id" : origination_account_id, "start_time"
+                        : start_time, "end_time" : end_time, "count" : count }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_balance_get(
+        &self,
+        origination_account_id: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "origination_account_id" : origination_account_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn bank_transfer_migrate_account(
+        &self,
+        account_number: String,
+        routing_number: String,
+        account_type: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "account_number" : account_number, "routing_number" :
+                        routing_number, "account_type" : account_type }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_intent_create(
+        &self,
+        account_id: Option<String>,
+        mode: String,
+        amount: String,
+        description: String,
+        ach_class: String,
+        origination_account_id: Option<String>,
+        user: serde_json::Value,
+        metadata: Option<serde_json::Value>,
+        iso_currency_code: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "account_id" : account_id, "mode" : mode, "amount" : amount,
+                        "description" : description, "ach_class" : ach_class,
+                        "origination_account_id" : origination_account_id, "user" : user,
+                        "metadata" : metadata, "iso_currency_code" : iso_currency_code }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_intent_get(
+        &self,
+        transfer_intent_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "transfer_intent_id" : transfer_intent_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_repayment_list(
+        &self,
+        start_date: Option<String>,
+        end_date: Option<String>,
+        count: Option<i64>,
+        offset: i64,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "start_date" : start_date, "end_date" : end_date, "count" :
+                        count, "offset" : offset }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn transfer_repayment_return_list(
+        &self,
+        repayment_id: String,
+        count: Option<i64>,
+        offset: i64,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "repayment_id" : repayment_id, "count" : count, "offset" :
+                        offset }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_bank_transfer_simulate(
+        &self,
+        bank_transfer_id: String,
+        event_type: String,
+        failure_reason: Option<serde_json::Value>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "bank_transfer_id" : bank_transfer_id, "event_type" :
+                        event_type, "failure_reason" : failure_reason }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_transfer_sweep_simulate(
+        &self,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({}))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_transfer_simulate(
+        &self,
+        transfer_id: String,
+        event_type: String,
+        failure_reason: Option<serde_json::Value>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "transfer_id" : transfer_id, "event_type" : event_type,
+                        "failure_reason" : failure_reason }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_transfer_repayment_simulate(
+        &self,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({}))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn employers_search(
+        &self,
+        query: String,
+        products: Vec<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "query" : query, "products" : products }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_create(
+        &self,
+        webhook: String,
+        precheck_id: String,
+        options: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "webhook" : webhook, "precheck_id" : precheck_id, "options" :
+                        options }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_summary_get(
+        &self,
+        income_verification_id: Option<String>,
+        access_token: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "income_verification_id" : income_verification_id,
+                        "access_token" : access_token }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_paystub_get(
+        &self,
+        income_verification_id: Option<String>,
+        access_token: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "income_verification_id" : income_verification_id,
+                        "access_token" : access_token }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_paystubs_get(
+        &self,
+        income_verification_id: Option<String>,
+        access_token: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "income_verification_id" : income_verification_id,
+                        "access_token" : access_token }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_documents_download(
+        &self,
+        income_verification_id: Option<String>,
+        access_token: Option<String>,
+        document_id: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "income_verification_id" : income_verification_id,
+                        "access_token" : access_token, "document_id" : document_id }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_refresh(
+        &self,
+        income_verification_id: Option<String>,
+        access_token: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "income_verification_id" : income_verification_id,
+                        "access_token" : access_token }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_taxforms_get(
+        &self,
+        income_verification_id: Option<String>,
+        access_token: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "income_verification_id" : income_verification_id,
+                        "access_token" : access_token }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn income_verification_precheck(
+        &self,
+        user: Option<serde_json::Value>,
+        employer: Option<serde_json::Value>,
+        transactions_access_token: serde_json::Value,
+        transactions_access_tokens: Vec<AccessToken>,
+        us_military_info: Option<serde_json::Value>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "user" : user, "employer" : employer,
+                        "transactions_access_token" : transactions_access_token,
+                        "transactions_access_tokens" : transactions_access_tokens,
+                        "us_military_info" : us_military_info }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn employment_verification_get(
+        &self,
+        access_token: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "access_token" : access_token }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn deposit_switch_alt_create(
+        &self,
+        target_account: serde_json::Value,
+        target_user: serde_json::Value,
+        options: serde_json::Value,
+        country_code: Option<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "target_account" : target_account, "target_user" : target_user,
+                        "options" : options, "country_code" : country_code }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_bank_transfer_fire_webhook(
+        &self,
+        webhook: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "webhook" : webhook }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_income_fire_webhook(
+        &self,
+        income_verification_id: String,
+        item_id: String,
+        webhook: String,
+        verification_status: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "income_verification_id" : income_verification_id, "item_id" :
+                        item_id, "webhook" : webhook, "verification_status" :
+                        verification_status }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn sandbox_oauth_select_accounts(
+        &self,
+        oauth_state_id: String,
+        accounts: Vec<String>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!({ "oauth_state_id" : oauth_state_id, "accounts" : accounts }),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn signal_evaluate(
+        &self,
+        access_token: String,
+        account_id: String,
+        client_transaction_id: String,
+        amount: f64,
+        user_present: Option<bool>,
+        client_user_id: String,
+        user: serde_json::Value,
+        device: serde_json::Value,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "access_token" : access_token, "account_id" : account_id,
+                        "client_transaction_id" : client_transaction_id, "amount" :
+                        amount, "user_present" : user_present, "client_user_id" :
+                        client_user_id, "user" : user, "device" : device }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn signal_decision_report(
+        &self,
+        client_transaction_id: String,
+        initiated: bool,
+        days_funds_on_hold: Option<i64>,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "client_transaction_id" : client_transaction_id, "initiated" :
+                        initiated, "days_funds_on_hold" : days_funds_on_hold }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn signal_return_report(
+        &self,
+        client_transaction_id: String,
+        return_code: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "client_transaction_id" : client_transaction_id, "return_code"
+                        : return_code }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn wallet_get(
+        &self,
+        wallet_id: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(json!({ "wallet_id" : wallet_id }))
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn wallet_transaction_execute(
+        &self,
+        idempotency_key: String,
+        wallet_id: String,
+        counterparty: serde_json::Value,
+        amount: serde_json::Value,
+        reference: String,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "idempotency_key" : idempotency_key, "wallet_id" : wallet_id,
+                        "counterparty" : counterparty, "amount" : amount, "reference" :
+                        reference }
+                    ),
+                )
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res.text().await.map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    }
+    pub async fn wallet_transactions_list(
+        &self,
+        wallet_id: String,
+        cursor: String,
+        count: i64,
+    ) -> anyhow::Result<ItemGetResponse> {
+        {
+            let res = self
+                .client
+                .post("/item/get")
+                .json(
+                    json!(
+                        { "wallet_id" : wallet_id, "cursor" : cursor, "count" : count }
+                    ),
+                )
                 .authenticate(&self.authentication)
                 .send()
                 .await

@@ -8,8 +8,8 @@ pub mod codegen;
 
 
 pub fn format_code(code: TokenStream) -> Result<String> {
-    let mut code = code.to_string();
+    let code = code.to_string();
     let syntax_tree = syn::parse_file(&code).unwrap();
-    let formatted = prettyplease::unparse(&syntax_tree);
-    Ok(formatted)
+    let code = prettyplease::unparse(&syntax_tree);
+    Ok(code)
 }

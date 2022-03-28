@@ -2,6 +2,7 @@ use openapiv3::{OpenAPI, ReferenceOr, Schema};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use crate::codegen::util::ToToken;
+use crate::codegen::util::ToIdent;
 
 pub fn all_struct_Schema(spec: &OpenAPI) -> TokenStream {
     let schemas = spec.components.as_ref().unwrap().schemas.iter().map(|(k, schema)| {
@@ -32,12 +33,12 @@ pub fn struct_Schema_object(name: &str, schema: &Schema, spec: &OpenAPI) -> Toke
         if !schema.required(&k) && !prop_schema.schema_data.nullable {
             field_type = quote! { Option<#field_type>};
         }
-        let serde = if ["type", "use"].contains(&k.as_str()) {
-            let serde = quote! {
+        let serde = if k.is_restricted() {
+            let serde_line = quote! {
                 #[serde(rename = #k)]
             };
             k += "_";
-            serde
+            serde_line
         } else {
             TokenStream::new()
         };

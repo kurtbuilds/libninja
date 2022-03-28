@@ -52,4 +52,5 @@ gen:
     cargo run
 
 client:
+    env
     cd gen/plaid && cargo run --bin client

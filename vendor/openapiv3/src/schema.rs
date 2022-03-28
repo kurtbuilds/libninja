@@ -265,6 +265,18 @@ impl Schema {
             _ => true,
         }
     }
+
+    pub fn is_anonymous_object(&self) -> bool {
+        match &self.schema_kind {
+            SchemaKind::Type(t) => {
+                match t {
+                    Type::Object(o) => o.properties.is_empty(),
+                    _ => false,
+                }
+            }
+            _ => false,
+        }
+    }
 }
 
 #[cfg(test)]
