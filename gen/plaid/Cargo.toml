@@ -2,6 +2,8 @@
 name = "plaid-openapi"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Async client library for Plaid."
 
 [dependencies]
 anyhow = "1.0.53"

@@ -17,8 +17,6 @@ impl ToToken for Schema {
             SchemaKind::Type(openapiv3::Type::Boolean{}) => quote!(bool),
             SchemaKind::Type(openapiv3::Type::Object(o)) => {
                 quote!(serde_json::Value)
-                // println!("object: {:?}, self: {:?}", o, self);
-                // unimplemented!()
             }
             SchemaKind::Type(openapiv3::Type::Array(a)) => {
                 let inside = a.items

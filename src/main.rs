@@ -16,13 +16,6 @@ use openapi_client_generator::format_code;
 fn main() -> Result<()>{
     let file = File::open("data/openapi-spec/plaid/2020-09-14.yaml")?;
     let spec: OpenAPI = serde_yaml::from_reader(file)?;
-    // spec.security.unwrap().iter().for_each(|s: SecurityRequirement| {
-    //     s.iter().for_each(|(k, v)| {
-    //         println!("{} {}", k, v);
-    //     })
-    //
-    //     println!("{:?}", s);
-    // });
     let struct_ServiceClient = struct_ServiceClient("Plaid");
     let struct_ServiceAuthentication = struct_ServiceAuthentication("Plaid", &spec);
     let impl_ServiceClient = impl_ServiceClient("Plaid", &spec);
