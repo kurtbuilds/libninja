@@ -1,3 +1,4 @@
+use convert_case::Case;
 use openapiv3::{OpenAPI, ReferenceOr, Schema};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
@@ -44,7 +45,7 @@ pub fn struct_Schema_object(name: &str, schema: &Schema, spec: &OpenAPI) -> Toke
         };
         let z = "".to_string();
         let docstring = prop_schema.schema_data.description.as_ref().unwrap_or(&z);
-        let field = syn::Ident::new(&k, Span::call_site());
+        let field = syn::Ident::new(&k.to_case(Case::Snake), Span::call_site());
         quote! {
             #serde
             #[doc = #docstring]

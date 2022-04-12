@@ -1,12 +1,9 @@
 #![allow(non_snake_case)]
-use std::fmt::format;
 use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use anyhow::Result;
-use convert_case::{Case, Casing};
-use openapiv3::{OpenAPI, ReferenceOr, Schema, SchemaKind, SecurityRequirement};
-use proc_macro2::TokenStream;
+use openapiv3::{OpenAPI};
 use quote::quote;
 use openapi_client_generator::codegen::client::{impl_Authenticatable, impl_ServiceAuthentication, impl_ServiceClient, struct_ServiceAuthentication, struct_ServiceClient};
 use openapi_client_generator::codegen::model::all_struct_Schema;

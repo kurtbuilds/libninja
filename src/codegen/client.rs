@@ -60,6 +60,7 @@ pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStrea
                 })
                 .collect::<Vec<_>>();
             let fn_args = params.iter().map(|(k, prop_schema)| {
+                let k = k.to_case(Case::ScreamingSnake);
                 let k = k.to_ident();
                 let tok = prop_schema.to_token(spec);
                 quote!(#k: #tok)
