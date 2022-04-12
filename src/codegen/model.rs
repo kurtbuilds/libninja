@@ -1,9 +1,11 @@
 use convert_case::Case;
+use convert_case::Casing;
 use openapiv3::{OpenAPI, ReferenceOr, Schema};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use crate::codegen::util::ToToken;
+
 use crate::codegen::util::ToIdent;
+use crate::codegen::util::ToToken;
 
 pub fn all_struct_Schema(spec: &OpenAPI) -> TokenStream {
     let schemas = spec.components.as_ref().unwrap().schemas.iter().map(|(k, schema)| {
