@@ -2,6 +2,8 @@
 name = "openapi-client-generator"
 version = "0.1.1"
 edition = "2021"
+license = "MIT"
+description = "Generates a client library based on an OpenAPI spec."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 default-run = "openapi-client-generator"
