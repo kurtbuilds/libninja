@@ -46,7 +46,7 @@ fn main() -> Result<()>{
         .write(true)
         .create(true)
         .truncate(true)
-        .open("gen/plaid/src/lib.rs")?;
+        .open("gen/plaid/src/mod")?;
     let template = fs::read_to_string("src/codegen/template/lib.rs")?;
     f.write(template.as_bytes())?;
     f.write("\n".as_bytes())?;
