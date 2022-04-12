@@ -73,7 +73,7 @@ impl ToIdent for str {
 
     fn to_ident(&self) -> Ident {
         let s = if self.is_restricted() {
-            self.to_case(Case::Snake) + "Struct"
+            self.to_case(Case::Snake) + "_"
         } else {
             self.to_case(Case::Snake)
         };

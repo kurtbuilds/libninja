@@ -723,7 +723,7 @@ See full Plaid docs at <https://plaid.com/docs/api/processors/#bank_transfercrea
         &self,
         idempotency_key: String,
         processor_token: String,
-        typeStruct: String,
+        type_: String,
         network: String,
         amount: String,
         iso_currency_code: String,
@@ -741,11 +741,11 @@ See full Plaid docs at <https://plaid.com/docs/api/processors/#bank_transfercrea
                 .json(
                     json!(
                         { "idempotency_key" : idempotency_key, "processor_token" :
-                        processor_token, "type" : typeStruct, "network" : network,
-                        "amount" : amount, "iso_currency_code" : iso_currency_code,
-                        "description" : description, "ach_class" : ach_class, "user" :
-                        user, "custom_tag" : custom_tag, "metadata" : metadata,
-                        "origination_account_id" : origination_account_id }
+                        processor_token, "type" : type_, "network" : network, "amount" :
+                        amount, "iso_currency_code" : iso_currency_code, "description" :
+                        description, "ach_class" : ach_class, "user" : user, "custom_tag"
+                        : custom_tag, "metadata" : metadata, "origination_account_id" :
+                        origination_account_id }
                     ),
                 )
                 .authenticate(&self.authentication)
@@ -2071,7 +2071,7 @@ See full Plaid docs at <https://plaid.com/docs/api/products#transferauthorizatio
         &self,
         access_token: String,
         account_id: String,
-        typeStruct: String,
+        type_: String,
         network: String,
         amount: String,
         ach_class: String,
@@ -2087,7 +2087,7 @@ See full Plaid docs at <https://plaid.com/docs/api/products#transferauthorizatio
                 .json(
                     json!(
                         { "access_token" : access_token, "account_id" : account_id,
-                        "type" : typeStruct, "network" : network, "amount" : amount,
+                        "type" : type_, "network" : network, "amount" : amount,
                         "ach_class" : ach_class, "user" : user, "device" : device,
                         "origination_account_id" : origination_account_id,
                         "iso_currency_code" : iso_currency_code }
@@ -2118,7 +2118,7 @@ See full Plaid docs at <https://plaid.com/docs/api/products#transfercreate>*/
         access_token: String,
         account_id: String,
         authorization_id: String,
-        typeStruct: String,
+        type_: String,
         network: String,
         amount: String,
         description: String,
@@ -2136,11 +2136,10 @@ See full Plaid docs at <https://plaid.com/docs/api/products#transfercreate>*/
                     json!(
                         { "idempotency_key" : idempotency_key, "access_token" :
                         access_token, "account_id" : account_id, "authorization_id" :
-                        authorization_id, "type" : typeStruct, "network" : network,
-                        "amount" : amount, "description" : description, "ach_class" :
-                        ach_class, "user" : user, "metadata" : metadata,
-                        "origination_account_id" : origination_account_id,
-                        "iso_currency_code" : iso_currency_code }
+                        authorization_id, "type" : type_, "network" : network, "amount" :
+                        amount, "description" : description, "ach_class" : ach_class,
+                        "user" : user, "metadata" : metadata, "origination_account_id" :
+                        origination_account_id, "iso_currency_code" : iso_currency_code }
                     ),
                 )
                 .authenticate(&self.authentication)
@@ -2167,7 +2166,7 @@ See full Plaid docs at <https://plaid.com/docs/bank-transfers/reference#bank_tra
         idempotency_key: String,
         access_token: String,
         account_id: String,
-        typeStruct: String,
+        type_: String,
         network: String,
         amount: String,
         iso_currency_code: String,
@@ -2185,7 +2184,7 @@ See full Plaid docs at <https://plaid.com/docs/bank-transfers/reference#bank_tra
                 .json(
                     json!(
                         { "idempotency_key" : idempotency_key, "access_token" :
-                        access_token, "account_id" : account_id, "type" : typeStruct,
+                        access_token, "account_id" : account_id, "type" : type_,
                         "network" : network, "amount" : amount, "iso_currency_code" :
                         iso_currency_code, "description" : description, "ach_class" :
                         ach_class, "user" : user, "custom_tag" : custom_tag, "metadata" :
