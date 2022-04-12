@@ -9,9 +9,7 @@ pub mod codegen;
 
 pub fn format_code(code: TokenStream) -> Result<String> {
     let code = code.to_string();
-    let syntax_tree = syn::parse_file(&code).map_err(|e| {
-        println!("{:?}", e.span());
-    }).unwrap();
+    let syntax_tree = syn::parse_file(&code).unwrap();
     let code = prettyplease::unparse(&syntax_tree);
     Ok(code)
 }
