@@ -110,7 +110,7 @@ impl<'a> ReferenceOr<&'a Schema> {
     pub fn get_struct_name(&self) -> Option<&str> {
         match self {
             ReferenceOr::Reference { reference } => get_struct_name_from_reference(&reference),
-            ReferenceOr::Item(schema) => None,
+            ReferenceOr::Item(_schema) => None,
         }
     }
 

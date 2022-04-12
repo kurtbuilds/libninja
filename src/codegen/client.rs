@@ -72,10 +72,17 @@ pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStrea
                 .collect::<Vec<_>>();
             let mut doc_pieces = vec![];
             if let Some(summary) = operation.summary.as_ref() {
-                doc_pieces.push(summary.clone());
+                if !summary.is_empty() {
+                    doc_pieces.push(summary.clone());
+                }
             }
             if let Some(description) = operation.description.as_ref() {
-                doc_pieces.push(description.clone());
+                if !description.is_empty() {
+                    if doc_pieces.len() > 0 && description == &doc_pieces[0] {
+                    } else {
+                        doc_pieces.push(description.clone());
+                    }
+                }
             }
             if let Some(external_docs) = operation.external_docs.as_ref() {
                 doc_pieces.push(format!("See full Plaid docs at <https://plaid.com/docs{}>", external_docs.url));

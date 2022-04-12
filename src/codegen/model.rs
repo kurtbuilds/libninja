@@ -42,9 +42,12 @@ pub fn struct_Schema_object(name: &str, schema: &Schema, spec: &OpenAPI) -> Toke
         } else {
             TokenStream::new()
         };
+        let z = "".to_string();
+        let docstring = prop_schema.schema_data.description.as_ref().unwrap_or(&z);
         let field = syn::Ident::new(&k, Span::call_site());
         quote! {
             #serde
+            #[doc = #docstring]
             pub #field: #field_type,
         }
     });
