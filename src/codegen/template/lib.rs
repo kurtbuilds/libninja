@@ -6,3 +6,5 @@
 use serde_json::json;
 use serde::{Serialize, Deserialize};
 use httpclient::RequestBuilder;
+pub mod model;
+use crate::model::*;

@@ -27,8 +27,6 @@ fn main() -> Result<()>{
         #struct_ServiceAuthentication
         #impl_ServiceAuthentication
         #impl_Authenticatable
-
-        #all_struct_Schema
     };
     let code = format_code(tok).unwrap();
     let mut f =  OpenOptions::new()
@@ -38,6 +36,21 @@ fn main() -> Result<()>{
         .truncate(true)
         .open("gen/plaid/src/lib.rs")?;
     let template = fs::read_to_string("src/codegen/template/lib.rs")?;
+    f.write(template.as_bytes())?;
+    f.write("\n".as_bytes())?;
+    f.write(code.as_bytes())?;
+
+    let tok = quote! {
+        #all_struct_Schema
+    };
+    let code = format_code(tok).unwrap();
+    let mut f =  OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open("gen/plaid/src/model.rs")?;
+    let template = fs::read_to_string("src/codegen/template/model.rs")?;
     f.write(template.as_bytes())?;
     f.write("\n".as_bytes())?;
     f.write(code.as_bytes())?;

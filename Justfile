@@ -55,4 +55,4 @@ client:
     cd gen/plaid && cargo run --bin client
 
 doc:
-    cd gen/plaid && cargo doc --open -p plaid-openapi
+    cd gen/plaid && cargo doc --open -p plaid-openapi --no-deps
