@@ -7,6 +7,15 @@ use quote::{quote, ToTokens};
 use crate::codegen::util::ToIdent;
 use crate::codegen::util::ToToken;
 
+pub fn generate_model_rs(spec: &OpenAPI) -> TokenStream {
+    let all_struct_Schema = all_struct_Schema(spec);
+
+    quote! {
+        #all_struct_Schema
+    }
+}
+
+
 pub fn all_struct_Schema(spec: &OpenAPI) -> TokenStream {
     let schemas = spec.components.as_ref().unwrap().schemas.iter().map(|(k, schema)| {
         let schema = schema
@@ -20,12 +29,18 @@ pub fn all_struct_Schema(spec: &OpenAPI) -> TokenStream {
 }
 
 pub fn struct_Schema_object(name: &str, schema: &Schema, spec: &OpenAPI) -> TokenStream {
+    if name == "Error" {
+        println!("{:?}", schema);
+    }
     let fields = schema.properties().unwrap().iter().map(|(k, v)| {
         let mut k = k.to_string();
         let prop_schema = v
             .as_ref()
             .resolve(spec)
             .unwrap();
+        if k == "error" {
+            println!("{:?}", prop_schema);
+        }
         let mut field_type = match v {
             ReferenceOr::Reference { ref reference } => {
                 let name = reference.rsplit('/').next().unwrap();
@@ -33,7 +48,7 @@ pub fn struct_Schema_object(name: &str, schema: &Schema, spec: &OpenAPI) -> Toke
             },
             ReferenceOr::Item(schema) => schema.to_token(spec),
         };
-        if !schema.required(&k) && !prop_schema.schema_data.nullable {
+        if schema.required(&k) || prop_schema.schema_data.nullable {
             field_type = quote! { Option<#field_type>};
         }
         let serde = if k.is_restricted() {

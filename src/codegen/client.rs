@@ -6,6 +6,23 @@ use crate::codegen::util;
 use crate::codegen::util::ToToken;
 use crate::codegen::util::ToIdent;
 
+
+pub fn generate_lib_rs(spec: &OpenAPI, name: &str) -> TokenStream {
+    let struct_ServiceClient = struct_ServiceClient(name);
+    let struct_ServiceAuthentication = struct_ServiceAuthentication(name, spec);
+    let impl_ServiceClient = impl_ServiceClient(name, spec);
+    let impl_ServiceAuthentication = impl_ServiceAuthentication(name, spec);
+    let impl_Authenticatable = impl_Authenticatable(name, spec);
+
+    quote! {
+        #struct_ServiceClient
+        #impl_ServiceClient
+        #struct_ServiceAuthentication
+        #impl_ServiceAuthentication
+        #impl_Authenticatable
+    }
+}
+
 pub fn service_auth_struct_name(service_name: &str) -> syn::Ident {
     quote::format_ident!("{}Authentication", service_name)
 }
@@ -79,8 +96,7 @@ pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStrea
             }
             if let Some(description) = operation.description.as_ref() {
                 if !description.is_empty() {
-                    if doc_pieces.len() > 0 && description == &doc_pieces[0] {
-                    } else {
+                    if doc_pieces.len() > 0 && description == &doc_pieces[0] {} else {
                         doc_pieces.push(description.clone());
                     }
                 }
@@ -194,7 +210,7 @@ pub fn impl_ServiceAuthentication_from_env(service_name: &str, spec: &OpenAPI) -
         } else {
             format!("{}_{}", service_name.to_case(Case::ScreamingSnake), k.to_case(Case::ScreamingSnake))
         };
-        let expect = format!("Environment variable {} not set", env_var);
+        let expect = format!("Environment variable {} is not set.", env_var);
         quote! {
             #field: std::env::var(#env_var).expect(#expect)
         }
