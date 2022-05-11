@@ -1,4 +1,4 @@
-set dotenv-load := true
+set dotenv-load := false
 
 help:
     @just --list --unsorted
@@ -16,9 +16,6 @@ release:
 
 install:
     cargo install --path .
-
-bootstrap:
-    cargo install cargo-edit
 
 test *args:
     cargo test {{args}}
@@ -47,12 +44,3 @@ publish:
 patch: test
     just version patch
     just publish
-
-gen:
-    cargo run
-
-client:
-    cd gen/plaid && cargo run --bin client
-
-doc:
-    cd gen/plaid && cargo doc --open -p plaid-openapi --no-deps
