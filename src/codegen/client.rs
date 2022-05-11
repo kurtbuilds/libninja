@@ -183,7 +183,6 @@ pub fn struct_ServiceAuthentication(service_name: &str, spec: &OpenAPI) -> Token
 
     let variants = spec.security.as_ref().unwrap().iter().map(|security| {
         let args = security.iter().map(|(k, scopes)| {
-            println!("security arg {:?}, {:?}", k, k.to_ident());
             k.to_ident()
         });
         let (name, scopes) = security.iter().next().unwrap();

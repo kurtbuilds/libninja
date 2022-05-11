@@ -39,7 +39,6 @@ fn write_file(path: &Path, code: TokenStream, template: &str) -> Result<()> {
 }
 
 pub fn generate_library(opts: GenerateLibrary) -> Result<()> {
-    println!("calling generate_library: {}", opts.name);
     fs::create_dir_all(&opts.dest_path)?;
 
     let spec: OpenAPI = {
