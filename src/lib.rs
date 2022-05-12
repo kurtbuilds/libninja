@@ -5,7 +5,6 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use proc_macro2::TokenStream;
 use anyhow::Result;
-use derive_builder::Builder;
 pub use openapiv3::OpenAPI;
 use tokio::io::AsyncWriteExt;
 use crate::codegen::client::generate_lib_rs;
