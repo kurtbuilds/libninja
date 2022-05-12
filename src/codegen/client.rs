@@ -7,7 +7,7 @@ use crate::codegen::util::ToToken;
 use crate::codegen::util::ToIdent;
 
 
-/// Generates the client code for a given OpenAPI specification.
+/// Generates the client code for a given OpenAPI yaml specification.
 pub fn generate_lib_rs(spec: &OpenAPI, name: &str) -> TokenStream {
     let struct_ServiceClient = struct_ServiceClient(name);
     let struct_ServiceAuthentication = struct_ServiceAuthentication(name, spec);
