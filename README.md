@@ -1,3 +1,24 @@
+<div id="top"></div>
+
+<p align="center">
+<a href="https://github.com/kurtbuilds/openapi-client-generator/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/kurtbuilds/openapi-client-generator.svg?style=flat-square" alt="GitHub Contributors" />
+</a>
+<a href="https://github.com/kurtbuilds/openapi-client-generator/stargazers">
+    <img src="https://img.shields.io/github/stars/kurtbuilds/openapi-client-generator.svg?style=flat-square" alt="Stars" />
+</a>
+<a href="https://github.com/kurtbuilds/openapi-client-generator/actions">
+    <img src="https://img.shields.io/github/workflow/status/kurtbuilds/openapi-client-generator/test?style=flat-square" alt="Build Status" />
+</a>
+<a href="https://crates.io/crates/openapi-client-generator">
+    <img src="https://img.shields.io/crates/d/openapi-client-generator?style=flat-square" alt="Downloads" />
+</a>
+<a href="https://crates.io/crates/openapi-client-generator">
+    <img src="https://img.shields.io/crates/v/openapi-client-generator?style=flat-square" alt="Crates.io" />
+</a>
+
+</p>
+
 # Installation
 
 This project can be used as a library or as a command line tool.
