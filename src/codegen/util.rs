@@ -22,14 +22,15 @@ impl ToToken for Schema {
                 let inside = a.items
                     .as_ref()
                     .unwrap()
-                    .unbox_ref()
+                    .unbox()
                     .to_token(spec);
                 quote! { Vec<#inside> }
             }
             SchemaKind::Any(..) => quote!(serde_json::Value),
             SchemaKind::AllOf{..} => quote!(serde_json::Value),
+            SchemaKind::OneOf{..} => quote!(serde_json::Value),
             _ => {
-                println!("unimplemented: {:?}", self);
+                println!("unimplemented: {:#?}", self);
                 unimplemented!()
             },
         };
@@ -42,11 +43,26 @@ impl ToToken for Schema {
 }
 
 
-impl ToToken for ReferenceOr<&Schema> {
+pub fn get_struct_name(reference: &str) -> Option<&str> {
+    let mut parts = reference.split('/');
+    if parts.next() != Some("#") {
+        return None;
+    }
+    if parts.next() != Some("components") {
+        return None;
+    }
+    if parts.next() != Some("schemas") {
+        return None;
+    }
+    parts.next()
+}
+
+
+impl ToToken for ReferenceOr<Schema> {
     fn to_token(&self, spec: &OpenAPI) -> TokenStream {
         match self {
-            ReferenceOr::Reference{ .. } => {
-                let name = self.get_struct_name().unwrap();
+            ReferenceOr::Reference{ reference } => {
+                let name = get_struct_name(&reference).unwrap();
                 syn::Ident::new(&name, Span::call_site()).to_token_stream()
             }
             ReferenceOr::Item(s) => s.to_token(spec),

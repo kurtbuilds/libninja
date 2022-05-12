@@ -382,9 +382,9 @@ dependencies = [
 
 [[package]]
 name = "openapiv3-extended"
-version = "1.0.1"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b4e3ecc4687b5c305a05ef69dbc79d7140163c32c17a0b98c1f3fffaa044c12"
+checksum = "14c145d64acdc3665563214799b8e21e524db296ad41d1f4f7639ba9c446c446"
 dependencies = [
  "indexmap",
  "serde",

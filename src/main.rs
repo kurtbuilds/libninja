@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
 
+use std::path::Path;
 use anyhow::Result;
-use openapi_client_generator::{generate_library, GenerateLibrary};
+use openapi_client_generator::{generate_library, generate_library_at_path, GenerateLibrary};
 use clap::{Command, Arg};
 
 
@@ -32,9 +33,8 @@ fn main() -> Result<()> {
             let yaml_spec = matches.value_of("yaml_spec").unwrap();
             let output_dir = matches.value_of("output_dir").unwrap_or("src");
 
-            generate_library(GenerateLibrary {
+            generate_library_at_path(Path::new(yaml_spec),GenerateLibrary {
                 name,
-                yaml_path: yaml_spec.into(),
                 dest_path: output_dir.into(),
                 lib_rs_path: None,
                 model_rs_path: None,

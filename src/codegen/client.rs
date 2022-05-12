@@ -1,7 +1,8 @@
 use convert_case::{Case, Casing};
-use openapiv3::{OpenAPI, ReferenceOr, Schema, SchemaKind, StatusCode};
+use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, RequestBody, Schema, SchemaKind, StatusCode};
 use proc_macro2::TokenStream;
 use quote::quote;
+use serde::de::Unexpected::Option;
 use crate::codegen::util;
 use crate::codegen::util::ToToken;
 use crate::codegen::util::ToIdent;
@@ -9,18 +10,29 @@ use crate::codegen::util::ToIdent;
 
 /// Generates the client code for a given OpenAPI specification.
 pub fn generate_lib_rs(spec: &OpenAPI, name: &str) -> TokenStream {
-    let struct_ServiceClient = struct_ServiceClient(name);
-    let struct_ServiceAuthentication = struct_ServiceAuthentication(name, spec);
-    let impl_ServiceClient = impl_ServiceClient(name, spec);
-    let impl_ServiceAuthentication = impl_ServiceAuthentication(name, spec);
-    let impl_Authenticatable = impl_Authenticatable(name, spec);
+    println!("Generating client for {}", name);
+    let struct_Client = struct_Client(name);
+    println!("generated struct");
+    let impl_Client = impl_Client(name, spec);
+    println!("generated service client");
+
+    let security = if spec.security.is_some() {
+        let struct_ServiceAuthentication = struct_ServiceAuthentication(name, spec);
+        let impl_ServiceAuthentication = impl_ServiceAuthentication(name, spec);
+        let impl_Authenticatable = impl_Authenticatable(name, spec);
+        quote! {
+            #struct_ServiceAuthentication
+            #impl_ServiceAuthentication
+            #impl_Authenticatable
+        }
+    } else {
+        quote! {}
+    };
 
     quote! {
-        #struct_ServiceClient
-        #impl_ServiceClient
-        #struct_ServiceAuthentication
-        #impl_ServiceAuthentication
-        #impl_Authenticatable
+        #struct_Client
+        #impl_Client
+        #security
     }
 }
 
@@ -32,7 +44,7 @@ pub fn service_client_struct_name(service_name: &str) -> syn::Ident {
     quote::format_ident!("{}Client", service_name)
 }
 
-pub fn struct_ServiceClient(service_name: &str) -> TokenStream {
+pub fn struct_Client(service_name: &str) -> TokenStream {
     let auth_struct_name = service_auth_struct_name(service_name);
     let client_struct_name = service_client_struct_name(service_name);
 
@@ -45,110 +57,156 @@ pub fn struct_ServiceClient(service_name: &str) -> TokenStream {
 }
 
 
-pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStream> + '_ {
-    spec.paths.iter()
-        // .filter(|(path, _)| path.as_str() == "/item/get")
-        .filter_map(move |(path, item)| {
-            let item = item.as_item().unwrap();
-            let operation = item.post.as_ref().unwrap();
-            let name = operation.operation_id.as_ref().unwrap().to_case(Case::Snake);
-            let name = syn::Ident::new(&name, proc_macro2::Span::call_site());
-            let request_body = operation.request_body.as_ref().unwrap()
-                .as_item().unwrap();
-            let params = request_body.content.iter()
-                .filter(|(key, _)| key.as_str() == "application/json")
-                .map(|(name, media_type)| {
-                    let body_schema = media_type.schema
-                        .as_ref()
-                        .unwrap()
-                        .as_ref()
-                        .resolve(spec)
-                        .unwrap();
-                    let props = body_schema.properties().unwrap();
-                    props.iter()
-                })
-                .flatten()
-                .filter(|(k, v)| !["client_id", "secret"].contains(&k.as_str()))
-                .map(|(k, v)| {
-                    let prop_schema = v
-                        .as_ref()
-                        .resolve(spec)
-                        .unwrap();
-                    (k, prop_schema)
-                })
-                .collect::<Vec<_>>();
-            let fn_args = params.iter().map(|(k, prop_schema)| {
-                // let k = k.to_case(Case::Snake);
-                let k = k.to_ident();
-                let tok = prop_schema.to_token(spec);
-                quote!(#k: #tok)
-            })
-                .collect::<Vec<_>>();
-            let json_fields = params.iter().map(|(k, prop_schema)| {
-                let iden = k.to_ident();
-                quote!(#k: #iden)
-            })
-                .collect::<Vec<_>>();
-            let mut doc_pieces = vec![];
-            if let Some(summary) = operation.summary.as_ref() {
-                if !summary.is_empty() {
-                    doc_pieces.push(summary.clone());
-                }
+pub fn build_docs(operation: &Operation) -> String {
+    let mut doc_pieces = vec![];
+    if let Some(summary) = operation.summary.as_ref() {
+        if !summary.is_empty() {
+            doc_pieces.push(summary.clone());
+        }
+    }
+    if let Some(description) = operation.description.as_ref() {
+        if !description.is_empty() {
+            if doc_pieces.len() > 0 && description == &doc_pieces[0] {} else {
+                doc_pieces.push(description.clone());
             }
-            if let Some(description) = operation.description.as_ref() {
-                if !description.is_empty() {
-                    if doc_pieces.len() > 0 && description == &doc_pieces[0] {} else {
-                        doc_pieces.push(description.clone());
-                    }
-                }
-            }
-            if let Some(external_docs) = operation.external_docs.as_ref() {
-                doc_pieces.push(format!("See full Plaid docs at <https://plaid.com/docs{}>", external_docs.url));
-            }
-            let docstring = doc_pieces.join("\n\n");
-            let response_success = operation.responses.responses
-                .get(&StatusCode::Code(200))
-                .unwrap()
-                .as_item()
-                .unwrap();
-            let response_success_schema_name = match response_success.content.get("application/json") {
-                Some(r) => r.schema.as_ref().unwrap().as_ref().to_token(spec),
-                None => return None,
-            };
-            Some(quote! {
-                #[doc = #docstring]
-                pub async fn #name(&self, #(#fn_args),*) -> anyhow::Result<#response_success_schema_name> {
-                    {
-                         let res = self.client.post("/item/get")
-                            .json(json!({
-                                #(#json_fields),*
-                            }))
-                            .authenticate(&self.authentication)
-                            .send()
-                            .await
-                            .unwrap()
-                            .error_for_status();
-                        match res {
-                            Ok(res) => res
-                                .json()
-                                .await
-                                .map_err(|e| anyhow::anyhow!("{:?}", e)),
-                            Err(res) => {
-                                let text = res
-                                    .text()
-                                    .await
-                                    .map_err(|e| anyhow::anyhow!("{:?}", e));
-                                Err(anyhow::anyhow!("{:?}", text))
-                            }
-                        }
-                    }
-                }
-            })
-        })
+        }
+    }
+    if let Some(external_docs) = operation.external_docs.as_ref() {
+        doc_pieces.push(format!("See endpoint docs at <{}>.", external_docs.url));
+    }
+    doc_pieces.join("\n\n")
 }
 
 
-pub fn impl_ServiceClient(service_name: &str, spec: &OpenAPI) -> TokenStream {
+pub fn build_url(operation: &Operation, path: &str) -> TokenStream {
+    if operation.parameters.len() > 0 {
+        quote! {
+            &format!(#path)
+        }
+    } else {
+        quote! {
+            #path
+        }
+    }
+}
+
+
+pub fn build_method(spec: &OpenAPI, path: &str, method: &str, operation: &Operation) -> core::option::Option<TokenStream> {
+    let name = operation.operation_id.as_ref().unwrap().to_case(Case::Snake);
+
+    let path_args: Vec<(String, &Schema)> = operation.parameters.iter().map(|params| {
+        let param: &Parameter = params.as_item().unwrap();
+        let schema = param.parameter_data_ref().schema().unwrap().resolve(spec);
+        (param.parameter_data_ref().name.to_case(Case::Snake), schema)
+    }).collect();
+
+    let body_args: std::option::Option<Vec<(String, &Schema)>> = operation.request_body.as_ref().map(|body| {
+        let body: &RequestBody = body.as_item().unwrap();
+        body.content.iter()
+            .filter(|(key, _)| key.as_str() == "application/json")
+            .filter_map(|(name, media_type)| {
+                let body_schema = media_type.schema
+                    .as_ref()
+                    .unwrap()
+                    .resolve(spec);
+                body_schema.properties()
+                    .map(|map| map.into_iter())
+            })
+            .flatten()
+            .filter(|(k, v)| !["client_id", "secret"].contains(&k.as_str()))
+            .map(|(k, v)| {
+                (k.clone(), v.resolve(spec))
+            })
+            .collect()
+    });
+
+    let fn_args: Vec<TokenStream> = path_args.iter().chain(body_args.iter().flatten()).map(|(name, schema)| {
+        let k = name.to_ident();
+        let tok = schema.to_token(spec);
+        quote!(#k: #tok)
+    }).collect();
+
+    let json: TokenStream = if let Some(body_args) = body_args {
+        let json_fields: Vec<TokenStream> = body_args.iter().map(|(k, _schema)| {
+            let iden = k.to_ident();
+            quote!(#k: #iden)
+        })
+            .collect::<Vec<_>>();
+        ;
+        quote! {
+                    .json(json!({
+                        #(#json_fields),*
+                    }))
+                }
+    } else {
+        quote! {}
+    };
+
+    let name = syn::Ident::new(&name, proc_macro2::Span::call_site());
+    let method = syn::Ident::new(method, proc_macro2::Span::call_site());
+    let response_success = operation.responses.responses
+        .get(&StatusCode::Code(200))
+        .unwrap()
+        .as_item()
+        .unwrap();
+    let response_success_struct: TokenStream = match response_success.content.get("application/json") {
+        Some(r) => r.schema.as_ref().unwrap().to_token(spec),
+        None => return None,
+    };
+    let docstring: String = build_docs(operation);
+    let url: TokenStream = build_url(operation, &path);
+
+    Some(quote! {
+        #[doc = #docstring]
+        pub async fn #name(&self, #(#fn_args),*) -> anyhow::Result<#response_success_struct> {
+             let res = self.client.#method(#url)
+                #json
+                .authenticate(&self.authentication)
+                .send()
+                .await
+                .unwrap()
+                .error_for_status();
+            match res {
+                Ok(res) => res
+                    .json()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("{:?}", e)),
+                Err(res) => {
+                    let text = res
+                        .text()
+                        .await
+                        .map_err(|e| anyhow::anyhow!("{:?}", e));
+                    Err(anyhow::anyhow!("{:?}", text))
+                }
+            }
+        }
+    })
+}
+
+
+pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStream> + '_ {
+    let mut it = spec.paths.iter();
+    spec.paths.iter().map(|(path, item)| {
+        let item = item.as_item().unwrap();
+        vec![
+            (item.get.as_ref(), "get"),
+            (item.post.as_ref(), "post"),
+            (item.delete.as_ref(), "delete"),
+            (item.put.as_ref(), "put"),
+        ].into_iter()
+            .filter_map(|x| {
+            if let Some(operation) = x.0 {
+                build_method(spec, path, x.1, operation)
+            } else {
+                None
+            }
+        })
+    })
+        .flatten()
+}
+
+
+pub fn impl_Client(service_name: &str, spec: &OpenAPI) -> TokenStream {
     let client_struct_name = service_client_struct_name(service_name);
     let auth_struct_name = service_auth_struct_name(service_name);
     let path_fns = impl_ServiceClient_paths(spec);

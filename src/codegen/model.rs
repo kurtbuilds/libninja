@@ -18,9 +18,7 @@ pub fn generate_model_rs(spec: &OpenAPI) -> TokenStream {
 
 pub fn all_struct_Schema(spec: &OpenAPI) -> TokenStream {
     let schemas = spec.components.as_ref().unwrap().schemas.iter().map(|(k, schema)| {
-        let schema = schema
-            .as_ref()
-            .resolve(spec).unwrap();
+        let schema = schema.resolve(spec);
         struct_Schema(k, schema, spec)
     });
     quote! {
@@ -35,10 +33,7 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
 
     let fields = struct_schema.properties().unwrap().iter().map(|(k, v)| {
         let mut k = k.to_string();
-        let prop_schema = v
-            .as_ref()
-            .resolve(spec)
-            .unwrap();
+        let prop_schema = v.resolve(spec);
 
         let mut field_type = match v {
             ReferenceOr::Reference { ref reference } => {
