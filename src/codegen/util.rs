@@ -29,6 +29,7 @@ impl ToToken for Schema {
             SchemaKind::Any(..) => quote!(serde_json::Value),
             SchemaKind::AllOf{..} => quote!(serde_json::Value),
             SchemaKind::OneOf{..} => quote!(serde_json::Value),
+            SchemaKind::AnyOf { .. } => quote!(serde_json::Value),
             _ => {
                 println!("unimplemented: {:#?}", self);
                 unimplemented!()
@@ -43,7 +44,7 @@ impl ToToken for Schema {
 }
 
 
-pub fn get_struct_name(reference: &str) -> Option<&str> {
+pub fn get_struct_name(reference: &str) -> Option<String> {
     let mut parts = reference.split('/');
     if parts.next() != Some("#") {
         return None;
@@ -54,7 +55,7 @@ pub fn get_struct_name(reference: &str) -> Option<&str> {
     if parts.next() != Some("schemas") {
         return None;
     }
-    parts.next()
+    parts.next().map(|s| s.to_case(Case::Pascal))
 }
 
 
@@ -93,10 +94,22 @@ impl ToIdent for str {
         } else {
             self.to_case(Case::Snake)
         };
+        let s = s.replace("/", "_");
         syn::Ident::new(&s, Span::call_site())
     }
 
     fn is_restricted(&self) -> bool {
-        ["type", "use"].contains(&self)
+        ["type", "use", "ref"].contains(&self)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_to_ident() {
+        assert_eq!("meta/root".to_ident(), "meta_root");
     }
 }

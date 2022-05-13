@@ -50,6 +50,7 @@ pub fn generate_library(spec: OpenAPI, opts: GenerateLibrary) -> Result<()> {
         Some(path) => fs::read_to_string(path)?,
         None => include_str!("../template/lib.rs").to_string(),
     };
+    println!("generate lib.rs");
     let code = generate_lib_rs(&spec, &opts.name);
     write_file(&opts.dest_path.join("lib.rs"), code, &lib_rs_template)?;
 
@@ -57,8 +58,10 @@ pub fn generate_library(spec: OpenAPI, opts: GenerateLibrary) -> Result<()> {
         Some(path) => fs::read_to_string(path)?,
         None => include_str!("../template/model.rs").to_string(),
     };
+    println!("generate model.rs");
     let code = generate_model_rs(&spec);
     write_file(&opts.dest_path.join("model.rs"), code, &lib_rs_template)?;
+    println!("done");
 
     Ok(())
 }

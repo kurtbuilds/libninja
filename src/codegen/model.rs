@@ -27,10 +27,6 @@ pub fn all_struct_Schema(spec: &OpenAPI) -> TokenStream {
 }
 
 pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) -> TokenStream {
-    // if name != "Item" {
-    //     return quote! {};
-    // }
-
     let fields = struct_schema.properties().unwrap().iter().map(|(k, v)| {
         let mut k = k.to_string();
         let prop_schema = v.resolve(spec);
@@ -38,29 +34,16 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
         let mut field_type = match v {
             ReferenceOr::Reference { ref reference } => {
                 let name = reference.rsplit('/').next().unwrap();
-                let field_type = syn::Ident::new(name, Span::call_site()).to_token_stream();
+                let field_type = name.to_struct_name();
                 if prop_schema.schema_data.nullable {
                     quote! { Option<#field_type> }
                 } else {
-                    field_type
+                    quote! { field_type }
                 }
             }
             ReferenceOr::Item(schema) => schema.to_token(spec),
         };
-        // if prop_schema.schema_data.nullable {
-        //     println!("cargo:warning={}.{} nullable", name, k);
-        // }
-        // if name == "Item" && k == "error" {
-        //     println!("cargo:warning={}.{}, requiredness struct={} prop={:?}",
-        //              name, k,
-        //              struct_schema.required(&k),
-        //              prop_schema.schema_data
-        //     );
-        // }
-        // if prop_schema.schema_data.nullable {
-        //     field_type = quote! { Option<#field_type>};
-        // }
-        let serde = if k.is_restricted() {
+        let serde_attr = if k.is_restricted() {
             let serde_line = quote! {
                 #[serde(rename = #k)]
             };
@@ -71,15 +54,14 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
         };
         let z = "".to_string();
         let docstring = prop_schema.schema_data.description.as_ref().unwrap_or(&z);
-        // let k = k.to_case(Case::Snake);
-        let field = syn::Ident::new(&k, Span::call_site());
+        let field = k.to_ident();
         quote! {
-            #serde
+            #serde_attr
             #[doc = #docstring]
             pub #field: #field_type,
         }
     });
-    let name = syn::Ident::new(name, Span::call_site());
+    let name = name.to_struct_name();
     quote! {
         #[derive(Debug, Serialize, Deserialize)]
         pub struct #name {

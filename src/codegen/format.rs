@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::Write;
 use anyhow::Result;
 use proc_macro2::TokenStream;
 

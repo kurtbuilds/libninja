@@ -10,11 +10,8 @@ use crate::codegen::util::ToIdent;
 
 /// Generates the client code for a given OpenAPI specification.
 pub fn generate_lib_rs(spec: &OpenAPI, name: &str) -> TokenStream {
-    println!("Generating client for {}", name);
     let struct_Client = struct_Client(name);
-    println!("generated struct");
     let impl_Client = impl_Client(name, spec);
-    println!("generated service client");
 
     let security = if spec.security.is_some() {
         let struct_ServiceAuthentication = struct_ServiceAuthentication(name, spec);
@@ -41,6 +38,7 @@ pub fn service_auth_struct_name(service_name: &str) -> syn::Ident {
 }
 
 pub fn service_client_struct_name(service_name: &str) -> syn::Ident {
+    println!("service_client_struct_name: {}", service_name);
     quote::format_ident!("{}Client", service_name)
 }
 
@@ -92,10 +90,9 @@ pub fn build_url(operation: &Operation, path: &str) -> TokenStream {
 
 
 pub fn build_method(spec: &OpenAPI, path: &str, method: &str, operation: &Operation) -> core::option::Option<TokenStream> {
-    let name = operation.operation_id.as_ref().unwrap().to_case(Case::Snake);
 
     let path_args: Vec<(String, &Schema)> = operation.parameters.iter().map(|params| {
-        let param: &Parameter = params.as_item().unwrap();
+        let param: &Parameter = params.resolve(spec);
         let schema = param.parameter_data_ref().schema().unwrap().resolve(spec);
         (param.parameter_data_ref().name.to_case(Case::Snake), schema)
     }).collect();
@@ -142,13 +139,16 @@ pub fn build_method(spec: &OpenAPI, path: &str, method: &str, operation: &Operat
         quote! {}
     };
 
-    let name = syn::Ident::new(&name, proc_macro2::Span::call_site());
+    let name = operation.operation_id.as_ref().unwrap().to_ident();
     let method = syn::Ident::new(method, proc_macro2::Span::call_site());
     let response_success = operation.responses.responses
         .get(&StatusCode::Code(200))
+        .or_else(|| operation.responses.responses.get(&StatusCode::Code(201)))
+        .or_else(|| operation.responses.responses.get(&StatusCode::Code(202)))
+        .or_else(|| operation.responses.responses.get(&StatusCode::Code(204)))
+        .or_else(|| operation.responses.responses.get(&StatusCode::Code(302)))
         .unwrap()
-        .as_item()
-        .unwrap();
+        .resolve(spec);
     let response_success_struct: TokenStream = match response_success.content.get("application/json") {
         Some(r) => r.schema.as_ref().unwrap().to_token(spec),
         None => return None,
@@ -207,6 +207,7 @@ pub fn impl_ServiceClient_paths(spec: &OpenAPI) -> impl Iterator<Item=TokenStrea
 
 
 pub fn impl_Client(service_name: &str, spec: &OpenAPI) -> TokenStream {
+    println!("impl cleint");
     let client_struct_name = service_client_struct_name(service_name);
     let auth_struct_name = service_auth_struct_name(service_name);
     let path_fns = impl_ServiceClient_paths(spec);
