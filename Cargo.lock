@@ -303,7 +303,7 @@ dependencies = [
 
 [[package]]
 name = "openapiv3-extended"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
  "indexmap",
  "serde",
