@@ -28,17 +28,17 @@ pub fn all_struct_Schema(spec: &OpenAPI) -> TokenStream {
 
 pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) -> TokenStream {
     let fields = struct_schema.properties().unwrap().iter().map(|(k, v)| {
-        let mut k = k.to_string();
+        let k = k.to_string();
         let prop_schema = v.resolve(spec);
 
-        let mut field_type = match v {
+        let field_type = match v {
             ReferenceOr::Reference { ref reference } => {
                 let name = reference.rsplit('/').next().unwrap();
                 let field_type = name.to_struct_name();
                 if prop_schema.schema_data.nullable {
                     quote! { Option<#field_type> }
                 } else {
-                    quote! { field_type }
+                    quote! { #field_type }
                 }
             }
             ReferenceOr::Item(schema) => schema.to_token(spec),
@@ -47,17 +47,21 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
             let serde_line = quote! {
                 #[serde(rename = #k)]
             };
-            k += "_";
             serde_line
         } else {
             TokenStream::new()
         };
-        let z = "".to_string();
-        let docstring = prop_schema.schema_data.description.as_ref().unwrap_or(&z);
+        let doc_attr = if let Some(doc) = &prop_schema.schema_data.description {
+            quote! {
+                #[doc = #doc]
+            }
+        } else {
+            TokenStream::new()
+        };
         let field = k.to_ident();
         quote! {
             #serde_attr
-            #[doc = #docstring]
+            #doc_attr
             pub #field: #field_type,
         }
     });
@@ -71,7 +75,6 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
 }
 
 pub fn struct_Schema_newtype(name: &str, schema: &Schema, spec: &OpenAPI) -> TokenStream {
-    let field = syn::Ident::new("value", Span::call_site());
     let field_type = schema.to_token(spec);
     let name = syn::Ident::new(name, Span::call_site());
     quote! {

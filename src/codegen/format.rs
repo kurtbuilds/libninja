@@ -6,8 +6,9 @@ use proc_macro2::TokenStream;
 
 pub fn format_code(code: TokenStream) -> Result<String> {
     let code = code.to_string();
-    let syntax_tree = syn::parse_file(&code).unwrap();
-    let code = prettyplease::unparse(&syntax_tree);
+    // println!("{}", code);
+    // let syntax_tree = syn::parse_file(&code).unwrap();
+    // let code = prettyplease::unparse(&syntax_tree);
     Ok(code)
 }
 
