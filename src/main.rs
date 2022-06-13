@@ -23,15 +23,16 @@ fn main() -> Result<()> {
             .arg(Arg::new("output_dir")
                 .long("output-dir")
                 .short('o')
+                .default_value("src")
                 .takes_value(true)
             )
         )
         .get_matches();
     match matches.subcommand().unwrap() {
         ("gen", matches) => {
-            let name = matches.value_of("name").unwrap().to_string();
-            let yaml_spec = matches.value_of("yaml_spec").unwrap();
-            let output_dir = matches.value_of("output_dir").unwrap_or("src");
+            let name = matches.get_one::<&str>("name").unwrap().to_string();
+            let yaml_spec = matches.get_one::<&str>("yaml_spec").unwrap();
+            let output_dir = matches.get_one::<&str>("output_dir").unwrap();
 
             generate_library_at_path(Path::new(yaml_spec),GenerateLibrary {
                 name,
