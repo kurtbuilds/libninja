@@ -1,6 +1,6 @@
 [package]
 name = "openapi-client-generator"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 license = "MIT"
 description = "Generates a client library based on an OpenAPI spec."
