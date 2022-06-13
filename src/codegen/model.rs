@@ -1,6 +1,6 @@
-use convert_case::Case;
-use convert_case::Casing;
+use convert_case::{Case, Casing};
 use openapiv3::{OpenAPI, ReferenceOr, Schema};
+use openapiv3::{SchemaKind, Type, StringType};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 
@@ -76,7 +76,47 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
 
 pub fn struct_Schema_newtype(name: &str, schema: &Schema, spec: &OpenAPI) -> TokenStream {
     let field_type = schema.to_token(spec);
-    let name = syn::Ident::new(name, Span::call_site());
+    if name == "WalletTransactionStatus" {
+        println!("{:?}", schema);
+    }
+    if let SchemaKind::Type(Type::String(StringType {
+                                             format, pattern, enumeration, min_length, max_length
+                                         })) = &schema.schema_kind {
+        if !enumeration.is_empty() {
+            let enums = enumeration.iter().map(|s| {
+                if s.is_none() {
+                    println!("{name} {:?}", schema);
+                }
+                match s.as_ref() {
+                    Some(s) => {
+                        let name = (if s.chars().next().unwrap().is_numeric() {
+                            name.to_string() + &s
+                        } else { s.to_string() }
+                        ).to_struct_name();
+                        quote! {
+                            #[serde(rename = #s)]
+                            #name
+                        }
+                    }
+                    None => {
+                        quote! {
+                            #[serde(rename = "")]
+                            Unknown
+                        }
+                    }
+                }
+            });
+            let name = name.to_struct_name();
+            return quote! {
+                #[derive(Debug, Serialize, Deserialize)]
+                pub enum #name {
+                    #(#enums,)*
+                }
+            };
+        }
+    }
+    let name = name.to_struct_name();
+    let field_type = schema.to_token(spec);
     quote! {
         #[derive(Debug, Serialize, Deserialize)]
         pub struct #name(pub #field_type);
