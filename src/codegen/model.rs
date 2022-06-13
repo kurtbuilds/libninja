@@ -76,34 +76,19 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
 
 pub fn struct_Schema_newtype(name: &str, schema: &Schema, spec: &OpenAPI) -> TokenStream {
     let field_type = schema.to_token(spec);
-    if name == "WalletTransactionStatus" {
-        println!("{:?}", schema);
-    }
     if let SchemaKind::Type(Type::String(StringType {
                                              format, pattern, enumeration, min_length, max_length
                                          })) = &schema.schema_kind {
         if !enumeration.is_empty() {
-            let enums = enumeration.iter().map(|s| {
-                if s.is_none() {
-                    println!("{name} {:?}", schema);
-                }
-                match s.as_ref() {
-                    Some(s) => {
-                        let name = (if s.chars().next().unwrap().is_numeric() {
-                            name.to_string() + &s
-                        } else { s.to_string() }
-                        ).to_struct_name();
-                        quote! {
-                            #[serde(rename = #s)]
-                            #name
-                        }
-                    }
-                    None => {
-                        quote! {
-                            #[serde(rename = "")]
-                            Unknown
-                        }
-                    }
+            let enums = enumeration.iter().filter(|s| s.is_some()).map(|s| {
+                let s = s.as_ref().unwrap().to_string();
+                let name = (if s.chars().next().unwrap().is_numeric() {
+                    name.to_string() + &s
+                } else { s.to_string() }
+                ).to_struct_name();
+                quote! {
+                    #[serde(rename = #s)]
+                    #name
                 }
             });
             let name = name.to_struct_name();

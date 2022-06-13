@@ -38,7 +38,6 @@ pub fn service_auth_struct_name(service_name: &str) -> syn::Ident {
 }
 
 pub fn service_client_struct_name(service_name: &str) -> syn::Ident {
-    println!("service_client_struct_name: {}", service_name);
     quote::format_ident!("{}Client", service_name)
 }
 
@@ -110,7 +109,7 @@ pub fn build_method(spec: &OpenAPI, path: &str, method: &str, operation: &Operat
                     .map(|map| map.into_iter())
             })
             .flatten()
-            .filter(|(k, v)| !["client_id", "secret"].contains(&k.as_str()))
+            // .filter(|(k, v)| !["client_id", "secret"].contains(&k.as_str()))
             .map(|(k, v)| {
                 (k.clone(), v.resolve(spec))
             })
