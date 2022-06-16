@@ -32,7 +32,7 @@ fn main() -> Result<()> {
         ("gen", matches) => {
             let name = matches.value_of("name").unwrap().to_string();
             let yaml_spec = matches.value_of("yaml_spec").unwrap();
-            let output_dir = matches.value_of("output_dir").unwrap();
+            let output_dir = matches.value_of("output_dir").unwrap_or(&"src");
 
             generate_library_at_path(Path::new(yaml_spec),GenerateLibrary {
                 name,

@@ -76,30 +76,66 @@ pub trait ToIdent {
     fn to_struct_name(&self) -> syn::Ident;
     fn to_ident(&self) -> syn::Ident;
     fn is_restricted(&self) -> bool;
+    fn serde_rename(&self) -> Option<TokenStream>;
+}
+
+fn sanitize(s: &str) -> String  {
+    // custom logic for Github openapi spec lol
+    if s == "+1" {
+        return "PlusOne".to_string()
+    } else if s == "-1" {
+        return "MinusOne".to_string()
+    }
+    s
+        .replace("/", "_")
+        .replace("@", "")
+        .replace("'", "")
+        .replace("+", "")
+}
+
+fn assert_valid_ident(s: &str, original: &str) {
+    if s.chars().all(|c| c.is_numeric()) {
+        panic!("Numeric identifier: {}", original)
+    }
 }
 
 impl ToIdent for str {
     fn to_struct_name(&self) -> syn::Ident {
-        let s = if self.is_restricted() {
-            self.to_case(Case::Pascal) + "Struct"
-        } else {
-            self.to_case(Case::Pascal)
-        };
+        let s = sanitize(self);
+        let mut s = s.to_case(Case::Pascal);
+        if s.is_restricted() {
+            s += "Struct"
+        }
+        assert_valid_ident(&s, self);
         syn::Ident::new(&s, Span::call_site())
     }
 
     fn to_ident(&self) -> Ident {
-        let s = if self.is_restricted() {
-            self.to_case(Case::Snake) + "_"
-        } else {
-            self.to_case(Case::Snake)
-        };
-        let s = s.replace("/", "_");
+        let s = sanitize(self);
+        let mut s = s.to_case(Case::Snake);
+        if s.is_restricted() {
+            s += "_"
+        }
+        assert_valid_ident(&s, self);
         syn::Ident::new(&s, Span::call_site())
     }
 
     fn is_restricted(&self) -> bool {
         ["type", "use", "ref"].contains(&self)
+    }
+
+    fn serde_rename(&self) -> Option<TokenStream> {
+        if self.is_restricted()
+            || self.chars().next().unwrap().is_numeric()
+            || self.contains('@')
+            || self.contains('+')
+        {
+            Some(quote! {
+                #[serde(rename = #self)]
+            })
+        } else {
+            None
+        }
     }
 }
 

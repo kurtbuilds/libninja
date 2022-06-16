@@ -43,21 +43,12 @@ pub fn struct_Schema_object(name: &str, struct_schema: &Schema, spec: &OpenAPI) 
             }
             ReferenceOr::Item(schema) => schema.to_token(spec),
         };
-        let serde_attr = if k.is_restricted() {
-            let serde_line = quote! {
-                #[serde(rename = #k)]
-            };
-            serde_line
-        } else {
-            TokenStream::new()
-        };
-        let doc_attr = if let Some(doc) = &prop_schema.schema_data.description {
-            quote! {
+        let serde_attr = k.serde_rename().unwrap_or_else(|| TokenStream::new());
+        let doc_attr = prop_schema.schema_data.description.as_ref()
+            .map(|doc| quote! {
                 #[doc = #doc]
-            }
-        } else {
-            TokenStream::new()
-        };
+            })
+            .unwrap_or_else(|| TokenStream::new());
         let field = k.to_ident();
         quote! {
             #serde_attr
@@ -80,17 +71,18 @@ pub fn struct_Schema_newtype(name: &str, schema: &Schema, spec: &OpenAPI) -> Tok
                                              format, pattern, enumeration, min_length, max_length
                                          })) = &schema.schema_kind {
         if !enumeration.is_empty() {
-            let enums = enumeration.iter().filter(|s| s.is_some()).map(|s| {
-                let s = s.as_ref().unwrap().to_string();
-                let name = (if s.chars().next().unwrap().is_numeric() {
-                    name.to_string() + &s
-                } else { s.to_string() }
-                ).to_struct_name();
-                quote! {
-                    #[serde(rename = #s)]
-                    #name
-                }
-            });
+            let enums = enumeration.iter()
+                .filter(|s| s.is_some())
+                .map(|s| {
+                    let s = s.as_ref().unwrap().to_string();
+                    let serde_attr = s.serde_rename()
+                        .unwrap_or_else(|| TokenStream::new());
+                    let name = s.to_struct_name();
+                    quote! {
+                        #serde_attr
+                        #name
+                    }
+                });
             let name = name.to_struct_name();
             return quote! {
                 #[derive(Debug, Serialize, Deserialize)]
