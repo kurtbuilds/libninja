@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use ocg_macro::rfunction;
+use ln_macro::rfunction;
 use ln_model::{File, Import};
 use crate::{Language, LibraryOptions, mir};
 use crate::mir::{MirSpec, Parameter};

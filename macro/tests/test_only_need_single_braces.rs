@@ -1,5 +1,5 @@
 use pretty_assertions::assert_eq;
-use ocg_macro::function;
+use ln_macro::function;
 
 #[test]
 fn test_only_need_single_braces() {

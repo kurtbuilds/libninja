@@ -1,22 +1,41 @@
+use std::collections::{BTreeMap, HashMap, HashSet};
+
+use anyhow::{anyhow, Result};
+use convert_case::{Case, Casing};
+use openapiv3::{APIKeyLocation, OpenAPI, Operation, PathItem, ReferenceOr, RequestBody, Response, Schema, SchemaKind, SchemaReference, SecurityRequirement, SecurityScheme, StatusCode, StringType, Type};
+pub use record::*;
+pub use resolution::{concrete_schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
+use tracing_ez::{span, warn};
+
+use crate::{hir, Language, LibraryOptions, mir};
+use crate::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirSpec, Record, StrEnum, Struct, Ty};
+use crate::mir::{Doc, Name, NewType};
+
 mod resolution;
 mod record;
 
-use std::collections::{BTreeMap, HashMap, HashSet};
-use tracing_ez::{span, warn};
-use anyhow::{anyhow, Result};
-use convert_case::{Case, Casing};
 use openapiv3 as oa;
-use openapiv3::{APIKeyLocation, ArrayType, ObjectType, OpenAPI, Operation, Parameter, PathItem, ReferenceOr, RequestBody, Response, Schema, SchemaKind, SchemaReference, SecurityRequirement, SecurityScheme, StatusCode, StringType, Type};
-use syn::Lit::Str;
 
-use ln_model::{Doc, Ident, NewType};
-pub use resolution::{concrete_schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
-pub use record::*;
+/// You might need to call add_operation_models after this
+pub fn extract_spec(spec: &OpenAPI, opt: &LibraryOptions) -> Result<MirSpec> {
+    let operations = extract_api_operations(spec)?;
+    let schemas = record::extract_records(spec)?;
 
-use crate::mir::{MirSpec, AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirField, Name, Record, StrEnum, Struct, Ty};
-use crate::util::is_primitive;
-use crate::{Language, LibraryOptions, mir};
+    let servers = extract_servers(spec)?;
+    let security = extract_security_strategies(spec, opt);
 
+    let api_docs_url = extract_api_docs_link(spec);
+
+    let mut s = MirSpec {
+        operations,
+        schemas,
+        servers,
+        security,
+        api_docs_url,
+    };
+    sanitize_spec(&mut s);
+    Ok(s)
+}
 
 pub fn is_optional(name: &str, param: &oa::Schema, parent: &Schema) -> bool {
     param.schema_data.nullable || !parent.required(name)
@@ -38,7 +57,7 @@ pub fn extract_request_schema<'a>(
     Ok(content.schema.as_ref().unwrap().resolve(spec))
 }
 
-pub fn extract_param(param: &ReferenceOr<Parameter>, spec: &OpenAPI) -> Result<mir::Parameter> {
+pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<hir::Parameter> {
     span!("extract_param", param = ?param);
     let param = param.resolve(spec)?;
     let data = param.parameter_data_ref();
@@ -47,9 +66,9 @@ pub fn extract_param(param: &ReferenceOr<Parameter>, spec: &OpenAPI) -> Result<m
         .ok_or_else(|| anyhow!("No schema for parameter: {:?}", param))?;
     let ty = schema_ref_to_ty(param_schema_ref, spec);
     let schema = param_schema_ref.resolve(spec);
-    Ok(mir::Parameter {
+    Ok(hir::Parameter {
         doc: None,
-        name: Name::new(&data.name),
+        name: mir::Name::new(&data.name),
         optional: !data.required,
         location: param.into(),
         ty,
@@ -58,10 +77,10 @@ pub fn extract_param(param: &ReferenceOr<Parameter>, spec: &OpenAPI) -> Result<m
 }
 
 pub fn extract_inputs<'a>(
-    operation: &'a Operation,
+    operation: &'a oa::Operation,
     item: &'a PathItem,
     spec: &'a OpenAPI,
-) -> Result<Vec<mir::Parameter>> {
+) -> Result<Vec<hir::Parameter>> {
     let mut path_args = operation
         .parameters
         .iter()
@@ -86,7 +105,7 @@ pub fn extract_inputs<'a>(
                 let ty = schema_ref_to_ty(param, spec);
                 let param: &Schema = param.resolve(spec);
                 let optional = is_optional(name, param, schema);
-                mir::Parameter {
+                hir::Parameter {
                     name: name.into(),
                     ty,
                     optional,
@@ -102,7 +121,7 @@ pub fn extract_inputs<'a>(
             }
         }
         Err(err) => {
-            path_args.push(mir::Parameter {
+            path_args.push(hir::Parameter {
                 name: Name::new("body"),
                 ty: Ty::Any,
                 optional: false,
@@ -116,7 +135,7 @@ pub fn extract_inputs<'a>(
 }
 
 pub fn extract_response_success<'a>(
-    operation: &'a Operation,
+    operation: &'a oa::Operation,
     spec: &'a OpenAPI,
 ) -> Option<&'a ReferenceOr<Schema>> {
     let response = operation
@@ -199,7 +218,7 @@ pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {
     format!("{method}{name}{last_group}")
 }
 
-pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<mir::Operation>> {
+pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<hir::Operation>> {
     spec.operations()
         .map(|(path, method, operation, item)| {
             let name = match &operation.operation_id {
@@ -213,7 +232,7 @@ pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<mir::Operation>> {
                 None => Ty::Unit,
                 Some(r) => schema_ref_to_ty(r, spec),
             };
-            Ok(mir::Operation {
+            Ok(hir::Operation {
                 name: name.into(),
                 doc,
                 parameters,
@@ -255,7 +274,7 @@ fn extract_api_docs_link(spec: &OpenAPI) -> Option<String> {
     spec.external_docs.as_ref().map(|e| e.url.clone())
 }
 
-pub fn remove_unused(spec: &mut MirSpec) {
+fn remove_unused(spec: &mut MirSpec) {
     let mut used = HashSet::new();
     for (name, schema) in spec.schemas.iter() {
         for field in schema.fields() {
@@ -277,7 +296,7 @@ pub fn remove_unused(spec: &mut MirSpec) {
     spec.schemas.retain(|name, _| used.contains(name));
 }
 
-pub fn sanitize_spec(spec: &mut MirSpec) {
+fn sanitize_spec(spec: &mut MirSpec) {
     // skip alias structs
     let optional_short_circuit: HashMap<Name, Name> = spec.schemas.iter()
         .filter(|(_, r)| r.optional())
@@ -285,7 +304,7 @@ pub fn sanitize_spec(spec: &mut MirSpec) {
             let Record::TypeAlias(alias, field) = r else {
                 return None;
             };
-            let mir::Ty::Model(resolved) = &field.ty else {
+            let Ty::Model(resolved) = &field.ty else {
                 return None;
             };
             Some((alias.clone(), resolved.clone()))
@@ -293,13 +312,13 @@ pub fn sanitize_spec(spec: &mut MirSpec) {
         .collect();
     for (name, record) in &mut spec.schemas {
         for field in record.fields_mut() {
-            let mir::Ty::Model(name) = &field.ty else {
+            let Ty::Model(name) = &field.ty else {
                 continue;
             };
             let Some(rename_to) = optional_short_circuit.get(name) else {
                 continue;
             };
-            field.ty = mir::Ty::Model(rename_to.clone());
+            field.ty = hir::Ty::Model(rename_to.clone());
             field.optional = true;
         }
     }
@@ -313,26 +332,6 @@ pub fn sanitize_spec(spec: &mut MirSpec) {
 
 }
 
-/// You might need to call add_operation_models after this
-pub fn extract_spec(spec: &OpenAPI, opt: &LibraryOptions) -> Result<MirSpec> {
-    let operations = extract_api_operations(spec)?;
-    let schemas = record::extract_records(spec)?;
-
-    let servers = extract_servers(spec)?;
-    let security = extract_security_strategies(spec, opt);
-
-    let api_docs_url = extract_api_docs_link(spec);
-
-    let mut s = MirSpec {
-        operations,
-        schemas,
-        servers,
-        security,
-        api_docs_url,
-    };
-    sanitize_spec(&mut s);
-    Ok(s)
-}
 
 pub fn spec_defines_auth(spec: &MirSpec) -> bool {
     !spec.security.is_empty()

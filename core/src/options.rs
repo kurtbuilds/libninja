@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use convert_case::{Case, Casing};
-use ln_model::{Ident, Literal};
-use crate::mir::Name;
+use crate::mir::{Literal, Name};
 
 #[derive(Debug, Clone, Default)]
 pub struct LibraryConfig {

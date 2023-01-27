@@ -12,7 +12,7 @@ use openapiv3::{
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use regex::Captures;
-use ocg_macro::rfunction;
+use ln_macro::rfunction;
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
 

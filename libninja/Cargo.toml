@@ -35,8 +35,7 @@ cargo_toml = "0.14.0"
 toml = "0.5.11"
 topo_sort = "0.4.0"
 url = "2.3.1"
-ln-model = { path = "../model" }
-ocg-macro = { path = "../macro" }
+ln-macro = { path = "../macro" }
 http = "0.2.8"
 tracing-ez = "0.3.0"
 strum = "0.24.1"

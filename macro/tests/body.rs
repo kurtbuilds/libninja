@@ -1,4 +1,4 @@
-use ocg_macro::body;
+use ln_macro::body;
 use pretty_assertions::assert_eq;
 
 // #[test]

@@ -9,15 +9,7 @@ use std::{fs, io};
 use tera::{Context, Tera};
 use url::Host;
 pub use ln_model::build_struct;
-
-pub fn open<P: AsRef<std::path::Path>>(path: P) -> io::Result<File> {
-    std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(path.as_ref())
-}
+use ocg_core::fs;
 
 /// Create context for j2 files.
 pub fn create_context(opts: &OutputOptions, mir_spec: &MirSpec) -> tera::Context {
@@ -67,7 +59,7 @@ fn copy_files_recursive(
             continue;
         }
         fs::create_dir_all(path.parent().unwrap()).unwrap();
-        write_file(&path, file.contents_utf8().unwrap()).unwrap();
+        fs::write_file(&path, file.contents_utf8().unwrap()).unwrap();
     }
 }
 
@@ -104,36 +96,9 @@ pub fn copy_templates(
                 return;
             }
             let content = tera.render(f.path().to_str().unwrap(), context).unwrap();
-            write_file(&path, &content).unwrap();
+            fs::write_file(&path, &content).unwrap();
         });
     Ok(())
-}
-
-pub fn write_file(path: &Path, text: &str) -> anyhow::Result<()> {
-    let mut f = open(path)?;
-    f.write_all(text.as_bytes())?;
-    println!("{}: Wrote file.", path.display());
-    Ok(())
-}
-
-pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
-    match &schema.schema_kind {
-        SchemaKind::Type(openapiv3::Type::String(_)) => true,
-        SchemaKind::Type(openapiv3::Type::Number(_)) => true,
-        SchemaKind::Type(openapiv3::Type::Integer(_)) => true,
-        SchemaKind::Type(openapiv3::Type::Boolean {}) => true,
-        SchemaKind::Type(openapiv3::Type::Array(ArrayType {
-            items: Some(inner), ..
-        })) => {
-            let inner = inner.unbox();
-            let inner = inner.resolve(spec);
-            is_primitive(inner, spec)
-        }
-        SchemaKind::AllOf { all_of } => {
-            all_of.len() == 1 && is_primitive(all_of[0].resolve(spec), spec)
-        }
-        _ => false,
-    }
 }
 
 pub fn prepare_templates() -> tera::Tera {

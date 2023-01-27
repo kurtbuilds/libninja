@@ -1,480 +1,339 @@
-use std::collections::{BTreeMap, HashMap};
-/// The API model.
-/// Higher level compared to code level models in ln-model.
-use std::fmt::{Debug, Formatter};
-use std::iter::{empty, Iterator, once};
-use std::string::{String, ToString};
-use anyhow::Result;
-use convert_case::{Case, Casing};
+/// Models that represent code
+/// Things like, Parameters, Functions, Fields, Class, etc.
+use core::default::Default;
+use core::fmt::{Debug, Formatter};
+use core::option::Option;
+use core::option::Option::None;
+use quote::TokenStreamExt;
 
-use crate::{LibraryOptions, Language};
-use ln_model::{Doc, Ident};
-pub use ln_model::Name;
-use openapiv3 as oa;
+pub use function::{ArgIdent, FnArg, FnArgTreatment, Function, IntoDoc, build_struct, build_dict};
+
+mod function;
+mod r#macro;
+
+/// Non-localized
+#[derive(Debug, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Default)]
+pub struct Name(pub String);
+
+/// Localized string
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct Ident(pub String);
 
 
-#[derive(Debug, Clone)]
-pub enum Ty {
-    String,
-    Integer,
-    Float,
-    Boolean,
-    Array(Box<Ty>),
-    // OpenAPI name for the model. Hasn't been converted to a language type (e.g. cased, sanitized)
-    Model(Name),
-    Unit,
-    Any,
-    // TODO add a union type and an enum type
-}
-
-impl Default for Ty {
-    fn default() -> Self {
-        Ty::Any
-    }
-}
-
-impl Ty {
-    pub fn inner_model(&self) -> Option<&Name> {
-        match self {
-            Ty::Model(name) => Some(name),
-            Ty::Array(ty) => ty.inner_model(),
-            _ => None,
-        }
-    }
-
-    pub fn is_iterable(&self) -> bool {
-        self.inner_iterable().is_some()
-    }
-
-    pub fn inner_iterable(&self) -> Option<&Ty> {
-        match self {
-            Ty::Array(ty) => Some(ty.as_ref()),
-            _ => None,
-        }
-    }
-
-    pub fn is_primitive(&self) -> bool {
-        match self {
-            Ty::String => true,
-            Ty::Integer => true,
-            Ty::Float => true,
-            Ty::Boolean => true,
-            Ty::Array(_) => false,
-            Ty::Model(_) => false,
-            Ty::Any => false,
-            Ty::Unit => true,
-        }
-    }
-
-    pub fn model(s: &str) -> Self {
-        Ty::Model(Name::new(s))
-    }
-}
-
-/// Parameter is an input to an OpenAPI operation.
-#[derive(Debug, Clone)]
-pub struct Parameter {
-    pub name: Name,
-    pub ty: Ty,
-    pub location: Location,
-    pub optional: bool,
-    pub doc: Option<Doc>,
-    pub example: Option<serde_json::Value>,
-}
-
-impl Parameter {
-    pub fn to_key(&self) -> ParamKey {
-        if self.ty.is_iterable() && self.location == Location::Query {
-            ParamKey::RepeatedKey(self.name.0.clone())
-        } else {
-            ParamKey::Key(self.name.0.clone())
-        }
-    }
-
-    pub fn path(name: &str, ty: Ty) -> Self {
-        Self {
-            name: Name(name.to_string()),
-            ty,
-            location: Location::Path,
-            optional: false,
-            doc: None,
-            example: None,
-        }
-    }
-}
-
-/// Describes how an Parameter should be placed in an API request
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Location {
-    Path,
-    Body,
-    Query,
-    Header,
-    Cookie,
-}
-
-impl From<&oa::Parameter> for Location {
-    fn from(p: &oa::Parameter) -> Self {
-        match p {
-            oa::Parameter::Query { .. } => Location::Query,
-            oa::Parameter::Header { .. } => Location::Header,
-            oa::Parameter::Path { .. } => Location::Path,
-            oa::Parameter::Cookie { .. } => Location::Cookie,
-        }
-    }
-}
-
-/// Specifically represents a parameter in Location::Query. We need special treatment for repeated keys.
-pub enum ParamKey {
-    Key(String),
-    RepeatedKey(String),
-}
-
-impl std::fmt::Display for ParamKey {
+impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ParamKey::Key(s) => write!(f, "\"{}\"", s),
-            ParamKey::RepeatedKey(s) => write!(f, "\"{}[]\"", s),
-        }
+        write!(f, "{}", self.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Visibility {
+    Public,
+    Crate,
+    Private,
+}
+
+impl Default for Visibility {
+    fn default() -> Self {
+        Self::Private
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct AuthorizationParameter {
-    pub name: String,
-    pub env_var: String,
-    pub location: AuthLocation,
+pub struct Doc(pub String);
+
+impl Doc {
+    pub fn new(s: &str) -> Self {
+        Self(s.to_string())
+    }
 }
 
-#[derive(Debug, Clone)]
-pub enum AuthLocation {
-    Header { key: String },
-    Basic,
-    Bearer,
-    Token,
-    Query { key: String },
-    Cookie { key: String },
-}
-
-#[derive(Debug, Clone)]
-pub struct AuthorizationStrategy {
-    pub name: String,
-    pub fields: Vec<AuthorizationParameter>,
-}
-
-pub enum DocFormat {
-    Markdown,
-    Rst,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct MirField {
-    pub ty: Ty,
-    pub optional: bool,
+#[derive(Debug, Default)]
+pub struct Field<T> {
+    pub name: Name,
+    pub ty: T,
+    pub default: Option<T>,
+    pub visibility: Visibility,
     pub doc: Option<Doc>,
-    pub example: Option<serde_json::Value>,
-    pub flatten: bool,
-}
-
-#[derive(Debug, Clone)]
-pub struct Struct {
-    pub name: Name,
-    pub nullable: bool,
-    pub fields: BTreeMap<Name, MirField>,
-}
-
-#[derive(Debug, Clone)]
-pub struct NewType {
-    pub name: Name,
-    pub fields: Vec<MirField>,
-}
-
-#[derive(Debug, Clone)]
-pub struct TypeAlias {
-    pub name: Name,
-    pub ty: Ty,
     pub optional: bool,
+    pub decorators: Vec<T>,
 }
 
-#[derive(Debug, Clone)]
-pub struct StrEnum {
-    pub name: Name,
-    pub variants: Vec<String>,
-}
-
-#[derive(Debug, Clone)]
-pub enum Record {
-    Struct(Struct),
-    NewType(NewType),
-    TypeAlias(Name, MirField),
-    Enum(StrEnum),
-}
-
-impl Record {
-    pub fn name(&self) -> &Name {
-        match self {
-            Record::Struct(s) => &s.name,
-            Record::Enum(e) => &e.name,
-            Record::NewType(n) => &n.name,
-            Record::TypeAlias(name, _) => name,
-        }
-    }
-
-    pub fn len_fields(&self) -> usize {
-        match self {
-            Record::Struct(s) => s.fields.len(),
-            Record::Enum(_) => 0,
-            Record::NewType(n) => n.fields.len(),
-            Record::TypeAlias(_, _) => 0,
-        }
-    }
-
-    pub fn fields(&self) -> Box<dyn Iterator<Item=&MirField> + '_> {
-        match self {
-            Record::Struct(s) => Box::new(s.fields.values()),
-            Record::Enum(_) => Box::new(empty()),
-            Record::NewType(n) => Box::new(n.fields.iter()),
-            Record::TypeAlias(_, f) => Box::new(once(f)),
-        }
-    }
-
-    pub fn fields_mut(&mut self) -> Box<dyn Iterator<Item=&mut MirField> + '_> {
-        match self {
-            Record::Struct(s) => Box::new(s.fields.iter_mut().map(|(_, f)| f)),
-            Record::Enum(_) => Box::new(empty()),
-            Record::NewType(n) => Box::new(n.fields.iter_mut()),
-            Record::TypeAlias(_, f) => Box::new(once(f)),
-        }
-    }
-
-    /// This is just for debug/testing to simplify output. It's not used in the actual codegen.
-    pub fn clear_docs(&mut self) {
-        for f in self.fields_mut() {
-            f.doc = None;
-        }
-    }
-
-    pub fn optional(&self) -> bool {
-        match self {
-            Record::Struct(s) => false,
-            Record::Enum(_) => false,
-            Record::NewType(_) => false,
-            Record::TypeAlias(_, f) => f.optional,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MirSpec {
-    pub operations: Vec<Operation>,
-    pub schemas: BTreeMap<String, Record>,
-
-    pub servers: BTreeMap<String, String>,
-    pub security: Vec<AuthorizationStrategy>,
-
-    pub api_docs_url: Option<String>,
-}
-
-
-pub enum ServerStrategy {
-    /// No servers were provided, so we pass a base URL
-    BaseUrl,
-    /// There's only one
-    Single(String),
-    /// There's multiple choices
-    Env,
-}
-
-impl MirSpec {
-    pub fn get_record(&self, name: &Name) -> Result<&Record> {
-        self.schemas.get(&name.0).ok_or_else(|| anyhow::anyhow!("No record named {}", name.0))
-    }
-
-    pub fn get_operation(&self, name: &str) -> Result<&Operation> {
-        self.operations.iter().find(|o| o.name.0 == name).ok_or_else(|| anyhow::anyhow!("No operation named {}", name))
-    }
-
-    pub fn server_strategy(&self) -> ServerStrategy {
-        let len = self.servers.len();
-        if len == 0 {
-            ServerStrategy::BaseUrl
-        } else if len == 1 {
-            ServerStrategy::Single(self.servers.values().next().unwrap().clone())
-        } else {
-            ServerStrategy::Env
-        }
-    }
-
-    pub fn multiple_security(&self) -> bool {
-        self.security.len() > 1
-    }
-
-    pub fn env_vars(&self, opt: &LibraryOptions) -> Vec<String> {
-        let mut env_vars = vec![];
-        match self.server_strategy() {
-            ServerStrategy::Single(_) => {}
-            ServerStrategy::BaseUrl => {
-                env_vars.push(opt.env_var("base_url").0);
-            }
-            ServerStrategy::Env => {
-                env_vars.push(opt.env_var("env").0);
-            }
-        }
-        for strategy in &self.security {
-            for param in &strategy.fields {
-                env_vars.push(param.env_var.clone());
-            }
-        }
-        env_vars
-    }
-
-    pub fn has_security(&self) -> bool {
-        !self.security.is_empty()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Operation {
-    pub name: Name,
+pub struct Interface<T> {
+    pub name: String,
     pub doc: Option<Doc>,
-    pub parameters: Vec<Parameter>,
-    pub ret: Ty,
+    pub fields: Vec<Field<T>>,
+    pub public: bool,
+    pub instance_methods: Vec<Function<T>>,
+}
+
+pub struct NewType<T> {
+    pub name: String,
+    pub doc: Option<String>,
+    pub ty: T,
+    pub public: bool,
+}
+
+pub struct Class<T> {
+    pub name: Ident,
+    pub doc: Option<Doc>,
+    /// `code` is for Python, where we need code like this:
+    /// class Account(BaseModel):
+    ///     class Config:
+    ///         this_is_a_config_for_pydantic = True
+    pub code: Option<String>,
+    pub instance_fields: Vec<Field<T>>,
+    pub static_fields: Vec<Field<T>>,
+    pub instance_methods: Vec<Function<T>>,
+    pub constructors: Vec<Function<T>>,
+    pub class_methods: Vec<Function<T>>,
+    pub static_methods: Vec<Function<T>>,
+    pub public: bool,
+
+    pub mut_self_instance_methods: Vec<Function<T>>,
+    pub lifetimes: Vec<String>,
+    pub decorators: Vec<T>,
+    pub superclasses: Vec<T>,
+}
+
+pub struct File<T> {
+    pub doc: Option<Doc>,
+    /// Code that is before function and class declarations
+    pub declaration: Option<T>,
+    pub classes: Vec<Class<T>>,
+    pub functions: Vec<Function<T>>,
+    /// Code that follows after the function and class declarations
+    pub code: Option<T>,
+    pub imports: Vec<Import>,
+    pub package: Option<String>,
+}
+
+pub struct Import {
+    /// Path that we're importing from
+    /// e.g. plaid.model in `from plaid.model import ...`
     pub path: String,
-    pub method: String,
+    /// Specific items that are imported
+    /// e.g. `Account` in `from plaid.model import Account`
+    pub imports: Vec<ImportItem>,
+    /// If a wildcard import and if we want to alias, then alias
+    pub alias: Option<String>,
+    pub vis: Visibility,
 }
 
-impl Operation {
-    // Mostly for Go
-    pub fn flat_package_name(&self) -> String {
-        self.name.0.to_case(Case::Flat)
-    }
+pub struct ImportItem {
+    /// This might not conform to standard ident rules for the language, so its a string, not an ident.
+    pub name: String,
+    pub alias: Option<String>,
+}
 
-    pub fn file_name(&self) -> String {
-        self.name.0.to_case(Case::Snake)
-    }
+pub struct Literal<T>(pub T, pub bool);
 
-    pub fn request_struct_name(&self) -> Name {
-        Name(format!("{}Request", self.name.0))
-    }
-
-    pub fn required_struct_name(&self) -> Name {
-        Name(format!("{}Required", self.name.0))
-    }
-
-    pub fn crowded_args(&self) -> bool {
-        self.parameters.iter().filter(|p| !p.optional).count() > 3
-    }
-
-    pub fn has_response(&self) -> bool {
-        !matches!(self.ret, Ty::Unit)
-    }
-
-    pub fn optional_args(&self) -> Vec<&Parameter> {
-        self.parameters.iter().filter(|p| p.optional).collect()
-    }
-
-    pub fn required_args(&self) -> Vec<&Parameter> {
-        self.parameters.iter().filter(|p| !p.optional).collect()
-    }
-
-    pub fn parameters_by_header_query_body(
-        &self,
-    ) -> (Vec<&Parameter>, Vec<&Parameter>, Vec<&Parameter>) {
-        let mut header = Vec::new();
-        let mut query = Vec::new();
-        let mut body = Vec::new();
-        self.parameters.iter().for_each(|p| match p.location {
-            Location::Header => header.push(p),
-            Location::Query => query.push(p),
-            Location::Body => body.push(p),
-            _ => {}
-        });
-        (header, query, body)
-    }
-
-    pub fn use_required_struct(&self, sourcegen: Language) -> bool {
-        matches!(sourcegen, Language::Rust | Language::Golang | Language::Typescript if self.crowded_args())
-    }
-
-    /// Returns the params that are used as function arguments.
-    pub fn function_args(&self, generator: Language) -> Vec<Parameter> {
-        match generator {
-            Language::Golang if self.crowded_args() => {
-                vec![Parameter {
-                    name: Name::new("args"),
-                    ty: Ty::Model(Name::new("Required")),
-                    location: Location::Body,
-                    optional: false,
-                    doc: None,
-                    example: None,
-                }]
-            }
-            gen if self.use_required_struct(generator) => {
-                vec![Parameter {
-                    name: Name::new("args"),
-                    ty: Ty::Model(self.required_struct_name()),
-                    location: Location::Body,
-                    optional: false,
-                    doc: None,
-                    example: None,
-                }]
-            }
-            _ => {
-                self.parameters
-                    .iter()
-                    .filter(|p| !p.optional).cloned()
-                    .collect()
-            }
-        }
-    }
-
-    pub fn required_struct(&self, sourcegen: Language) -> Struct {
-        let fields = match sourcegen {
-            Language::Typescript => {
-                self.parameters
-                    .iter()
-                    .map(|p| (p.name.clone(), p.into()))
-                    .collect()
-            }
-            Language::Rust | Language::Golang => {
-                self.parameters
-                    .iter()
-                    .filter(|p| !p.optional)
-                    .map(|p| (p.name.clone(), p.into()))
-                    .collect()
-            }
-            _ => unimplemented!()
-        };
-        Struct {
-            nullable: false,
-            name: self.required_struct_name(),
-            fields,
+impl Visibility {
+    pub fn public(&self) -> bool {
+        match self {
+            Visibility::Public => true,
+            Visibility::Crate => false,
+            Visibility::Private => false,
         }
     }
 }
 
-impl Default for Operation {
+impl<T> From<T> for Ident where T: AsRef<str> {
+    fn from(s: T) -> Self {
+        Self::new(s.as_ref())
+    }
+}
+
+impl Ident {
+    pub fn new(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl<T> Default for Class<T> {
     fn default() -> Self {
         Self {
-            name: Name::new(""),
+            name: Ident::new(""),
+            code: None,
             doc: None,
-            parameters: Vec::new(),
-            ret: Ty::Unit,
-            path: "".to_string(),
-            method: "".to_string(),
+            instance_fields: vec![],
+            static_fields: vec![],
+            instance_methods: vec![],
+            constructors: vec![],
+            class_methods: vec![],
+            static_methods: vec![],
+            public: false,
+            mut_self_instance_methods: vec![],
+            lifetimes: vec![],
+            decorators: vec![],
+            superclasses: vec![],
         }
     }
 }
 
-impl From<&Parameter> for MirField {
-    fn from(p: &Parameter) -> Self {
+impl Debug for Class<String> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let public = self.public;
+        write!(f, "Class {{ name: {name:?}, \
+        doc: {doc:?}, \
+        instance_fields: todo!, \
+        static_fields: todo!, \
+        instance_methods: todo!, \
+        constructors: todo!, \
+        class_methods: todo!, \
+        static_methods: todo!, \
+        public: {public}, \
+        mut_self_instance_methods: todo!, \
+        lifetimes: todo!, \
+        superclasses: todo! }}",
+               name = self.name,
+               doc = self.doc,
+        )
+    }
+}
+
+impl ImportItem {
+    pub fn alias(name: &str, alias: &str) -> Self {
+        Self { name: name.to_string(), alias: Some(alias.to_string()) }
+    }
+}
+
+impl From<&String> for ImportItem {
+    fn from(s: &String) -> Self {
+        Self { name: s.clone(), alias: None }
+    }
+}
+
+impl From<String> for ImportItem {
+    fn from(s: String) -> Self {
+        Self { name: s, alias: None }
+    }
+}
+
+impl From<&str> for ImportItem {
+    fn from(s: &str) -> Self {
+        Self { name: s.to_string(), alias: None }
+    }
+}
+
+impl From<Ident> for ImportItem {
+    fn from(s: Ident) -> Self {
+        Self { name: s.0, alias: None }
+    }
+}
+
+
+impl Import {
+    pub fn package(path: &str) -> Self {
         Self {
-            ty: p.ty.clone(),
-            optional: p.optional,
-            doc: p.doc.clone(),
-            example: p.example.clone(),
-            flatten: false,
+            path: path.to_string(),
+            imports: vec![],
+            alias: None,
+            vis: Visibility::Private,
+        }
+    }
+
+    pub fn new(path: &str, imports: impl IntoIterator<Item=impl Into<ImportItem>>) -> Self {
+        Self {
+            path: path.to_string(),
+            imports: imports
+                .into_iter()
+                .map(|s| s.into())
+                .collect(),
+            alias: None,
+            vis: Visibility::Private,
+        }
+    }
+
+    pub fn alias(path: &str, alias: &str) -> Self {
+        Self {
+            path: path.to_string(),
+            imports: Vec::new(),
+            alias: Some(alias.to_string()),
+            vis: Visibility::Private,
+        }
+    }
+
+    pub fn public(mut self) -> Self {
+        self.vis = Visibility::Public;
+        self
+    }
+}
+
+impl<T> Default for File<T>
+    where
+        T: Default,
+{
+    fn default() -> Self {
+        Self {
+            doc: None,
+            declaration: None,
+            classes: vec![],
+            functions: vec![],
+            code: None,
+            imports: vec![],
+            package: None,
         }
     }
 }
 
+impl Literal<String> {
+    pub fn new(s: &str) -> Self {
+        Self(s.to_string(), false)
+    }
+
+    /// Create a python f-string
+    pub fn f(s: &str) -> Self {
+        Self(format!("f\"{}\"", s), true)
+    }
+
+    /// Grave
+    pub fn grave(s: &str) -> Self {
+        Self(format!("`{}`", s), true)
+    }
+}
+
+impl From<String> for Literal<String> {
+    fn from(s: String) -> Self {
+        Self(s, false)
+    }
+}
+
+impl From<Ident> for Literal<String> {
+    fn from(s: Ident) -> Self {
+        Self(s.0, false)
+    }
+}
+
+impl quote::ToTokens for Ident {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        tokens.append(proc_macro2::Ident::new(&self.0, proc_macro2::Span::call_site()))
+    }
+}
+
+impl From<Ident> for proc_macro2::TokenStream {
+    fn from(val: Ident) -> Self {
+        let mut tok = proc_macro2::TokenStream::new();
+        tok.append(proc_macro2::Ident::new(&val.0, proc_macro2::Span::call_site()));
+        tok
+    }
+}
+
+impl Name {
+    pub fn new(name: &str) -> Self {
+        Self(name.to_string())
+    }
+}
+
+
+impl From<String> for Name {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl From<&String> for Name {
+    fn from(s: &String) -> Self {
+        Self(s.clone())
+    }
+}

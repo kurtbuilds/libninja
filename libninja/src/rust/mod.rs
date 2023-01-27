@@ -5,12 +5,12 @@ pub mod model;
 pub mod request;
 mod io;
 
-use crate::rust::codegen::{ToRustCode};
+use crate::rust::codegen::ToRustCode;
 pub use crate::rust::codegen::generate_example;
 use crate::rust::model::{generate_model_rs, generate_single_model_file};
 use crate::rust::request::{build_request_struct, generate_request_model_rs};
-use crate::util::{create_context, write_file};
-use crate::{add_operation_models, extract_spec, LibraryOptions, MirSpec, open, OutputOptions, TEMPLATE_DIR, util};
+use crate::util::create_context;
+use crate::{add_operation_models, extract_spec, LibraryOptions, MirSpec, OutputOptions, TEMPLATE_DIR, util};
 use anyhow::Result;
 use format::format_code;
 use indoc::formatdoc;
@@ -24,6 +24,8 @@ use convert_case::{Case, Casing};
 use codegen::ToRustIdent;
 use codegen::ToRustType;
 use ln_model::{File, import, Import, Visibility};
+use ocg_core::fs;
+use ocg_core::fs::{open, write_file};
 use crate::rust::io::write_rust_file_to_path;
 
 pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
@@ -179,7 +181,7 @@ fn bump_version_and_update_deps(opts: &OutputOptions) -> anyhow::Result<()> {
     bump_deps(&mut manifest, &template_manifest)?;
 
     let content = toml::to_string(&manifest).unwrap();
-    util::write_file(&cargo, &content)
+    fs::write_file(&cargo, &content)
 }
 
 fn load_template(path: &str) -> &'static str {

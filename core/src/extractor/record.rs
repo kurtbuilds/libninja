@@ -1,13 +1,12 @@
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 
 use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type};
-use ln_model::{Doc, Name};
-use std::collections::{BTreeMap, HashMap};
-use std::ops::IndexMut;
+use crate::mir::{Doc, Name};
+use std::collections::{BTreeMap};
 use tracing_ez::warn;
-use crate::{extractor, mir};
+use crate::{extractor, hir, mir};
 use crate::extractor::schema_ref_to_ty_already_resolved;
-use crate::mir::{MirField, Record, StrEnum, Struct};
+use crate::hir::{MirField, Record, StrEnum, Struct};
 use indexmap::IndexMap;
 use anyhow::Result;
 
@@ -68,7 +67,7 @@ pub fn create_record(name: &str, schema_ref: &ReferenceOr<Schema>, spec: &OpenAP
         // A newtype with multiple fields
         SchemaKind::AllOf { all_of } => {
             if effective_length(all_of) == 1 {
-                Record::TypeAlias(Name::new(name), mir::MirField {
+                Record::TypeAlias(Name::new(name), MirField {
                     ty: schema_ref_to_ty_already_resolved(&all_of[0], spec, schema),
                     optional: schema.schema_data.nullable,
                     ..MirField::default()
@@ -78,8 +77,8 @@ pub fn create_record(name: &str, schema_ref: &ReferenceOr<Schema>, spec: &OpenAP
             }
         }
         // Default case, a newtype with a single field
-        _ => Record::NewType(mir::NewType {
-            name: Name::new(name),
+        _ => Record::NewType(hir::NewType {
+            name: Name::new(&name),
             fields: vec![MirField {
                 ty: schema_ref_to_ty_already_resolved(schema_ref, spec, schema),
                 optional: schema.schema_data.nullable,

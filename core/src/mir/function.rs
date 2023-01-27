@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-use crate::{Doc, Ident};
+use crate::mir::{Doc, Ident};
 
 /// Localized
 pub enum ArgIdent {

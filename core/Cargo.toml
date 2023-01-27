@@ -9,6 +9,11 @@ edition = "2021"
 anyhow = "1.0.68"
 clap = { version = "4.1.4", features = ["derive"] }
 convert_case = "0.6.0"
-ln-model = { path = "../model" }
 openapiv3-extended = "2.0.2"
 serde = { version = "1.0.152", features = ["derive"] }
+quote = "1.0.23"
+serde_json = "1.0.91"
+proc-macro2 = "1.0.50"
+tracing-ez = "0.3.0"
+indexmap = "1.9.2"
+syn = "1.0.107"

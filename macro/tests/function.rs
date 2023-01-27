@@ -1,4 +1,4 @@
-use ocg_macro::function;
+use ln_macro::function;
 use ln_model::{Function, ArgIdent};
 use pretty_assertions::assert_eq;
 

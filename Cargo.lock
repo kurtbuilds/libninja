@@ -998,7 +998,13 @@ name = "libninja-commercial"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "convert_case 0.6.0",
+ "indoc",
  "ln-core",
+ "ln-macro",
+ "openapiv3-extended",
+ "proc-macro2",
+ "quote",
 ]
 
 [[package]]
@@ -1023,15 +1029,22 @@ dependencies = [
  "anyhow",
  "clap",
  "convert_case 0.6.0",
- "ln-model",
+ "indexmap",
  "openapiv3-extended",
+ "proc-macro2",
+ "quote",
  "serde",
+ "serde_json",
+ "syn",
+ "tracing-ez",
 ]
 
 [[package]]
-name = "ln-model"
+name = "ln-macro"
 version = "0.1.0"
 dependencies = [
+ "ln-core",
+ "pretty_assertions",
  "proc-macro2",
  "quote",
 ]
@@ -1169,9 +1182,8 @@ dependencies = [
  "indexmap",
  "indoc",
  "ln-core",
- "ln-model",
+ "ln-macro",
  "log",
- "ocg-macro",
  "openapiv3-extended",
  "pretty_assertions",
  "prettyplease",
@@ -1191,16 +1203,6 @@ dependencies = [
  "topo_sort",
  "tracing-ez",
  "url",
-]
-
-[[package]]
-name = "ocg-macro"
-version = "0.1.0"
-dependencies = [
- "ln-model",
- "pretty_assertions",
- "proc-macro2",
- "quote",
 ]
 
 [[package]]

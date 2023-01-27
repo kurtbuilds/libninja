@@ -1,17 +1,17 @@
-use tracing_ez::warn;
-use openapiv3 as oa;
 use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
-use crate::mir;
-use crate::mir::Ty;
-use crate::util::is_primitive;
+use tracing_ez::warn;
 
+use crate::hir;
+use crate::hir::Ty;
 
-pub fn schema_ref_to_ty(schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> mir::Ty {
+use openapiv3 as oa;
+
+pub fn schema_ref_to_ty(schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> Ty {
     let schema = schema_ref.resolve(spec);
     schema_ref_to_ty_already_resolved(schema_ref, spec, schema)
 }
 
-pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI, schema: &Schema) -> mir::Ty {
+pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI, schema: &Schema) -> Ty {
     if is_primitive(schema, spec) {
         concrete_schema_to_ty(schema, spec)
     } else {
@@ -30,7 +30,7 @@ pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec:
 
 /// You probably want schema_ref_to_ty, not this method. Reason being, you want
 /// to use the ref'd model if one exists (e.g. User instead of resolving to Ty::Any)
-pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> mir::Ty {
+pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.schema_kind {
         SchemaKind::Type(oa::Type::String(s)) => Ty::String,
         SchemaKind::Type(oa::Type::Number(_)) => Ty::Float,
@@ -59,5 +59,28 @@ pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> mir::Ty {
         SchemaKind::OneOf { .. } => Ty::Any,
         SchemaKind::AnyOf { .. } => Ty::Any,
         SchemaKind::Not { .. } => Ty::Any,
+    }
+}
+
+
+pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
+    use openapiv3::SchemaKind::*;
+    use openapiv3::Type::*;
+    match &schema.schema_kind {
+        Type(String(_)) => true,
+        Type(Number(_)) => true,
+        Type(Integer(_)) => true,
+        Type(Boolean {}) => true,
+        Type(Array(ArrayType {
+                             items: Some(inner), ..
+                         })) => {
+            let inner = inner.unbox();
+            let inner = inner.resolve(spec);
+            is_primitive(inner, spec)
+        }
+        SchemaKind::AllOf { all_of } => {
+            all_of.len() == 1 && is_primitive(all_of[0].resolve(spec), spec)
+        }
+        _ => false,
     }
 }

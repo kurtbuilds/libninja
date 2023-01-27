@@ -1,9 +1,10 @@
 use std::path::Path;
 use proc_macro2::TokenStream;
+use ocg_core::fs;
 use crate::rust::codegen::ToRustCode;
 use crate::rust::format::format_code;
 use crate::util;
-use crate::util::open;
+use ocg_core::fs::open;
 
 pub fn write_rust_file_to_path(path: &Path, file: ln_model::File<TokenStream>) -> anyhow::Result<()> {
     let code = file.to_rust_code();
@@ -22,5 +23,5 @@ pub fn write_rust_to_path(path: &Path, code: TokenStream, template: &str) -> any
         s += "\n";
     }
     s += &code;
-    util::write_file(path, &s)
+    fs::write_file(path, &s)
 }

@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use ocg_macro::rfunction;
+use ln_macro::rfunction;
 
 use ln_model::Function;
 use quote::quote;
