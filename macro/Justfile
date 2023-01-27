@@ -1,0 +1,4 @@
+test TEST='':
+    cargo test {{ TEST }}
+
+alias t := test

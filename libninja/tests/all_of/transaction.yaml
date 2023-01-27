@@ -1,0 +1,71 @@
+title: Transaction
+description: A representation of a transaction
+x-examples: { }
+allOf:
+  - $ref: '#/components/schemas/TransactionBase'
+  - type: object
+    additionalProperties: true
+    properties:
+      payment_channel:
+        type: string
+        enum:
+          - online
+          - in store
+          - other
+        description: |
+          The channel used to make a payment.
+          `online:` transactions that took place online.
+          
+          `in store:` transactions that were made at a physical location.
+          
+          `other:` transactions that relate to banks, e.g. fees or deposits.
+          
+          This field replaces the `transaction_type` field.
+      authorized_date:
+        type: string
+        format: date
+        description: The date that the transaction was authorized. Dates are returned in an [ISO 8601](https://wikipedia.org/wiki/ISO_8601) format ( `YYYY-MM-DD` ).
+        nullable: true
+      authorized_datetime:
+        type: string
+        format: date-time
+        description: |-
+          Date and time when a transaction was authorized in [ISO 8601](https://wikipedia.org/wiki/ISO_8601) format ( `YYYY-MM-DDTHH:mm:ssZ` ).
+          
+          This field is returned for select financial institutions and comes as provided by the institution. It may contain default time values (such as 00:00:00).
+        nullable: true
+      datetime:
+        type: string
+        format: date-time
+        description: |-
+          Date and time when a transaction was posted in [ISO 8601](https://wikipedia.org/wiki/ISO_8601) format ( `YYYY-MM-DDTHH:mm:ssZ` ).
+          
+          This field is returned for select financial institutions and comes as provided by the institution. It may contain default time values (such as 00:00:00).
+        nullable: true
+      transaction_code:
+        $ref: '#/components/schemas/TransactionCode'
+      personal_finance_category:
+        $ref: '#/components/schemas/PersonalFinanceCategory'
+      personal_finance_category_icon_url:
+        type: string
+        description: A link to the icon associated with the primary personal finance category. The logo will always be 100x100 pixels.
+        x-hidden-from-docs: true
+      counterparties:
+        type: array
+        description: The counterparties present in the transaction. Counterparties, such as the financial institutions, are extracted by Plaid from the raw description.
+        items:
+          $ref: '#/components/schemas/TransactionCounterparty'
+        x-hidden-from-docs: true
+    required:
+      - account_owner
+      - pending_transaction_id
+      - payment_channel
+      - payment_meta
+      - name
+      - location
+      - authorized_date
+      - authorized_datetime
+      - datetime
+      - category_id
+      - category
+      - transaction_code

@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "model",
+    "libninja",
+    "macro",
+    "core",
+    "commercial",
+]
+exclude = [
+]
+
+#[patch.crates-io]
+#serde_derive = { git = "https://github.com/kurtbuilds/serde" }
+#openapiv3-extended = { path = "../openapiv3" }
