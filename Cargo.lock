@@ -1045,26 +1045,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libninja-commercial"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "convert_case 0.6.0",
- "include_dir",
- "indoc",
- "ln-core",
- "ln-macro",
- "ln-mir",
- "openapiv3-extended",
- "proc-macro2",
- "quote",
- "regex",
- "serde_json",
- "syn",
- "topo_sort",
-]
-
-[[package]]
 name = "link-cplusplus"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
