@@ -311,7 +311,7 @@ fn sanitize_spec(spec: &mut MirSpec) {
             Some((alias.clone(), resolved.clone()))
         })
         .collect();
-    for (_name, record) in &mut spec.schemas {
+    for record in spec.schemas.values_mut() {
         for field in record.fields_mut() {
             let Ty::Model(name) = &field.ty else {
                 continue;
