@@ -1104,6 +1104,7 @@ name = "ln-macro"
 version = "0.1.0"
 dependencies = [
  "ln-core",
+ "ln-mir",
  "pretty_assertions",
  "proc-macro2",
  "quote",
