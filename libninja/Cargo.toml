@@ -1,5 +1,5 @@
 [package]
-name = "ocg"
+name = "libninja"
 version = "0.1.9"
 edition = "2021"
 license = "MIT"
@@ -44,7 +44,7 @@ indexmap = "1.9.2"
 ln-macro = { path = "../macro" }
 ln-core = { path = "../core" }
 ln-mir = { path = "../mir" }
-implicit-trait = "0.2.1"
+implicit-trait = "0.3.0"
 
 [dev-dependencies]
 env_logger = "0.10.0"

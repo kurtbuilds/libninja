@@ -140,12 +140,10 @@ pub fn generate_single_model_file(name: &str, record: &Record, spec: &MirSpec, c
     }
 }
 
-struct RefTarget {
+pub struct RefTarget {
     name: Name,
     ty: hir::Ty,
 }
-
-
 
 pub fn create_sumtype_struct(schema: &Struct, config: &LibraryConfig) -> TokenStream {
     let default = schema.derive_default();

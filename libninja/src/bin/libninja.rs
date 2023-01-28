@@ -4,11 +4,11 @@
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use clap::{Args, Parser, Subcommand};
-use ocg::{generate_library_using_spec_at_path, Language};
-use ocg::options::{OutputOptions, LibraryOptions};
-use ocg::rust::generate_rust_library;
+use libninja::generate_library_using_spec_at_path;
+use ln_core::{Language, OutputOptions, LibraryOptions};
+use libninja::rust::generate_rust_library;
 use std::path::Path;
-use ocg::command::*;
+use libninja::command::*;
 
 fn warn_if_not_found(command: &str) {
     if std::process::Command::new(command)

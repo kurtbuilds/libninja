@@ -886,9 +886,9 @@ dependencies = [
 
 [[package]]
 name = "implicit-trait"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "946a1d402305b15ae7916692608cac6a5e5d49b845c497c64a7db6d5e163c6e1"
+checksum = "05eef5c1f9073f3731ab65e5f3c3c0498bce6c092923feaf721898ac2491d549"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1003,6 +1003,46 @@ name = "libc"
 version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
+
+[[package]]
+name = "libninja"
+version = "0.1.9"
+dependencies = [
+ "actix-web",
+ "anyhow",
+ "cargo_toml",
+ "clap",
+ "convert_case 0.6.0",
+ "env_logger",
+ "http",
+ "implicit-trait",
+ "include_dir",
+ "indexmap",
+ "indoc",
+ "ln-core",
+ "ln-macro",
+ "ln-mir",
+ "log",
+ "openapiv3-extended",
+ "pretty_assertions",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "strum",
+ "syn",
+ "tempfile",
+ "tera",
+ "tokio",
+ "toml",
+ "topo_sort",
+ "tracing-ez",
+ "url",
+]
 
 [[package]]
 name = "libninja-commercial"
@@ -1193,46 +1233,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea86265d3d3dcb6a27fc51bd29a4bf387fae9d2986b823079d4986af253eb439"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "ocg"
-version = "0.1.9"
-dependencies = [
- "actix-web",
- "anyhow",
- "cargo_toml",
- "clap",
- "convert_case 0.6.0",
- "env_logger",
- "http",
- "implicit-trait",
- "include_dir",
- "indexmap",
- "indoc",
- "ln-core",
- "ln-macro",
- "ln-mir",
- "log",
- "openapiv3-extended",
- "pretty_assertions",
- "prettyplease",
- "proc-macro2",
- "quote",
- "regex",
- "semver",
- "serde",
- "serde_json",
- "serde_yaml",
- "strum",
- "syn",
- "tempfile",
- "tera",
- "tokio",
- "toml",
- "topo_sort",
- "tracing-ez",
- "url",
 ]
 
 [[package]]
