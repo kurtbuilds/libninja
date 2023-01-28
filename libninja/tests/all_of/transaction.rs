@@ -2,9 +2,12 @@
 pub struct Transaction {
     #[serde(flatten)]
     pub transaction_base: TransactionBase,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub authorized_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub authorized_datetime: Option<String>,
     pub counterparties: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub datetime: Option<String>,
     pub payment_channel: String,
     pub personal_finance_category: String,

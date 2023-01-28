@@ -1,14 +1,14 @@
 use openapiv3::{OpenAPI, ReferenceOr, Schema};
-use ocg::mir;
-use ocg::mir::Record;
+use ln_core::{hir, hir::Record};
+use libninja::rust::mir::StructExt;
 
 const LINK_TOKEN_CREATE: &str = include_str!("link_token_create.yaml");
 
 
-fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> mir::Record {
+fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> hir::Record {
     let schema = serde_yaml::from_str::<Schema>(schema).unwrap();
     let schema_ref = ReferenceOr::Item(schema);
-    let mut record = ocg::extractor::create_record(name, &schema_ref, spec);
+    let mut record = ln_core::extractor::create_record(name, &schema_ref, spec);
     record.clear_docs();
     record
 }

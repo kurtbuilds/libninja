@@ -422,9 +422,8 @@ pub fn formatted_code(code: impl ToRustCode) -> String {
 
 #[cfg(test)]
 mod tests {
-    use ln_mir::{Ident, import, Import};
+    use ln_mir::{Ident, import, Import, Name};
 
-    use crate::mir::Name;
     use crate::rust::codegen::{ToRustCode, ToRustIdent};
 
     #[test]

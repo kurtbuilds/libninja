@@ -28,7 +28,11 @@ impl FieldExt for MirField {
         let rust_ident = name.to_rust_ident();
         if rust_ident.0 != name.0 {
             let name = &name.0;
-            if !self.flatten {
+            if self.flatten {
+                decorators.push(quote! {
+                    #[serde(flatten)]
+                });
+            } else {
                 decorators.push(quote! {
                     #[serde(rename = #name)]
                 });
@@ -48,7 +52,7 @@ impl FieldExt for MirField {
     }
 }
 
-#[implicit_trait]
+#[implicit_trait(pub)]
 impl StructExt for Struct {
 
     fn implements_default(&self) -> bool {
