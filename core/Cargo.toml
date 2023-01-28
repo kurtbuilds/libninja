@@ -17,3 +17,6 @@ proc-macro2 = "1.0.50"
 tracing-ez = "0.3.0"
 indexmap = "1.9.2"
 syn = "1.0.107"
+ln-mir = { path = "../mir" }
+include_dir = "0.7.3"
+tera = "1.17.1"

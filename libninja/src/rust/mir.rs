@@ -7,19 +7,102 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use tracing_ez::{info, span};
 
-use ln_model::{Field, File, Ident, Import, import, Name, Visibility};
-use ln_model as model;
+use ln_mir::{Field, File, Ident, Import, import, Name, Visibility};
+use ln_mir as model;
 
-use crate::{extractor, mir, MirSpec};
-use crate::command::Config;
-use crate::mir::{MirField, NewType, Record, StrEnum, Struct, TypeAlias};
-use crate::mir::AuthLocation::Token;
-use crate::extractor::schema_ref_to_ty;
-use crate::options::LibraryConfig;
+use ln_core::{extractor, hir, MirSpec};
+use ln_core::hir::{MirField, NewType, Record, StrEnum, Struct, TypeAlias};
+use ln_core::hir::AuthLocation::Token;
+use ln_core::extractor::schema_ref_to_ty;
+use ln_core::LibraryConfig;
 use crate::rust::codegen;
 use crate::rust::codegen::{ToRustCode};
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
+use implicit_trait::implicit_trait;
+
+#[implicit_trait]
+impl FieldExt for MirField {
+    fn decorators(&self, name: &Name, config: &LibraryConfig) -> Vec<TokenStream> {
+        let mut decorators = Vec::new();
+        let rust_ident = name.to_rust_ident();
+        if rust_ident.0 != name.0 {
+            let name = &name.0;
+            if !self.flatten {
+                decorators.push(quote! {
+                    #[serde(rename = #name)]
+                });
+            }
+            if config.ormlite {
+                decorators.push(quote! {
+                    #[ormlite(rename = #name)]
+                });
+            }
+        }
+        if self.optional {
+            decorators.push(quote! {
+                #[serde(skip_serializing_if = "Option::is_none")]
+            });
+        }
+        decorators
+    }
+}
+
+#[implicit_trait]
+impl StructExt for Struct {
+
+    fn implements_default(&self) -> bool {
+        self.fields.iter().all(|(_, f)| f.optional || f.ty.implements_default())
+    }
+
+    fn derive_default(&self) -> TokenStream {
+        if self.implements_default() {
+            quote! { , Default }
+        } else {
+            TokenStream::new()
+        }
+    }
+
+    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=model::Field<TokenStream>> + 'a> {
+        Box::new(self.fields.iter().map(|(name, field)| {
+            let decorators = field.decorators(name, config);
+            let ty = field.ty.to_rust_type();
+            let optional = field.optional;
+            model::Field {
+                name: name.clone(),
+                ty,
+                visibility: Visibility::Public,
+                decorators,
+                optional,
+                ..model::Field::default()
+            }
+        }))
+    }
+
+    fn ref_target(&self) -> Option<RefTarget> {
+        self.fields.iter().find(|(_, f)| f.flatten && !f.optional).map(|(name, f)| {
+            RefTarget {
+                name: name.clone(),
+                ty: f.ty.clone(),
+            }
+        })
+    }
+}
+
+#[implicit_trait]
+impl RecordExt for Record {
+    fn imports(&self, path: &str) -> Option<Import> {
+        let names = self.fields()
+            .flat_map(|f| f.ty.inner_model())
+            .map(|name| name.to_rust_struct().0)
+            .collect::<BTreeSet<_>>();
+        if !names.is_empty() {
+            Some(Import::new(path, names.into_iter().collect::<Vec<_>>()))
+        } else {
+            None
+        }
+    }
+}
 
 /// Generate a model.rs file that just imports from dependents.
 pub fn generate_model_rs(spec: &MirSpec, config: &LibraryConfig) -> File<TokenStream> {
@@ -59,87 +142,10 @@ pub fn generate_single_model_file(name: &str, record: &Record, spec: &MirSpec, c
 
 struct RefTarget {
     name: Name,
-    ty: mir::Ty,
+    ty: hir::Ty,
 }
 
-impl MirField {
-    fn decorators(&self, name: &Name, config: &LibraryConfig) -> Vec<TokenStream> {
-        let mut decorators = Vec::new();
-        let rust_ident = name.to_rust_ident();
-        if rust_ident.0 != name.0 {
-            let name = &name.0;
-            if !self.flatten {
-                decorators.push(quote! {
-                    #[serde(rename = #name)]
-                });
-            }
-            if config.ormlite {
-                decorators.push(quote! {
-                    #[ormlite(column = #name)]
-                });
-            }
-        }
-        if self.flatten {
-            decorators.push(quote! {
-                #[serde(flatten)]
-            });
-        }
-        decorators
-    }
-}
 
-impl Struct {
-    pub fn implements_default(&self) -> bool {
-        self.fields.iter().all(|(_, f)| f.optional || f.ty.implements_default())
-    }
-
-    fn derive_default(&self) -> TokenStream {
-        if self.implements_default() {
-            quote! { , Default }
-        } else {
-            TokenStream::new()
-        }
-    }
-
-    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> impl Iterator<Item=model::Field<TokenStream>> + 'a {
-        self.fields.iter().map(|(name, field)| {
-            let decorators = field.decorators(name, config);
-            let ty = field.ty.to_rust_type();
-            let optional = field.optional;
-            model::Field {
-                name: name.clone(),
-                ty,
-                visibility: Visibility::Public,
-                decorators,
-                optional,
-                ..model::Field::default()
-            }
-        })
-    }
-
-    fn ref_target(&self) -> Option<RefTarget> {
-        self.fields.iter().find(|(_, f)| f.flatten && !f.optional).map(|(name, f)| {
-            RefTarget {
-                name: name.clone(),
-                ty: f.ty.clone(),
-            }
-        })
-    }
-}
-
-impl Record {
-    fn imports(&self, path: &str) -> Option<Import> {
-        let names = self.fields()
-            .flat_map(|f| f.ty.inner_model())
-            .map(|name| name.to_rust_struct().0)
-            .collect::<BTreeSet<_>>();
-        if !names.is_empty() {
-            Some(Import::new(path, names.into_iter().collect::<Vec<_>>()))
-        } else {
-            None
-        }
-    }
-}
 
 pub fn create_sumtype_struct(schema: &Struct, config: &LibraryConfig) -> TokenStream {
     let default = schema.derive_default();
@@ -237,7 +243,7 @@ pub fn create_struct(record: &Record, config: &LibraryConfig) -> TokenStream {
 
 #[cfg(test)]
 mod tests {
-    use crate::mir::{MirField, Name, Ty};
+    use ln_core::hir::{MirField, Name, Ty};
     use crate::rust::format::format_code;
     use super::*;
 

@@ -1,7 +1,6 @@
 use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
 use tracing_ez::warn;
 
-use crate::hir;
 use crate::hir::Ty;
 
 use openapiv3 as oa;

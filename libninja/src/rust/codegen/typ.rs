@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use crate::mir::Ty;
+use ln_core::hir::Ty;
 use crate::rust::codegen::ident::ToRustIdent;
 
 /// Use this to generate Rust code types.

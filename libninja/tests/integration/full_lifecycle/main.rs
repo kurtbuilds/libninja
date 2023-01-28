@@ -34,7 +34,7 @@ async fn test_lifecycle() -> Result<()> {
             library_options: ::ocg::LibraryOptions {
                 package_name: "postman".to_string(),
                 service_name: "Postman".to_string(),
-                generator: ::ocg::Language::Rust,
+                language: ::ocg::Language::Rust,
                 package_version: "0.1.0".to_string(),
                 config: ::ocg::LibraryConfig::default(),
             },

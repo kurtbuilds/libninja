@@ -1,9 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use ln_macro::rfunction;
-use ln_model::{File, Import};
-use crate::{Language, LibraryOptions, mir};
-use crate::mir::{MirSpec, Parameter};
+use ln_mir::{File, Import};
+use crate::{Language, LibraryOptions, };
+use ln_core::{hir, hir::{MirSpec, Parameter}};
 use crate::rust::codegen;
 use crate::rust::codegen::ident::ToRustIdent;
 use crate::rust::codegen::{to_rust_example_value, ToRustCode};
@@ -20,7 +20,7 @@ impl ToRustExample for Parameter {
 }
 
 
-pub fn generate_example(operation: &mir::Operation, opt: &LibraryOptions, spec: &MirSpec) -> anyhow::Result<String> {
+pub fn generate_example(operation: &hir::Operation, opt: &LibraryOptions, spec: &MirSpec) -> anyhow::Result<String> {
     let args = operation.function_args(Language::Rust);
     let declarations = args.iter().map(|p| {
         let ident = p.name.to_rust_ident();

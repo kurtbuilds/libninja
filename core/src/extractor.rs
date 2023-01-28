@@ -3,18 +3,19 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
 use openapiv3::{APIKeyLocation, OpenAPI, Operation, PathItem, ReferenceOr, RequestBody, Response, Schema, SchemaKind, SchemaReference, SecurityRequirement, SecurityScheme, StatusCode, StringType, Type};
-pub use record::*;
-pub use resolution::{concrete_schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
+use openapiv3 as oa;
 use tracing_ez::{span, warn};
 
-use crate::{hir, Language, LibraryOptions, mir};
+use ln_mir::{Doc, Name, NewType};
+pub use record::*;
+pub use resolution::{concrete_schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
+pub use resolution::*;
+
+use crate::{hir, Language, LibraryOptions};
 use crate::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirSpec, Record, StrEnum, Struct, Ty};
-use crate::mir::{Doc, Name, NewType};
 
 mod resolution;
 mod record;
-
-use openapiv3 as oa;
 
 /// You might need to call add_operation_models after this
 pub fn extract_spec(spec: &OpenAPI, opt: &LibraryOptions) -> Result<MirSpec> {
@@ -68,7 +69,7 @@ pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Resu
     let schema = param_schema_ref.resolve(spec);
     Ok(hir::Parameter {
         doc: None,
-        name: mir::Name::new(&data.name),
+        name: Name::new(&data.name),
         optional: !data.required,
         location: param.into(),
         ty,
@@ -366,10 +367,6 @@ fn extract_security_fields(name: &str, requirement: &SecurityRequirement, spec: 
                     AuthLocation::Cookie {
                         key: name.to_string(),
                     }
-                }
-                _ => {
-                    println!("Unsupported API key location: {:?}", location);
-                    unimplemented!()
                 }
             },
             SecurityScheme::HTTP {

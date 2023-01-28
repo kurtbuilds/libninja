@@ -1,32 +1,32 @@
-pub mod client;
-pub mod codegen;
-pub mod format;
-pub mod model;
-pub mod request;
-mod io;
+use std::path::Path;
 
-use crate::rust::codegen::ToRustCode;
-pub use crate::rust::codegen::generate_example;
-use crate::rust::model::{generate_model_rs, generate_single_model_file};
-use crate::rust::request::{build_request_struct, generate_request_model_rs};
-use crate::util::create_context;
-use crate::{add_operation_models, extract_spec, LibraryOptions, MirSpec, OutputOptions, TEMPLATE_DIR, util};
 use anyhow::Result;
-use format::format_code;
+use convert_case::{Case, Casing};
 use indoc::formatdoc;
 use openapiv3::OpenAPI;
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::fs;
-use std::fs::create_dir_all;
-use std::path::Path;
-use convert_case::{Case, Casing};
+
 use codegen::ToRustIdent;
 use codegen::ToRustType;
-use ln_model::{File, import, Import, Visibility};
-use ocg_core::fs;
-use ocg_core::fs::{open, write_file};
+use format::format_code;
+use ln_core::{copy_files, copy_templates, create_context, get_template_file, prepare_templates};
+use ln_mir::{Visibility, Import, File};
+use ln_core::fs;
+
+use crate::{add_operation_models, extract_spec, LibraryOptions, MirSpec, OutputOptions, util};
+pub use crate::rust::codegen::generate_example;
+use crate::rust::codegen::ToRustCode;
 use crate::rust::io::write_rust_file_to_path;
+use crate::rust::mir::{generate_model_rs, generate_single_model_file};
+use crate::rust::request::{build_request_struct, generate_request_model_rs};
+
+pub mod client;
+pub mod codegen;
+pub mod format;
+pub mod mir;
+pub mod request;
+mod io;
 
 pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     let config = &opts.library_options.config;
@@ -36,7 +36,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
 
     // Prepare the MIR Spec.
     let mir_spec = extract_spec(&spec, &opts.library_options)?;
-    let mir_spec = add_operation_models(opts.library_options.generator, mir_spec)?;
+    let mir_spec = add_operation_models(opts.library_options.language, mir_spec)?;
 
     write_model_module(&mir_spec, &opts)?;
 
@@ -46,13 +46,13 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
 
     let example = write_examples(&mir_spec, &opts)?;
 
-    let tera = crate::util::prepare_templates();
-    let mut context = crate::util::create_context(&opts, &mir_spec);
+    let tera = prepare_templates();
+    let mut context = create_context(&opts, &mir_spec);
     context.insert("code_sample", &example);
     context.insert("client_docs_url", &format!("https://docs.rs/{}", opts.library_options.package_name));
 
-    util::copy_files(&opts.dest_path, &opts.library_options.generator.to_string(), &["src"])?;
-    util::copy_templates(&opts, &tera, &context)?;
+    copy_files(&opts.dest_path, &opts.library_options.language.to_string(), &["src"])?;
+    copy_templates(&opts, &tera, &context)?;
 
     bump_version_and_update_deps(&opts)?;
 
@@ -97,10 +97,7 @@ fn write_lib_rs(mir_spec: &MirSpec, spec: &OpenAPI, opts: &OutputOptions) -> Res
     let lib_rs_template = if template_path.exists() {
         fs::read_to_string(template_path)?
     } else {
-        let s = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/template/rust/src/lib.rs"
-        ));
+        let s = get_template_file("rust/lib.rs");
         formatdoc!(
             r#"
             //! [`{client}`](struct.{client}.html) is the main entry point for this library.
@@ -177,15 +174,11 @@ fn bump_version_and_update_deps(opts: &OutputOptions) -> anyhow::Result<()> {
 
     package.version = cargo_toml::Inheritable::Set(opts.library_options.package_version.clone());
 
-    let template_manifest = cargo_toml::Manifest::from_str(load_template("rust/Cargo.toml.j2")).unwrap();
+    let template_manifest = cargo_toml::Manifest::from_str(get_template_file("rust/Cargo.toml.j2")).unwrap();
     bump_deps(&mut manifest, &template_manifest)?;
 
     let content = toml::to_string(&manifest).unwrap();
     fs::write_file(&cargo, &content)
-}
-
-fn load_template(path: &str) -> &'static str {
-    TEMPLATE_DIR.get_file(path).unwrap().contents_utf8().unwrap()
 }
 
 fn bump_deps(current_manifest: &mut cargo_toml::Manifest, from_other: &cargo_toml::Manifest) -> Result<()> {
@@ -212,7 +205,7 @@ fn write_examples(spec: &MirSpec, opts: &OutputOptions) -> Result<String> {
             first_example = Some(source.clone());
         }
         source.insert_str(0, "#![allow(unused_imports)]\n");
-        write_file(&example_path.join(operation.file_name()).with_extension("rs"), &source)?;
+        fs::write_file(&example_path.join(operation.file_name()).with_extension("rs"), &source)?;
     }
     first_example.ok_or_else(|| anyhow::anyhow!("No examples were generated."))
 }

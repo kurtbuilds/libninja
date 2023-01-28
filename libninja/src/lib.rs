@@ -13,11 +13,12 @@ pub use openapiv3;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 
-use extractor::add_operation_models;
+use lang::*;
+use ln_core::{Language, LibraryConfig, LibraryOptions, MirSpec, OutputOptions};
+use ln_core::extractor::{extract_api_operations, extract_spec};
+use ln_core::extractor::add_operation_models;
+use ln_core::fs::open;
 pub use repo::*;
-
-use crate::extractor::{extract_api_operations, extract_spec};
-use ocg_core::fs::open;
 
 pub mod custom;
 pub mod rust;
@@ -26,13 +27,6 @@ pub mod command;
 mod modify;
 pub mod repo;
 mod lang;
-
-use lang::*;
-use ln_core::{Language, LibraryConfig, LibraryOptions, OutputOptions, MirSpec};
-
-
-static TEMPLATE_DIR: include_dir::Dir<'_> =
-    include_dir::include_dir!("$CARGO_MANIFEST_DIR/template");
 
 pub fn read_spec(path: impl AsRef<Path>, service_name: &str) -> Result<OpenAPI> {
     let path = path.as_ref();
@@ -47,11 +41,11 @@ pub fn read_spec(path: impl AsRef<Path>, service_name: &str) -> Result<OpenAPI> 
 }
 
 pub fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
-    match opts.library_options.generator {
+    match opts.library_options.language {
         Language::Rust => rust::generate_rust_library(spec, opts),
-        Language::Python => python::generate_python_library(spec, opts),
-        Language::Typescript => typescript::generate_typescript_library(spec, opts),
-        Language::Golang => go::generate_go_library(spec, opts),
+        Language::Python => python::generate_library(spec, opts),
+        Language::Typescript => typescript::generate_library(spec, opts),
+        Language::Golang => go::generate_library(spec, opts),
     }
 }
 
@@ -79,27 +73,27 @@ pub fn generate_examples(
     for operation in &spec.operations {
         let rust = {
             let generator = Language::Rust;
-            let opt = LibraryOptions { generator, ..opt.clone() };
+            let opt = LibraryOptions { language: generator, ..opt.clone() };
             let spec = add_operation_models(generator, spec.clone())?;
             rust::generate_example(operation, &opt, &spec)?
         };
         let python = {
-            let opt = LibraryOptions { generator: Language::Python, ..opt.clone() };
-            python::example::generate_sync_example(operation, &opt, &spec)?
+            let opt = LibraryOptions { language: Language::Python, ..opt.clone() };
+            python::generate_sync_example(operation, &opt, &spec)?
         };
         let python_async = {
-            let opt = LibraryOptions { generator: Language::Python, ..opt.clone() };
-            python::example::generate_async_example(operation, &opt, &spec)?
+            let opt = LibraryOptions { language: Language::Python, ..opt.clone() };
+            python::generate_async_example(operation, &opt, &spec)?
         };
         let typescript = {
             let generator = Language::Rust;
-            let opt = LibraryOptions { generator, ..opt.clone() };
+            let opt = LibraryOptions { language: generator, ..opt.clone() };
             let spec = add_operation_models(generator, spec.clone())?;
-            typescript::example::generate_example(operation, &opt, &spec)?
+            typescript::generate_example(operation, &opt, &spec)?
         };
         let go = {
-            let opt = LibraryOptions { generator: Language::Golang, ..opt.clone() };
-            go::example::generate_example(operation, &opt, &spec)?
+            let opt = LibraryOptions { language: Language::Golang, ..opt.clone() };
+            go::generate_example(operation, &opt, &spec)?
         };
         let examples = Examples {
             rust,

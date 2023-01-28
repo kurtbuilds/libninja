@@ -1,6 +1,6 @@
 use openapiv3::OpenAPI;
 use anyhow::{anyhow, Result};
-use ln_core::{mir, LibraryOptions, OutputOptions};
+use ln_core::{hir, LibraryOptions, OutputOptions};
 
 #[cfg(feature = "commercial")]
 pub mod python {
@@ -11,11 +11,15 @@ pub mod python {
 pub mod python {
     use super::*;
 
-    fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
+    pub fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 
-    fn generate_sync_example(operation: &mir::Operation, opt: &LibraryOptions, spec: &mir::MirSpec) -> Result<String> {
+    pub fn generate_sync_example(operation: &hir::Operation, opt: &LibraryOptions, spec: &hir::MirSpec) -> Result<String> {
+        Err(anyhow!("Commercial features are not enabled"))
+    }
+
+    pub fn generate_async_example(operation: &hir::Operation, opt: &LibraryOptions, spec: &hir::MirSpec) -> Result<String> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 }
@@ -29,11 +33,11 @@ pub mod go {
 pub mod go {
     use super::*;
 
-    fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
+    pub fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 
-    fn generate_example(operation: &mir::Operation, opt: &LibraryOptions, spec: &mir::MirSpec) -> Result<String> {
+    pub fn generate_example(operation: &hir::Operation, opt: &LibraryOptions, spec: &hir::MirSpec) -> Result<String> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 }
@@ -47,11 +51,11 @@ pub mod typescript {
 pub mod typescript {
     use super::*;
 
-    fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
+    pub fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 
-    fn generate_example(operation: &mir::Operation, opt: &LibraryOptions, spec: &mir::MirSpec) -> Result<String> {
+    pub fn generate_example(operation: &hir::Operation, opt: &LibraryOptions, spec: &hir::MirSpec) -> Result<String> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 }

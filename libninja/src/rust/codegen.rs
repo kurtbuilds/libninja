@@ -6,13 +6,14 @@ use quote::{quote, TokenStreamExt};
 use regex::{Captures, Regex};
 use syn::Path;
 
-use ln_model::{ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, IntoDoc, Literal, Visibility};
+use ln_mir::{ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility};
 pub use typ::*;
 pub use example::*;
 pub use ident::*;
-use crate::mir;
+use ln_core::extractor::is_primitive;
+use ln_core::hir;
 
-use crate::mir::{MirSpec, Name, NewType, Parameter, ParamKey, Record, StrEnum, Struct, Ty};
+use ln_core::hir::{MirSpec, Name, NewType, Parameter, ParamKey, Record, StrEnum, Struct, Ty};
 use crate::rust::format;
 
 mod example;
@@ -305,7 +306,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
                     let model = model.to_rust_struct();
                     quote!(#model::#variant)
                 }
-                Record::TypeAlias(name, mir::MirField { ty, optional, .. }) => {
+                Record::TypeAlias(name, hir::MirField { ty, optional, .. }) => {
                     let ty = to_rust_example_value(ty, name, spec, force_not_ref)?;
                     if *optional {
                         quote!(Some(#ty))
@@ -349,10 +350,10 @@ pub fn is_referenceable(schema: &Schema, spec: &OpenAPI) -> bool {
                                                 })) => {
             let inner = inner.unbox();
             let inner = inner.resolve(spec);
-            crate::util::is_primitive(inner, spec)
+            is_primitive(inner, spec)
         }
         SchemaKind::AllOf { all_of } => {
-            all_of.len() == 1 && crate::util::is_primitive(all_of[0].resolve(spec), spec)
+            all_of.len() == 1 && is_primitive(all_of[0].resolve(spec), spec)
         }
         _ => false,
     }
@@ -421,7 +422,7 @@ pub fn formatted_code(code: impl ToRustCode) -> String {
 
 #[cfg(test)]
 mod tests {
-    use ln_model::{Ident, import, Import};
+    use ln_mir::{Ident, import, Import};
 
     use crate::mir::Name;
     use crate::rust::codegen::{ToRustCode, ToRustIdent};

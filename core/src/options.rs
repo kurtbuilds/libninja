@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use convert_case::{Case, Casing};
-use crate::mir::{Literal, Name};
+use ln_mir::{Literal, Name};
+use crate::Language;
 
 #[derive(Debug, Clone, Default)]
 pub struct LibraryConfig {
@@ -17,7 +18,7 @@ pub struct LibraryOptions {
     // eg PetStore
     pub service_name: String,
 
-    pub generator: crate::Language,
+    pub language: Language,
 
     pub package_version: String,
 
@@ -25,11 +26,11 @@ pub struct LibraryOptions {
 }
 
 impl LibraryOptions {
-    pub fn new(service_name: &str, language: crate::Language) -> Self {
+    pub fn new(service_name: &str, language: Language) -> Self {
         Self {
             package_name: service_name.to_case(Case::Snake),
             service_name: service_name.to_string(),
-            generator: crate::Language::Rust,
+            language,
             package_version: "0.1.0".to_string(),
             config: Default::default(),
         }
@@ -39,7 +40,7 @@ impl LibraryOptions {
         Literal::from(format!(
             "{}/{}/{}",
             self.package_name,
-            self.generator.to_string(),
+            self.language.to_string(),
             self.package_version
         ))
     }
@@ -83,7 +84,7 @@ impl OutputOptions {
         format!(
             "{}/{}/{}",
             self.library_options.package_name,
-            self.library_options.generator.to_string(),
+            self.library_options.language.to_string(),
             self.library_options.package_version
         )
     }

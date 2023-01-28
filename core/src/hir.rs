@@ -8,7 +8,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 
 use crate::{LibraryOptions, Language};
-use crate::mir::{Doc, Name};
+pub use ln_mir::{Doc, Name};
 use openapiv3 as oa;
 
 
@@ -408,7 +408,7 @@ impl Operation {
                     example: None,
                 }]
             }
-            gen if self.use_required_struct(generator) => {
+            _ if self.use_required_struct(generator) => {
                 vec![Parameter {
                     name: Name::new("args"),
                     ty: Ty::Model(self.required_struct_name()),

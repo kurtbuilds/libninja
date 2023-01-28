@@ -3,7 +3,8 @@ use anyhow::Result;
 use clap::{Args, ValueEnum};
 use convert_case::{Case, Casing};
 use crate::{generate_library_using_spec_at_path, OutputOptions, Language, LibraryOptions};
-use crate::options::LibraryConfig;
+use ln_core::LibraryConfig;
+use crate::command::Config::Ormlite;
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
 pub enum Config {
@@ -11,17 +12,15 @@ pub enum Config {
     Ormlite,
 }
 
-impl From<&[Config]> for LibraryConfig {
-    fn from(value: &[Config]) -> Self {
-        use Config::*;
-        let mut config = LibraryConfig::default();
-        for c in value {
-            match c {
-                Ormlite => config.ormlite = true,
-            }
+fn build_config(configs: &[Config]) -> LibraryConfig {
+    use Config::*;
+    let mut config = LibraryConfig::default();
+    for c in configs {
+        match c {
+            Ormlite => config.ormlite = true,
         }
-        config
     }
+    config
 }
 
 #[derive(Args, Debug)]
@@ -66,8 +65,8 @@ impl Generate {
                     package_name,
                     service_name: self.name.to_case(Case::Pascal),
                     package_version: version,
-                    generator: self.language,
-                    config: LibraryConfig::from(self.config.as_slice()),
+                    language: self.language,
+                    config: build_config(&self.config),
                 },
                 qualified_github_repo: self.github_repo,
                 dest_path: PathBuf::from(self.output_dir),

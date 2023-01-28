@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-use crate::mir::{Doc, Ident};
+use crate::{Doc, Ident};
 
 /// Localized
 pub enum ArgIdent {
@@ -149,21 +149,6 @@ impl<T> Default for Function<T>
         }
     }
 }
-
-pub trait IntoDoc {
-    fn to_doc(&self) -> Option<Doc>;
-}
-
-impl IntoDoc for str {
-    fn to_doc(&self) -> Option<Doc> {
-        if self.is_empty() {
-            None
-        } else {
-            Some(Doc(self.to_string()))
-        }
-    }
-}
-
 
 impl std::fmt::Display for ArgIdent {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

@@ -24,7 +24,7 @@ pub fn function(item: TokenStream) -> TokenStream {
     let args = parse_args(arg_toks.stream()).into_iter().map(|arg| {
         let Arg { name, arg_type, default } = arg;
         quote! {
-            ::ln_model::FnArg {
+            ::ln_mir::FnArg {
                 name: #name.into(),
                 ty: #arg_type,
                 default: #default,
@@ -44,14 +44,14 @@ pub fn function(item: TokenStream) -> TokenStream {
     };
 
     quote! {
-        ::ln_model::Function {
+        ::ln_mir::Function {
             name: #fn_name,
             async_: #asyn,
             public: #public,
             args: vec![#(#args),*],
             ret: #ret,
             body: #body,
-            ..::ln_model::Function::default()
+            ..::ln_mir::Function::default()
         }
     }.into()
 }
@@ -70,7 +70,7 @@ pub fn rfunction(item: TokenStream) -> TokenStream {
     let args = rfunction::parse_args2(arg_toks.stream()).into_iter().map(|arg| {
         let Arg { name, arg_type, default } = arg;
         quote! {
-            ::ln_model::FnArg {
+            ::ln_mir::FnArg {
                 name: #name.into(),
                 ty: #arg_type,
                 default: #default,
@@ -93,14 +93,14 @@ pub fn rfunction(item: TokenStream) -> TokenStream {
     };
 
     quote! {
-        ::ln_model::Function {
+        ::ln_mir::Function {
             name: #fn_name,
             async_: #asyn,
             public: #public,
             args: vec![#(#args),*],
             ret: #ret,
             body: #body,
-            ..::ln_model::Function::default()
+            ..::ln_mir::Function::default()
         }
     }.into()
 }

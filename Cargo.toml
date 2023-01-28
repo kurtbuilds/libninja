@@ -4,6 +4,7 @@ members = [
     "macro",
     "core",
     "commercial",
+    "mir",
 ]
 exclude = [
 ]

@@ -6,7 +6,7 @@ use core::option::Option;
 use core::option::Option::None;
 use quote::TokenStreamExt;
 
-pub use function::{ArgIdent, FnArg, FnArgTreatment, Function, IntoDoc, build_struct, build_dict};
+pub use function::{ArgIdent, FnArg, FnArgTreatment, Function, build_struct, build_dict};
 
 mod function;
 mod r#macro;
@@ -45,6 +45,15 @@ pub struct Doc(pub String);
 impl Doc {
     pub fn new(s: &str) -> Self {
         Self(s.to_string())
+    }
+}
+
+pub fn doc<S: Into<String>>(s: S) -> Option<Doc> {
+    let s = s.into();
+    if s.is_empty() {
+        None
+    } else {
+        Some(Doc(s))
     }
 }
 

@@ -22,7 +22,7 @@ fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> mir::Record {
 
 fn formatted_code(record: mir::Record) -> String {
     let config = LibraryConfig::default();
-    let code = ocg::rust::model::create_struct(&record, &config);
+    let code = ocg::rust::mir::create_struct(&record, &config);
     ocg::rust::format::format_code(code).unwrap()
 }
 

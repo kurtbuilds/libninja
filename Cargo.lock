@@ -885,6 +885,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "implicit-trait"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "946a1d402305b15ae7916692608cac6a5e5d49b845c497c64a7db6d5e163c6e1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "include_dir"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -999,12 +1010,18 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "convert_case 0.6.0",
+ "include_dir",
  "indoc",
  "ln-core",
  "ln-macro",
+ "ln-mir",
  "openapiv3-extended",
  "proc-macro2",
  "quote",
+ "regex",
+ "serde_json",
+ "syn",
+ "topo_sort",
 ]
 
 [[package]]
@@ -1029,13 +1046,16 @@ dependencies = [
  "anyhow",
  "clap",
  "convert_case 0.6.0",
+ "include_dir",
  "indexmap",
+ "ln-mir",
  "openapiv3-extended",
  "proc-macro2",
  "quote",
  "serde",
  "serde_json",
  "syn",
+ "tera",
  "tracing-ez",
 ]
 
@@ -1045,6 +1065,14 @@ version = "0.1.0"
 dependencies = [
  "ln-core",
  "pretty_assertions",
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
+name = "ln-mir"
+version = "0.1.0"
+dependencies = [
  "proc-macro2",
  "quote",
 ]
@@ -1178,11 +1206,13 @@ dependencies = [
  "convert_case 0.6.0",
  "env_logger",
  "http",
+ "implicit-trait",
  "include_dir",
  "indexmap",
  "indoc",
  "ln-core",
  "ln-macro",
+ "ln-mir",
  "log",
  "openapiv3-extended",
  "pretty_assertions",
