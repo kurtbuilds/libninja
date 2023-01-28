@@ -3,10 +3,10 @@ members = [
     "libninja",
     "macro",
     "core",
-    "commercial",
     "mir",
 ]
 exclude = [
+    "commercial",
 ]
 
 #[patch.crates-io]
