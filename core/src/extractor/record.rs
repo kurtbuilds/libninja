@@ -35,7 +35,7 @@ fn properties_to_fields(properties: &IndexMap<String, ReferenceOr<Schema>>, sche
 pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
     let mut length = 0;
     for schema_ref in all_of {
-        length += schema_ref.as_ref_str().map(|s| 1).unwrap_or_default();
+        length += schema_ref.as_ref_str().map(|_s| 1).unwrap_or_default();
         length += schema_ref.as_item()
             .and_then(|s| s.properties() )
             .map(|s| s.iter().len() )
@@ -78,7 +78,7 @@ pub fn create_record(name: &str, schema_ref: &ReferenceOr<Schema>, spec: &OpenAP
         }
         // Default case, a newtype with a single field
         _ => Record::NewType(hir::NewType {
-            name: Name::new(&name),
+            name: Name::new(name),
             fields: vec![MirField {
                 ty: schema_ref_to_ty_already_resolved(schema_ref, spec, schema),
                 optional: schema.schema_data.nullable,
@@ -142,7 +142,7 @@ pub fn extract_records(spec: &OpenAPI) -> Result<BTreeMap<String, Record>> {
     if spec.components.is_none() {
         return Ok(BTreeMap::new());
     }
-    let mut result: BTreeMap<String, Record> = spec.schemas()
+    let result: BTreeMap<String, Record> = spec.schemas()
         .into_iter()
         .map(|(name, schema)| {
             create_record(name, schema, spec)

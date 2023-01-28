@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
-use openapiv3::{APIKeyLocation, OpenAPI, Operation, PathItem, ReferenceOr, RequestBody, Response, Schema, SchemaKind, SchemaReference, SecurityRequirement, SecurityScheme, StatusCode, StringType, Type};
+use openapiv3::{APIKeyLocation, OpenAPI, Operation, PathItem, ReferenceOr, Schema, SchemaReference, SecurityRequirement, SecurityScheme, StatusCode};
 use openapiv3 as oa;
 use tracing_ez::{span, warn};
 
@@ -12,7 +12,7 @@ pub use resolution::{concrete_schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_a
 pub use resolution::*;
 
 use crate::{hir, Language, LibraryOptions};
-use crate::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirSpec, Record, StrEnum, Struct, Ty};
+use crate::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirSpec, Record, Ty};
 
 mod resolution;
 mod record;
@@ -121,7 +121,7 @@ pub fn extract_inputs<'a>(
                 }
             }
         }
-        Err(err) => {
+        Err(_err) => {
             path_args.push(hir::Parameter {
                 name: Name::new("body"),
                 ty: Ty::Any,
@@ -277,7 +277,7 @@ fn extract_api_docs_link(spec: &OpenAPI) -> Option<String> {
 
 fn remove_unused(spec: &mut MirSpec) {
     let mut used = HashSet::new();
-    for (name, schema) in spec.schemas.iter() {
+    for (_name, schema) in spec.schemas.iter() {
         for field in schema.fields() {
             if let Some(name) = &field.ty.inner_model() {
                 used.insert(name.0.clone());
@@ -311,7 +311,7 @@ fn sanitize_spec(spec: &mut MirSpec) {
             Some((alias.clone(), resolved.clone()))
         })
         .collect();
-    for (name, record) in &mut spec.schemas {
+    for (_name, record) in &mut spec.schemas {
         for field in record.fields_mut() {
             let Ty::Model(name) = &field.ty else {
                 continue;
@@ -338,16 +338,16 @@ pub fn spec_defines_auth(spec: &MirSpec) -> bool {
     !spec.security.is_empty()
 }
 
-fn extract_security_fields(name: &str, requirement: &SecurityRequirement, spec: &OpenAPI, opt: &LibraryOptions) -> Result<Vec<AuthorizationParameter>> {
+fn extract_security_fields(_name: &str, requirement: &SecurityRequirement, spec: &OpenAPI, opt: &LibraryOptions) -> Result<Vec<AuthorizationParameter>> {
     let security_schemas = &spec.components.as_ref().unwrap().security_schemes;
     let mut fields = vec![];
-    for (name, scopes) in requirement {
+    for (name, _scopes) in requirement {
         let schema = security_schemas.get(name).unwrap().as_item().unwrap();
         let location = match schema {
             SecurityScheme::APIKey {
                 location,
                 name,
-                description,
+                description: _,
             } => match location {
                 APIKeyLocation::Header => {
                     if ["bearer_auth", "bearer"].contains(&&*name.to_case(Case::Snake)) {
@@ -371,8 +371,8 @@ fn extract_security_fields(name: &str, requirement: &SecurityRequirement, spec: 
             },
             SecurityScheme::HTTP {
                 scheme,
-                bearer_format,
-                description,
+                bearer_format: _,
+                description: _,
             } => match scheme.as_str() {
                 "basic" => AuthLocation::Basic,
                 "bearer" => AuthLocation::Bearer,
@@ -415,10 +415,10 @@ pub fn extract_security_strategies(spec: &OpenAPI, opt: &LibraryOptions) -> Vec<
         Some(s) => s,
     };
     for requirement in security {
-        let (name, scopes) = requirement.iter().next().unwrap();
+        let (name, _scopes) = requirement.iter().next().unwrap();
         let fields = match extract_security_fields(name, requirement, spec, opt) {
             Ok(f) => f,
-            Err(e) => {
+            Err(_e) => {
                 continue;
             }
         };

@@ -255,7 +255,7 @@ impl Record {
 
     pub fn optional(&self) -> bool {
         match self {
-            Record::Struct(s) => false,
+            Record::Struct(_s) => false,
             Record::Enum(_) => false,
             Record::NewType(_) => false,
             Record::TypeAlias(_, f) => f.optional,

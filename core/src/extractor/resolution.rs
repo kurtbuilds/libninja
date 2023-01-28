@@ -19,7 +19,7 @@ pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec:
                 let r = oa::SchemaReference::from_str(reference);
                 match r {
                     SchemaReference::Schema { schema: s } => Ty::model(&s),
-                    SchemaReference::Property { schema, property } => unimplemented!(),
+                    SchemaReference::Property { schema: _, property: _ } => unimplemented!(),
                 }
             }
             ReferenceOr::Item(schema) => concrete_schema_to_ty(schema, spec)
@@ -31,7 +31,7 @@ pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec:
 /// to use the ref'd model if one exists (e.g. User instead of resolving to Ty::Any)
 pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.schema_kind {
-        SchemaKind::Type(oa::Type::String(s)) => Ty::String,
+        SchemaKind::Type(oa::Type::String(_s)) => Ty::String,
         SchemaKind::Type(oa::Type::Number(_)) => Ty::Float,
         SchemaKind::Type(oa::Type::Integer(_)) => Ty::Integer,
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,

@@ -25,7 +25,7 @@ pub fn code_sample(path: &Path) -> Option<String> {
             match first {
                 None => None,
                 Some(first) => {
-                    let code = fs::read_to_string(&first).unwrap();
+                    let code = fs::read_to_string(first).unwrap();
                     Some(code)
                 }
             }
