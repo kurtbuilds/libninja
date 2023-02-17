@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::thread::current;
 
 use anyhow::Result;
 use convert_case::{Case, Casing};
@@ -32,6 +33,7 @@ mod serde;
 pub struct Extras {
     null_as_zero: bool,
     date_serialization: bool,
+    currency: bool,
 }
 
 impl Extras {
@@ -44,6 +46,7 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     use ln_core::hir::Ty;
     let mut null_as_zero = false;
     let mut date_serialization = false;
+    let mut currency = false;
     for (_, record) in &spec.schemas {
         for field in record.fields() {
             match &field.ty {
@@ -53,6 +56,9 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
                 Ty::Date { serialization: ln_core::hir::DateSerialization::Integer } => {
                     date_serialization = true;
                 }
+                Ty::Currency { .. } => {
+                    currency = true;
+                }
                 _ => {}
             }
         }
@@ -60,6 +66,7 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     Extras {
         null_as_zero,
         date_serialization,
+        currency,
     }
 }
 
@@ -93,7 +100,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     copy_files(&opts.dest_path, &opts.library_options.language.to_string(), &["src"])?;
     copy_templates(&opts, &tera, &context)?;
 
-    bump_version_and_update_deps(&opts)?;
+    bump_version_and_update_deps(&extras, &opts)?;
 
     Ok(())
 }
@@ -213,7 +220,7 @@ use crate::model::*;")?;
     Ok(())
 }
 
-fn bump_version_and_update_deps(opts: &OutputOptions) -> anyhow::Result<()> {
+fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow::Result<()> {
     let cargo = opts.dest_path.join("Cargo.toml");
 
     let mut manifest = cargo_toml::Manifest::from_path(&cargo)?;
@@ -223,6 +230,18 @@ fn bump_version_and_update_deps(opts: &OutputOptions) -> anyhow::Result<()> {
 
     let template_manifest = cargo_toml::Manifest::from_str(get_template_file("rust/Cargo.toml.j2")).unwrap();
     bump_deps(&mut manifest, &template_manifest)?;
+    if extras.currency {
+        manifest.dependencies.entry("rust_decimal".to_string())
+            .or_insert(cargo_toml::Dependency::Simple("1.28.1".to_string()));
+    }
+    if extras.date_serialization {
+        manifest.dependencies.entry("chrono".to_string())
+            .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
+                version: Some("0.4.23".to_string()),
+                features: vec!["serde".to_string()],
+                ..cargo_toml::DependencyDetail::default()
+            }));
+    }
 
     let content = toml::to_string(&manifest).unwrap();
     fs::write_file(&cargo, &content)
