@@ -234,7 +234,7 @@ fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow
         manifest.dependencies.entry("rust_decimal".to_string())
             .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
                 version: Some("1.28.1".to_string()),
-                features: vec!["serde".to_string()],
+                features: vec!["serde-with-str".to_string()],
                 ..cargo_toml::DependencyDetail::default()
             }));
     }
