@@ -232,7 +232,11 @@ fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow
     bump_deps(&mut manifest, &template_manifest)?;
     if extras.currency {
         manifest.dependencies.entry("rust_decimal".to_string())
-            .or_insert(cargo_toml::Dependency::Simple("1.28.1".to_string()));
+            .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
+                version: Some("1.28.1".to_string()),
+                features: vec!["serde".to_string()],
+                ..cargo_toml::DependencyDetail::default()
+            }));
     }
     if extras.date_serialization {
         manifest.dependencies.entry("chrono".to_string())
