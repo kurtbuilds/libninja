@@ -11,17 +11,31 @@ use crate::{LibraryOptions, Language};
 pub use ln_mir::{Doc, Name};
 use openapiv3 as oa;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DateSerialization {
+    Iso8601,
+    Integer,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CurrencySerialization {
+    String,
+}
 
 #[derive(Debug, Clone)]
 pub enum Ty {
     String,
-    Integer,
+    Integer {
+        null_as_zero: bool,
+    },
     Float,
     Boolean,
     Array(Box<Ty>),
     // OpenAPI name for the model. Hasn't been converted to a language type (e.g. cased, sanitized)
     Model(Name),
     Unit,
+    Date { serialization: DateSerialization },
+    Currency { serialization: CurrencySerialization },
     Any,
     // TODO add a union type and an enum type
 }
@@ -30,9 +44,16 @@ impl Default for Ty {
     fn default() -> Self {
         Ty::Any
     }
+
 }
 
 impl Ty {
+    pub fn integer() -> Self {
+        Ty::Integer {
+            null_as_zero: false,
+        }
+    }
+
     pub fn inner_model(&self) -> Option<&Name> {
         match self {
             Ty::Model(name) => Some(name),
@@ -55,13 +76,15 @@ impl Ty {
     pub fn is_primitive(&self) -> bool {
         match self {
             Ty::String => true,
-            Ty::Integer => true,
+            Ty::Integer { .. } => true,
             Ty::Float => true,
             Ty::Boolean => true,
             Ty::Array(_) => false,
             Ty::Model(_) => false,
             Ty::Any => false,
             Ty::Unit => true,
+            Ty::Date { .. } => true,
+            Ty::Currency { .. } => true,
         }
     }
 

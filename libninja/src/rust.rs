@@ -27,6 +27,42 @@ pub mod format;
 pub mod mir;
 pub mod request;
 mod io;
+mod serde;
+
+pub struct Extras {
+    null_as_zero: bool,
+    date_serialization: bool,
+}
+
+impl Extras {
+    pub fn needs_serde(&self) -> bool {
+        self.null_as_zero || self.date_serialization
+    }
+}
+
+pub fn calculate_extras(spec: &MirSpec) -> Extras {
+    use ln_core::hir::Ty;
+    let mut null_as_zero = false;
+    let mut date_serialization = false;
+    for (_, record) in &spec.schemas {
+        for field in record.fields() {
+            match &field.ty {
+                Ty::Integer { null_as_zero: true } => {
+                    null_as_zero = true;
+                }
+                Ty::Date { serialization: ln_core::hir::DateSerialization::Integer } => {
+                    date_serialization = true;
+                }
+                _ => {}
+            }
+        }
+    }
+    Extras {
+        null_as_zero,
+        date_serialization,
+    }
+}
+
 
 pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     let config = &opts.library_options.config;
@@ -37,12 +73,15 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     // Prepare the MIR Spec.
     let mir_spec = extract_spec(&spec, &opts.library_options)?;
     let mir_spec = add_operation_models(opts.library_options.language, mir_spec)?;
+    let extras = calculate_extras(&mir_spec);
 
     write_model_module(&mir_spec, &opts)?;
 
     write_request_module(&mir_spec, &opts)?;
 
-    write_lib_rs(&mir_spec, &spec, &opts)?;
+    write_lib_rs(&mir_spec, &extras, &spec, &opts)?;
+
+    write_serde_module_if_needed(&extras, &opts)?;
 
     let example = write_examples(&mir_spec, &opts)?;
 
@@ -75,7 +114,7 @@ fn write_model_module(mir_spec: &MirSpec, opts: &OutputOptions) -> Result<()> {
 }
 
 /// Generates the client code for a given OpenAPI specification.
-fn write_lib_rs(mir_spec: &MirSpec, spec: &OpenAPI, opts: &OutputOptions) -> Result<()> {
+fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &OutputOptions) -> Result<()> {
     let src_path = opts.dest_path.join("src");
     let name = &opts.library_options.service_name;
     let mut struct_Client = client::struct_Client(mir_spec, &opts.library_options);
@@ -113,7 +152,15 @@ fn write_lib_rs(mir_spec: &MirSpec, spec: &OpenAPI, opts: &OutputOptions) -> Res
         struct_Client.class_methods.retain(|m| m.name.0 != "from_env");
     }
     let struct_Client = struct_Client.to_rust_code();
+    let serde = if extras.needs_serde() {
+        quote! {
+            mod serde
+        }
+    } else {
+        TokenStream::new()
+    };
     let code = quote! {
+        #serde;
         #struct_Client
         #impl_Client
         #security
@@ -208,4 +255,31 @@ fn write_examples(spec: &MirSpec, opts: &OutputOptions) -> Result<String> {
         fs::write_file(&example_path.join(operation.file_name()).with_extension("rs"), &source)?;
     }
     first_example.ok_or_else(|| anyhow::anyhow!("No examples were generated."))
+}
+
+fn write_serde_module_if_needed(extras: &Extras, opts: &OutputOptions) -> Result<()> {
+    let src_path = opts.dest_path.join("src").join("serde.rs");
+
+    if !extras.needs_serde() {
+        return Ok(());
+    }
+
+    let null_as_zero = if extras.null_as_zero {
+        serde::option_i64_null_as_zero_module()
+    } else {
+        TokenStream::new()
+    };
+
+    let date_as_int = if extras.date_serialization {
+        serde::option_chrono_naive_date_as_int_module()
+    } else {
+        TokenStream::new()
+    };
+
+    let code = quote! {
+        #null_as_zero
+        #date_as_int
+    };
+    let code = format_code(code).unwrap();
+    fs::write_file(&src_path, &code)
 }

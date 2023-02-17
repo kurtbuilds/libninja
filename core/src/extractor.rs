@@ -227,7 +227,8 @@ pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<hir::Operation>> {
                 Some(name) => name.clone(),
             };
             let doc = extract_operation_doc(operation, DocFormat::Markdown);
-            let parameters = extract_inputs(operation, item, spec)?;
+            let mut parameters = extract_inputs(operation, item, spec)?;
+            parameters.sort_by(|a, b| a.name.cmp(&b.name));
             let response_success = extract_response_success(operation, spec);
             let ret = match response_success {
                 None => Ty::Unit,

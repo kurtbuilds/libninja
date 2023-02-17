@@ -11,7 +11,7 @@ use ln_mir::{Field, File, Ident, Import, import, Name, Visibility};
 use ln_mir as model;
 
 use ln_core::{extractor, hir, MirSpec};
-use ln_core::hir::{MirField, NewType, Record, StrEnum, Struct, TypeAlias};
+use ln_core::hir::{DateSerialization, MirField, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
 use ln_core::hir::AuthLocation::Token;
 use ln_core::extractor::schema_ref_to_ty;
 use ln_core::LibraryConfig;
@@ -19,9 +19,11 @@ use crate::rust::codegen;
 use crate::rust::codegen::{ToRustCode};
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
-use implicit_trait::implicit_trait;
 
-#[implicit_trait]
+pub trait FieldExt {
+    fn decorators(&self, name: &Name, config: &LibraryConfig) -> Vec<TokenStream>;
+}
+
 impl FieldExt for MirField {
     fn decorators(&self, name: &Name, config: &LibraryConfig) -> Vec<TokenStream> {
         let mut decorators = Vec::new();
@@ -39,7 +41,7 @@ impl FieldExt for MirField {
             }
             if config.ormlite {
                 decorators.push(quote! {
-                    #[ormlite(rename = #name)]
+                    #[ormlite(column = #name)]
                 });
             }
         }
@@ -48,11 +50,41 @@ impl FieldExt for MirField {
                 #[serde(skip_serializing_if = "Option::is_none")]
             });
         }
+        match self.ty {
+            Ty::Integer { null_as_zero } => {
+                if null_as_zero {
+                    decorators.push(quote! {
+                        #[serde(with = "crate::serde::option_i64_null_as_zero")]
+                    });
+                }
+            }
+            Ty::Date { serialization } => {
+                match serialization {
+                    DateSerialization::Iso8601 => {}
+                    DateSerialization::Integer => {
+                        decorators.push(quote! {
+                            #[serde(with = "crate::serde::option_chrono_naive_date_as_int")]
+                        });
+                    }
+                }
+            }
+            Ty::Currency { serialization: hir::CurrencySerialization::String } => {
+                decorators.push(quote! {
+                    #[serde(with = "rust_decimal::serde::str")]
+                });
+            },
+            _ => {}
+        }
         decorators
     }
 }
 
-#[implicit_trait(pub)]
+pub trait StructExt {
+    fn implements_default(&self) -> bool;
+    fn derive_default(&self) -> TokenStream;
+    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=model::Field<TokenStream>> + 'a>;
+    fn ref_target(&self) -> Option<RefTarget>;
+}
 impl StructExt for Struct {
 
     fn implements_default(&self) -> bool {
@@ -71,7 +103,16 @@ impl StructExt for Struct {
         Box::new(self.fields.iter().map(|(name, field)| {
             let decorators = field.decorators(name, config);
             let ty = field.ty.to_rust_type();
-            let optional = field.optional;
+            let mut optional = field.optional;
+            match field.ty {
+                Ty::Integer { null_as_zero: true } => {
+                    optional = true;
+                }
+                Ty::Date { serialization: DateSerialization::Integer } => {
+                    optional = true;
+                }
+                _ => {}
+            }
             model::Field {
                 name: name.clone(),
                 ty,
@@ -93,7 +134,10 @@ impl StructExt for Struct {
     }
 }
 
-#[implicit_trait]
+pub trait RecordExt {
+    fn imports(&self, path: &str) -> Option<Import>;
+}
+
 impl RecordExt for Record {
     fn imports(&self, path: &str) -> Option<Import> {
         let names = self.fields()

@@ -261,7 +261,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
                 quote!(#s.to_owned())
             }
         }
-        Ty::Integer => quote!(1),
+        Ty::Integer { .. } => quote!(1),
         Ty::Float => quote!(1.0),
         Ty::Boolean => quote!(true),
         Ty::Array(inner) => {
@@ -317,7 +317,9 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
             }
         }
         Ty::Unit => quote!(()),
-        Ty::Any => quote!(::serde_json::json!({})),
+        Ty::Any => quote!(serde_json::json!({})),
+        Ty::Date { .. } => quote!(chrono::Utc::now().date()),
+        Ty::Currency { .. } => quote!(rust_decimal::dec!(100.01))
     };
     Ok(s)
 }

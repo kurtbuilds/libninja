@@ -15,7 +15,7 @@ impl ToRustType for Ty {
     fn to_rust_type(&self) -> TokenStream {
         match self {
             Ty::String => quote!(String),
-            Ty::Integer => quote!(i64),
+            Ty::Integer { .. } => quote!(i64),
             Ty::Float => quote!(f64),
             Ty::Boolean => quote!(bool),
             Ty::Array(inner) => {
@@ -27,13 +27,15 @@ impl ToRustType for Ty {
             }
             Ty::Unit => quote!(()),
             Ty::Any => quote!(serde_json::Value),
+            Ty::Date { .. } => quote!(chrono::NaiveDate),
+            Ty::Currency { .. } => quote!(rust_decimal::Decimal),
         }
     }
 
     fn to_reference_type(&self, specifier: TokenStream) -> TokenStream {
         match self {
             Ty::String => quote!(& #specifier str),
-            Ty::Integer => quote!(i64),
+            Ty::Integer { .. } => quote!(i64),
             Ty::Float => quote!(f64),
             Ty::Boolean => quote!(bool),
             Ty::Array(inner) => {
@@ -49,6 +51,8 @@ impl ToRustType for Ty {
             }
             Ty::Unit => quote!(()),
             Ty::Any => quote!(serde_json::Value),
+            Ty::Date { .. } => quote!(chrono::NaiveDate),
+            Ty::Currency { .. } => quote!(rust_decimal::Decimal),
         }
     }
 
@@ -65,13 +69,15 @@ impl ToRustType for Ty {
     fn implements_default(&self) -> bool {
         match self {
             Ty::String => true,
-            Ty::Integer => true,
+            Ty::Integer { .. } => true,
             Ty::Float => true,
             Ty::Boolean => true,
             Ty::Array(_) => true,
             Ty::Model(..) => false,
             Ty::Unit => true,
             Ty::Any => false,
+            Ty::Date { .. } => false,
+            Ty::Currency { .. } => false,
         }
     }
 }

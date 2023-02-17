@@ -31,9 +31,28 @@ pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec:
 /// to use the ref'd model if one exists (e.g. User instead of resolving to Ty::Any)
 pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.schema_kind {
-        SchemaKind::Type(oa::Type::String(_s)) => Ty::String,
+        SchemaKind::Type(oa::Type::String(s)) => {
+            match s.format.as_str() {
+                "currency" => Ty::Currency {
+                    serialization: crate::hir::CurrencySerialization::String,
+                },
+                "date" => Ty::Date {
+                    serialization: crate::hir::DateSerialization::Iso8601,
+                },
+                _ => Ty::String,
+            }
+        }
         SchemaKind::Type(oa::Type::Number(_)) => Ty::Float,
-        SchemaKind::Type(oa::Type::Integer(_)) => Ty::Integer,
+        SchemaKind::Type(oa::Type::Integer(_)) => {
+            let null_as_zero = schema.schema_data.extensions.get("x-null-as-zero")
+                .and_then(|v| v.as_bool()).unwrap_or(false);
+            match schema.schema_data.extensions.get("x-format").and_then(|s| s.as_str()) {
+                Some("date") => Ty::Date {
+                    serialization: crate::hir::DateSerialization::Integer,
+                },
+                _ => Ty::Integer { null_as_zero }
+            }
+        }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,
         SchemaKind::Type(oa::Type::Object(_)) => Ty::Any,
         SchemaKind::Type(oa::Type::Array(ArrayType {
@@ -71,8 +90,8 @@ pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
         Type(Integer(_)) => true,
         Type(Boolean {}) => true,
         Type(Array(ArrayType {
-                             items: Some(inner), ..
-                         })) => {
+                       items: Some(inner), ..
+                   })) => {
             let inner = inner.unbox();
             let inner = inner.resolve(spec);
             is_primitive(inner, spec)

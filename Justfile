@@ -19,7 +19,7 @@ example EXAMPLE:
     cargo run --example {{ EXAMPLE }}
 alias e := example
 
-install:
+install: clean
     cargo install --path libninja --force
 
 check:
@@ -54,7 +54,7 @@ patch: test
     just publish
 
 clean:
-    checkexec $CARGO_TARGET_DIR/debug/libninja $(fd . -H ocg/template) -- cargo clean --package ocg
+    checkexec $CARGO_TARGET_DIR/debug/libninja $(fd . -H core/template) -- cargo clean --package libninja
 
 rust: clean
     cargo run -- gen --name PetStore --output-dir gen/rust --generator rust data/openapi-spec/petstore/petstore.yaml --github libninjacom/petstore-rs --version 0.1.0

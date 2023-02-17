@@ -16,3 +16,4 @@ openapi-generator/
 /spec/
 commercial/
 *.iml
+.cargo/
