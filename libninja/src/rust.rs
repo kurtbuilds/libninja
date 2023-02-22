@@ -74,7 +74,8 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
 pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     let config = &opts.library_options.config;
     let src_path = opts.dest_path.join("src");
-    fs::remove_dir_all(&src_path)?;
+    // Ignore failure
+    let _ = fs::remove_dir_all(&src_path);
     fs::create_dir_all(&src_path)?;
 
     // Prepare the MIR Spec.
@@ -143,7 +144,7 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     let lib_rs_template = if template_path.exists() {
         fs::read_to_string(template_path)?
     } else {
-        let s = get_template_file("rust/lib.rs");
+        let s = get_template_file("rust/src/lib.rs");
         formatdoc!(
             r#"
             //! [`{client}`](struct.{client}.html) is the main entry point for this library.
@@ -161,13 +162,13 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     let struct_Client = struct_Client.to_rust_code();
     let serde = if extras.needs_serde() {
         quote! {
-            mod serde
+            mod serde;
         }
     } else {
         TokenStream::new()
     };
     let code = quote! {
-        #serde;
+        #serde
         #struct_Client
         #impl_Client
         #security
