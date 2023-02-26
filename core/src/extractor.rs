@@ -82,7 +82,7 @@ pub fn extract_inputs<'a>(
     item: &'a PathItem,
     spec: &'a OpenAPI,
 ) -> Result<Vec<hir::Parameter>> {
-    let mut path_args = operation
+    let mut inputs = operation
         .parameters
         .iter()
         .map(|param| extract_param(param, spec))
@@ -90,49 +90,61 @@ pub fn extract_inputs<'a>(
 
     let args = item.parameters.iter().map(|param| extract_param(param, spec)).collect::<Result<Vec<_>, _>>()?;
     for param in args {
-        if !path_args.iter().any(|p| p.name == param.name) {
-            path_args.push(param);
+        if !inputs.iter().any(|p| p.name == param.name) {
+            inputs.push(param);
         }
     }
 
     let schema = match extract_request_schema(operation, spec) {
-        Err(_) => return Ok(path_args),
+        Err(_) => return Ok(inputs),
         Ok(schema) => schema,
     };
 
-    match schema.properties_iter(spec) {
-        Ok(props) => {
-            let body_args = props.map(|(name, param)| {
-                let ty = schema_ref_to_ty(param, spec);
-                let param: &Schema = param.resolve(spec);
-                let optional = is_optional(name, param, schema);
-                hir::Parameter {
-                    name: name.into(),
-                    ty,
-                    optional,
-                    doc: None,
-                    location: Location::Body,
-                    example: schema.schema_data.example.clone(),
-                }
-            });
-            for param in body_args {
-                if !path_args.iter().any(|p| p.name == param.name) {
-                    path_args.push(param);
-                }
-            }
-        }
-        Err(_err) => {
-            path_args.push(hir::Parameter {
-                name: Name::new("body"),
-                ty: Ty::Any,
-                optional: false,
+    if let oa::SchemaKind::Type(oa::Type::Array(oa::ArrayType{ items, .. })) = &schema.schema_kind {
+        let ty = if let Some(items) = items {
+            schema_ref_to_ty(&items.unbox(), spec)
+        } else {
+            Ty::Any
+        };
+        let ty = Ty::Array(Box::new(ty));
+        inputs.push(hir::Parameter {
+            name: Name::new("body"),
+            ty,
+            optional: false,
+            doc: None,
+            location: Location::Body,
+            example: schema.schema_data.example.clone(),
+        });
+    } else if let Ok(props) = schema.properties_iter(spec) {
+        let body_args = props.map(|(name, param)| {
+            let ty = schema_ref_to_ty(param, spec);
+            let param: &Schema = param.resolve(spec);
+            let optional = is_optional(name, param, schema);
+            hir::Parameter {
+                name: name.into(),
+                ty,
+                optional,
                 doc: None,
                 location: Location::Body,
                 example: schema.schema_data.example.clone(),
-            });
+            }
+        });
+        for param in body_args {
+            if !inputs.iter().any(|p| p.name == param.name) {
+                inputs.push(param);
+            }
         }
-    };
-    Ok(path_args)
+    } else {
+        inputs.push(hir::Parameter {
+            name: Name::new("body"),
+            ty: Ty::Any,
+            optional: false,
+            doc: None,
+            location: Location::Body,
+            example: schema.schema_data.example.clone(),
+        });
+    }
+    Ok(inputs)
 }
 
 pub fn extract_response_success<'a>(

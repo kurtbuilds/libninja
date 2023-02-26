@@ -267,7 +267,7 @@ fn bump_deps(current_manifest: &mut cargo_toml::Manifest, from_other: &cargo_tom
 fn write_examples(spec: &MirSpec, opts: &OutputOptions) -> Result<String> {
     let example_path = opts.dest_path.join("examples");
 
-    fs::remove_dir_all(&example_path)?;
+    let _ = fs::remove_dir_all(&example_path);
     fs::create_dir_all(&example_path)?;
     let mut first_example = None;
     for operation in &spec.operations {
