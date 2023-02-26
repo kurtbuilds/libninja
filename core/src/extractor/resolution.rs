@@ -39,6 +39,7 @@ pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
                 "date" => Ty::Date {
                     serialization: crate::hir::DateSerialization::Iso8601,
                 },
+                "date-time" => Ty::DateTime,
                 _ => Ty::String,
             }
         }

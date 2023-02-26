@@ -35,6 +35,7 @@ pub enum Ty {
     Model(Name),
     Unit,
     Date { serialization: DateSerialization },
+    DateTime,
     Currency { serialization: CurrencySerialization },
     Any,
     // TODO add a union type and an enum type
@@ -85,6 +86,7 @@ impl Ty {
             Ty::Unit => true,
             Ty::Date { .. } => true,
             Ty::Currency { .. } => true,
+            Ty::DateTime => true,
         }
     }
 
