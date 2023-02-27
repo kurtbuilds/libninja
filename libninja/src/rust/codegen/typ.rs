@@ -28,7 +28,7 @@ impl ToRustType for Ty {
             Ty::Unit => quote!(()),
             Ty::Any => quote!(serde_json::Value),
             Ty::Date { .. } => quote!(chrono::NaiveDate),
-            Ty::DateTime { .. } => quote!(chrono::DateTime),
+            Ty::DateTime { .. } => quote!(chrono::DateTime<chrono::Utc>),
             Ty::Currency { .. } => quote!(rust_decimal::Decimal),
         }
     }
@@ -53,7 +53,7 @@ impl ToRustType for Ty {
             Ty::Unit => quote!(()),
             Ty::Any => quote!(serde_json::Value),
             Ty::Date { .. } => quote!(chrono::NaiveDate),
-            Ty::DateTime { .. } => quote!(chrono::DateTime),
+            Ty::DateTime { .. } => quote!(chrono::DateTime<chrono::Utc>),
             Ty::Currency { .. } => quote!(rust_decimal::Decimal),
         }
     }

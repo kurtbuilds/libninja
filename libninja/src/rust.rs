@@ -34,6 +34,7 @@ pub struct Extras {
     null_as_zero: bool,
     date_serialization: bool,
     currency: bool,
+    integer_date_serialization: bool,
 }
 
 impl Extras {
@@ -47,6 +48,7 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     let mut null_as_zero = false;
     let mut date_serialization = false;
     let mut currency = false;
+    let mut integer_date_serialization = false;
     for (_, record) in &spec.schemas {
         for field in record.fields() {
             match &field.ty {
@@ -54,6 +56,10 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
                     null_as_zero = true;
                 }
                 Ty::Date { serialization: ln_core::hir::DateSerialization::Integer } => {
+                    integer_date_serialization = true;
+                    date_serialization = true;
+                }
+                Ty::DateTime => {
                     date_serialization = true;
                 }
                 Ty::Currency { .. } => {
@@ -66,6 +72,7 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     Extras {
         null_as_zero,
         date_serialization,
+        integer_date_serialization,
         currency,
     }
 }
@@ -162,7 +169,7 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     let struct_Client = struct_Client.to_rust_code();
     let serde = if extras.needs_serde() {
         quote! {
-            mod serde;
+            mod custom_serde;
         }
     } else {
         TokenStream::new()
@@ -294,13 +301,14 @@ fn write_serde_module_if_needed(extras: &Extras, opts: &OutputOptions) -> Result
         TokenStream::new()
     };
 
-    let date_as_int = if extras.date_serialization {
+    let date_as_int = if extras.integer_date_serialization {
         serde::option_chrono_naive_date_as_int_module()
     } else {
         TokenStream::new()
     };
 
     let code = quote! {
+        pub use ::serde::*;
         #null_as_zero
         #date_as_int
     };
