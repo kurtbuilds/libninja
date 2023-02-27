@@ -169,7 +169,7 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     let struct_Client = struct_Client.to_rust_code();
     let serde = if extras.needs_serde() {
         quote! {
-            mod custom_serde;
+            mod serde;
         }
     } else {
         TokenStream::new()
