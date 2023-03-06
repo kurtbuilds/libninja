@@ -1,14 +1,15 @@
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
     #[serde(flatten)]
+    #[ormlite(experimental_encode_as_json)]
     pub transaction_base: TransactionBase,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub authorized_date: Option<String>,
+    pub authorized_date: Option<chrono::NaiveDate>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub authorized_datetime: Option<String>,
+    pub authorized_datetime: Option<chrono::DateTime<chrono::Utc>>,
     pub counterparties: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub datetime: Option<String>,
+    pub datetime: Option<chrono::DateTime<chrono::Utc>>,
     pub payment_channel: String,
     pub personal_finance_category: String,
     pub personal_finance_category_icon_url: String,
