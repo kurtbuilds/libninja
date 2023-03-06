@@ -50,7 +50,7 @@ impl FieldExt for MirField {
                 #[serde(skip_serializing_if = "Option::is_none")]
             });
         }
-        if self.ty.inner_model().is_some() {
+        if self.ty.inner_model().is_some() && config.ormlite {
             decorators.push(quote! {
                 #[ormlite(experimental_encode_as_json)]
             });
