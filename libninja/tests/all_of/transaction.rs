@@ -1,7 +1,6 @@
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
     #[serde(flatten)]
-    #[ormlite(experimental_encode_as_json)]
     pub transaction_base: TransactionBase,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authorized_date: Option<chrono::NaiveDate>,
