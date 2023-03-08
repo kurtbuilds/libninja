@@ -251,6 +251,7 @@ fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow
             .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
                 version: Some("0.4.23".to_string()),
                 features: vec!["serde".to_string()],
+                default_features: true,
                 ..cargo_toml::DependencyDetail::default()
             }));
     }
