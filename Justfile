@@ -55,7 +55,7 @@ patch: test
     just publish
 
 clean MODE='debug':
-    checkexec $CARGO_TARGET_DIR/{{MODE}}/libninja $(fd . -H core/template) -- cargo clean --package libninja
+    checkexec ${CARGO_TARGET_DIR:-target}/{{MODE}}/libninja $(fd . -H core/template) -- cargo clean --package libninja
 
 rust: clean
     cargo run -- gen --name PetStore --output-dir gen/rust --generator rust data/openapi-spec/petstore/petstore.yaml --github libninjacom/petstore-rs --version 0.1.0
@@ -78,7 +78,7 @@ java:
 
 go:
     rm -rf gen/petstore-go
-    checkexec $CARGO_TARGET_DIR/debug/ocg $(fd . ocg/template) -- cargo clean --package ocg
+    checkexec ${CARGO_TARGET_DIR:-target}/debug/ocg $(fd . ocg/template) -- cargo clean --package ocg
     cargo run -- gen --name PetStore --output-dir gen/petstore-go --generator go spec/petstore.yaml --github libninjacom/petstore-go --version 0.1.0
 
 create:
