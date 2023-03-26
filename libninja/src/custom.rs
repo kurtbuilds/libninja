@@ -42,3 +42,19 @@ pub fn modify_recurly(mut yaml: Value) -> OpenAPI {
     });
     serde_yaml::from_value(yaml).unwrap()
 }
+
+pub fn modify_openai(mut yaml: Value) -> OpenAPI {
+    let mut spec: OpenAPI =
+        serde_yaml::from_value(yaml).expect("Could not structure OpenAPI file.");
+    spec.security = Some(vec![{
+        let mut map = indexmap::IndexMap::new();
+        map.insert("Bearer".to_string(), vec![]);
+        map
+    }]);
+    spec.components.as_mut().unwrap().security_schemes.insert("Bearer".to_string(), openapiv3::ReferenceOr::Item(openapiv3::SecurityScheme::HTTP {
+        scheme: "bearer".to_string(),
+        bearer_format: None,
+        description: None,
+    }));
+    spec
+}

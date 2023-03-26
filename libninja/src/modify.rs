@@ -13,6 +13,9 @@ pub fn modify_spec(value: Value, service_name: &str) -> anyhow::Result<OpenAPI> 
         "recurly" => {
             custom::modify_recurly(value)
         }
+        "openai" => {
+            custom::modify_openai(value)
+        }
         _ => {
             serde_yaml::from_value(value)?
         }
