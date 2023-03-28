@@ -18,7 +18,7 @@ pub enum DateSerialization {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum CurrencySerialization {
+pub enum DecimalSerialization {
     String,
 }
 
@@ -36,7 +36,7 @@ pub enum Ty {
     Unit,
     Date { serialization: DateSerialization },
     DateTime,
-    Currency { serialization: CurrencySerialization },
+    Currency { serialization: DecimalSerialization },
     Any,
     // TODO add a union type and an enum type
 }

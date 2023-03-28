@@ -33,8 +33,8 @@ pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.schema_kind {
         SchemaKind::Type(oa::Type::String(s)) => {
             match s.format.as_str() {
-                "currency" => Ty::Currency {
-                    serialization: crate::hir::CurrencySerialization::String,
+                "decimal" => Ty::Currency {
+                    serialization: crate::hir::DecimalSerialization::String,
                 },
                 "date" => Ty::Date {
                     serialization: crate::hir::DateSerialization::Iso8601,
