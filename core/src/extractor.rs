@@ -307,7 +307,7 @@ fn remove_unused(spec: &mut MirSpec) {
             };
         }
     }
-    spec.schemas.retain(|name, _| used.contains(name));
+    spec.schemas.retain(|name, _| used.contains(name) || name.ends_with("Webhook"));
 }
 
 fn sanitize_spec(spec: &mut MirSpec) {
