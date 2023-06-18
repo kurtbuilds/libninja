@@ -202,7 +202,7 @@ impl ToRustCode for Import {
             let path = syn::parse_str::<Path>(&path[..path.len() - 3]).unwrap();
             return quote! { use #path::*; };
         }
-        let path = syn::parse_str::<Path>(&path).expect(&format!("Failed to parse as syn::Path: {}", &path));
+        let path = syn::parse_str::<Path>(&path).unwrap_or_else(|_| panic!("Failed to parse as syn::Path: {}", &path));
         let vis = vis.to_rust_code();
         if let Some(alias) = alias {
             let alias = syn::parse_str::<syn::Ident>(&alias).unwrap();

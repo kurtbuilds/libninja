@@ -77,7 +77,7 @@ impl FieldExt for MirField {
                 decorators.push(quote! {
                     #[serde(with = "rust_decimal::serde::str")]
                 });
-            },
+            }
             _ => {}
         }
         decorators
@@ -90,8 +90,8 @@ pub trait StructExt {
     fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=model::Field<TokenStream>> + 'a>;
     fn ref_target(&self) -> Option<RefTarget>;
 }
-impl StructExt for Struct {
 
+impl StructExt for Struct {
     fn implements_default(&self) -> bool {
         self.fields.iter().all(|(_, f)| f.optional || f.ty.implements_default())
     }
@@ -239,13 +239,13 @@ pub fn create_sumtype_struct(schema: &Struct, config: &LibraryConfig) -> TokenSt
 
 fn create_enum_struct(e: &StrEnum) -> TokenStream {
     let enums = e.variants.iter().filter(|s| !s.is_empty()).map(|s| {
-        let original_name = s.to_string();
-        let mut s = original_name.clone();
-        if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
-            s = format!("{}{}", e.name.0, s);
-        }
-        let name = Name::new(&s).to_rust_struct();
-        let serde_attr = codegen::serde_rename(&original_name, &name.to_string());
+        let name = if s.chars().next().unwrap().is_numeric() {
+            format!("{}{}", e.name.0, s)
+        } else {
+            s.to_string()
+        };
+        let name = Name::new(&name).to_rust_struct();
+        let serde_attr = codegen::serde_rename(s, &name.to_string());
         quote! {
             #serde_attr
             #name

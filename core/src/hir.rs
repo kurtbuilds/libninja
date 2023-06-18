@@ -22,7 +22,7 @@ pub enum DecimalSerialization {
     String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub enum Ty {
     String,
     Integer {
@@ -37,15 +37,9 @@ pub enum Ty {
     Date { serialization: DateSerialization },
     DateTime,
     Currency { serialization: DecimalSerialization },
+    #[default]
     Any,
     // TODO add a union type and an enum type
-}
-
-impl Default for Ty {
-    fn default() -> Self {
-        Ty::Any
-    }
-
 }
 
 impl Ty {

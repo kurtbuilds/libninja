@@ -49,7 +49,7 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     let mut date_serialization = false;
     let mut currency = false;
     let mut integer_date_serialization = false;
-    for (_, record) in &spec.schemas {
+    for record in spec.schemas.values() {
         for field in record.fields() {
             match &field.ty {
                 Ty::Integer { null_as_zero: true } => {
