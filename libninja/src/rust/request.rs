@@ -8,13 +8,13 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use regex::Captures;
 
-use ln_core::hir::{Parameter, Location, Ty};
-use ln_core::{extractor, Language, };
 use ln_core::extractor::{extract_response_success, schema_ref_to_ty, spec_defines_auth};
 use ln_core::hir;
+use ln_core::hir::{Location, Parameter, Ty};
 use ln_core::LibraryOptions;
 use ln_core::OutputOptions;
-use ln_mir::{Doc, doc, Ident, Name};
+use ln_core::{extractor, Language};
+use ln_mir::{doc, Doc, Ident, Name};
 use ln_mir::{Class, Field, FnArg, Function, Visibility};
 
 use crate::rust::codegen::ToRustCode;
@@ -121,21 +121,20 @@ pub fn authorize_request(spec: &hir::MirSpec) -> TokenStream {
     }
 }
 
-pub fn build_send_function(operation: &hir::Operation, spec: &hir::MirSpec) -> Function<TokenStream> {
+pub fn build_send_function(
+    operation: &hir::Operation,
+    spec: &hir::MirSpec,
+) -> Function<TokenStream> {
     let assign_inputs = assign_inputs_to_request(&operation.parameters);
     let auth = authorize_request(spec);
     let response = operation.ret.to_rust_type();
     let method = syn::Ident::new(&operation.method, proc_macro2::Span::call_site());
     let url = build_url(operation);
 
-    let ret = if matches!(operation.ret , Ty::Unit) {
+    let ret = if matches!(operation.ret, Ty::Unit) {
         quote!(Ok(()))
     } else {
-        quote!(res
-            .json()
-            .await
-            .map_err(|e| anyhow::anyhow!("{:?}", e))
-        )
+        quote!(res.json().await.map_err(|e| anyhow::anyhow!("{:?}", e)))
     };
     Function {
         name: "send".into(),
@@ -157,10 +156,7 @@ pub fn build_send_function(operation: &hir::Operation, spec: &hir::MirSpec) -> F
     }
 }
 
-pub fn build_struct_fields(
-    inputs: &[Parameter],
-    use_references: bool,
-) -> Vec<Field<TokenStream>> {
+pub fn build_struct_fields(inputs: &[Parameter], use_references: bool) -> Vec<Field<TokenStream>> {
     inputs
         .iter()
         .map(|input| {
@@ -186,46 +182,49 @@ pub fn build_struct_fields(
 pub fn build_request_struct_builder_methods(
     operation: &hir::Operation,
 ) -> Vec<Function<TokenStream>> {
-    operation.parameters.iter().filter(|a| a.optional).map(|a| {
-        let name = a.name.to_rust_ident();
-        let mut arg_type = a.ty.to_reference_type(TokenStream::new());
+    operation
+        .parameters
+        .iter()
+        .filter(|a| a.optional)
+        .map(|a| {
+            let name = a.name.to_rust_ident();
+            let mut arg_type = a.ty.to_reference_type(TokenStream::new());
 
-        let mut body = if a.ty.is_reference_type() {
-            quote! {
-                self.#name = Some(#name.to_owned());
-                self
-            }
-        } else {
-            quote! {
-                self.#name = Some(#name);
-                self
-            }
-        };
-        if let Some(Ty::String) = a.ty.inner_iterable() {
-            arg_type = quote!( impl IntoIterator<Item = impl AsRef<str>> );
-            body = quote! {
-                self.#name = Some(#name.into_iter().map(|s| s.as_ref().to_owned()).collect());
-                self
+            let mut body = if a.ty.is_reference_type() {
+                quote! {
+                    self.#name = Some(#name.to_owned());
+                    self
+                }
+            } else {
+                quote! {
+                    self.#name = Some(#name);
+                    self
+                }
             };
-        }
-        let name: Ident = a.name.to_rust_ident();
-        Function {
-            doc: doc(format!("Set the value of the {} field.", name.0)),
-            name,
-            args: vec![
-                FnArg {
+            if let Some(Ty::String) = a.ty.inner_iterable() {
+                arg_type = quote!(impl IntoIterator<Item = impl AsRef<str>>);
+                body = quote! {
+                    self.#name = Some(#name.into_iter().map(|s| s.as_ref().to_owned()).collect());
+                    self
+                };
+            }
+            let name: Ident = a.name.to_rust_ident();
+            Function {
+                doc: doc(format!("Set the value of the {} field.", name.0)),
+                name,
+                args: vec![FnArg {
                     name: a.name.to_rust_ident().into(),
                     ty: arg_type,
                     default: None,
                     treatment: None,
-                }
-            ],
-            ret: quote! {Self},
-            body,
-            public: true,
-            ..Function::default()
-        }
-    }).collect()
+                }],
+                ret: quote! {Self},
+                body,
+                public: true,
+                ..Function::default()
+            }
+        })
+        .collect()
 }
 
 pub fn build_request_struct(

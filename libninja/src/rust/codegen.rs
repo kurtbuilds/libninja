@@ -6,14 +6,16 @@ use quote::{quote, TokenStreamExt};
 use regex::{Captures, Regex};
 use syn::Path;
 
-use ln_mir::{ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility};
-pub use typ::*;
 pub use example::*;
 pub use ident::*;
 use ln_core::extractor::is_primitive;
 use ln_core::hir;
+use ln_core::hir::{MirSpec, Name, NewType, ParamKey, Parameter, Record, StrEnum, Struct, Ty};
+use ln_mir::{
+    ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility,
+};
+pub use typ::*;
 
-use ln_core::hir::{MirSpec, Name, NewType, Parameter, ParamKey, Record, StrEnum, Struct, Ty};
 use crate::rust::format;
 
 mod example;
@@ -104,7 +106,6 @@ fn codegen_function(func: Function<TokenStream>, self_arg: TokenStream) -> Token
     }
 }
 
-
 impl ToRustCode for Class<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
         let is_pub = pub_tok(self.public);
@@ -114,15 +115,18 @@ impl ToRustCode for Class<TokenStream> {
             let public = f.visibility.to_rust_code();
             quote! { #public #name: #ty }
         });
-        let instance_methods = self.instance_methods.into_iter().map(|m|
-            codegen_function(m, quote! { self , })
-        );
-        let mut_self_instance_methods = self.mut_self_instance_methods.into_iter().map(|m| {
-            codegen_function(m, quote! { mut self , })
-        });
-        let class_methods = self.class_methods.into_iter().map(|m| {
-            codegen_function(m, TokenStream::new())
-        });
+        let instance_methods = self
+            .instance_methods
+            .into_iter()
+            .map(|m| codegen_function(m, quote! { self , }));
+        let mut_self_instance_methods = self
+            .mut_self_instance_methods
+            .into_iter()
+            .map(|m| codegen_function(m, quote! { mut self , }));
+        let class_methods = self
+            .class_methods
+            .into_iter()
+            .map(|m| codegen_function(m, TokenStream::new()));
 
         let doc = self.doc.to_rust_code();
         let lifetimes = if self.lifetimes.is_empty() {
@@ -202,7 +206,8 @@ impl ToRustCode for Import {
             let path = syn::parse_str::<Path>(&path[..path.len() - 3]).unwrap();
             return quote! { use #path::*; };
         }
-        let path = syn::parse_str::<Path>(&path).unwrap_or_else(|_| panic!("Failed to parse as syn::Path: {}", &path));
+        let path = syn::parse_str::<Path>(&path)
+            .unwrap_or_else(|_| panic!("Failed to parse as syn::Path: {}", &path));
         let vis = vis.to_rust_code();
         if let Some(alias) = alias {
             let alias = syn::parse_str::<syn::Ident>(&alias).unwrap();
@@ -251,7 +256,12 @@ impl ToRustCode for Option<Doc> {
     }
 }
 
-pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value: bool) -> Result<TokenStream> {
+pub fn to_rust_example_value(
+    ty: &Ty,
+    name: &Name,
+    spec: &MirSpec,
+    use_ref_value: bool,
+) -> Result<TokenStream> {
     let s = match ty {
         Ty::String => {
             let s = format!("your {}", name.0.to_case(Case::Lower));
@@ -281,22 +291,31 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
             let record = spec.get_record(model)?;
             let force_not_ref = model.0.ends_with("Required");
             match record {
-                Record::Struct(Struct { name: _name, fields, nullable }) => {
-                    let fields = fields.iter().map(|(name, field)| {
-                        let mut value = to_rust_example_value(&field.ty, name, spec, force_not_ref)?;
-                        let name = name.to_rust_ident();
-                        if field.optional {
-                            value = quote!(Some(#value));
-                        }
-                        Ok(quote!(#name: #value))
-                    }).collect::<Result<Vec<_>, anyhow::Error>>()?;
+                Record::Struct(Struct {
+                    name: _name,
+                    fields,
+                    nullable,
+                }) => {
+                    let fields = fields
+                        .iter()
+                        .map(|(name, field)| {
+                            let mut value =
+                                to_rust_example_value(&field.ty, name, spec, force_not_ref)?;
+                            let name = name.to_rust_ident();
+                            if field.optional {
+                                value = quote!(Some(#value));
+                            }
+                            Ok(quote!(#name: #value))
+                        })
+                        .collect::<Result<Vec<_>, anyhow::Error>>()?;
                     let model = model.to_rust_struct();
                     quote!(#model{#(#fields),*})
                 }
                 Record::NewType(NewType { name, fields }) => {
-                    let fields = fields.iter().map(|f| {
-                        to_rust_example_value(&f.ty, name, spec, force_not_ref)
-                    }).collect::<Result<Vec<_>, _>>()?;
+                    let fields = fields
+                        .iter()
+                        .map(|f| to_rust_example_value(&f.ty, name, spec, force_not_ref))
+                        .collect::<Result<Vec<_>, _>>()?;
                     let name = name.to_rust_struct();
                     quote!(#name(#(#fields),*))
                 }
@@ -320,7 +339,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
         Ty::Any => quote!(serde_json::json!({})),
         Ty::Date { .. } => quote!(chrono::Utc::now().date()),
         Ty::DateTime { .. } => quote!(chrono::Utc::now()),
-        Ty::Currency { .. } => quote!(rust_decimal::dec!(100.01))
+        Ty::Currency { .. } => quote!(rust_decimal::dec!(100.01)),
     };
     Ok(s)
 }
@@ -349,8 +368,8 @@ pub fn is_referenceable(schema: &Schema, spec: &OpenAPI) -> bool {
     match &schema.schema_kind {
         SchemaKind::Type(openapiv3::Type::String(_)) => true,
         SchemaKind::Type(openapiv3::Type::Array(ArrayType {
-                                                    items: Some(inner), ..
-                                                })) => {
+            items: Some(inner), ..
+        })) => {
             let inner = inner.unbox();
             let inner = inner.resolve(spec);
             is_primitive(inner, spec)
@@ -425,7 +444,7 @@ pub fn formatted_code(code: impl ToRustCode) -> String {
 
 #[cfg(test)]
 mod tests {
-    use ln_mir::{Ident, import, Import, Name};
+    use ln_mir::{import, Ident, Import, Name};
 
     use crate::rust::codegen::{ToRustCode, ToRustIdent};
 
@@ -470,10 +489,7 @@ mod tests {
         );
 
         let import = Import::package("foo_bar");
-        assert_eq!(
-            import.to_rust_code().to_string(),
-            "use foo_bar ;"
-        );
+        assert_eq!(import.to_rust_code().to_string(), "use foo_bar ;");
     }
 }
 

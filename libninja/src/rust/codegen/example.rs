@@ -1,13 +1,18 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+
+use ln_core::{
+    hir,
+    hir::{MirSpec, Parameter},
+};
 use ln_macro::rfunction;
 use ln_mir::{File, Import};
-use crate::{Language, LibraryOptions, };
-use ln_core::{hir, hir::{MirSpec, Parameter}};
+
 use crate::rust::codegen;
 use crate::rust::codegen::ident::ToRustIdent;
 use crate::rust::codegen::{to_rust_example_value, ToRustCode};
 use crate::rust::format::format_code;
+use crate::{Language, LibraryOptions};
 
 pub trait ToRustExample {
     fn to_rust_example(&self, spec: &MirSpec) -> anyhow::Result<TokenStream>;
@@ -19,32 +24,52 @@ impl ToRustExample for Parameter {
     }
 }
 
-
-pub fn generate_example(operation: &hir::Operation, opt: &LibraryOptions, spec: &MirSpec) -> anyhow::Result<String> {
+pub fn generate_example(
+    operation: &hir::Operation,
+    opt: &LibraryOptions,
+    spec: &MirSpec,
+) -> anyhow::Result<String> {
     let args = operation.function_args(Language::Rust);
-    let declarations = args.iter().map(|p| {
-        let ident = p.name.to_rust_ident();
-        let value = to_rust_example_value(&p.ty, &p.name, spec, true)?;
-        Ok(quote! {
-            let #ident = #value;
+    let declarations = args
+        .iter()
+        .map(|p| {
+            let ident = p.name.to_rust_ident();
+            let value = to_rust_example_value(&p.ty, &p.name, spec, true)?;
+            Ok(quote! {
+                let #ident = #value;
+            })
         })
-    }).collect::<anyhow::Result<Vec<_>, anyhow::Error>>()?;
+        .collect::<anyhow::Result<Vec<_>, anyhow::Error>>()?;
     let fn_args = args.iter().map(|p| p.name.to_rust_ident());
-    let optionals = operation.optional_args().into_iter().map(|p| {
-        let ident = p.name.to_rust_ident();
-        let value = to_rust_example_value(&p.ty, &p.name, spec, true)?;
-        Ok(quote! {
-            .#ident(#value)
+    let optionals = operation
+        .optional_args()
+        .into_iter()
+        .map(|p| {
+            let ident = p.name.to_rust_ident();
+            let value = to_rust_example_value(&p.ty, &p.name, spec, true)?;
+            Ok(quote! {
+                .#ident(#value)
+            })
         })
-    }).collect::<anyhow::Result<Vec<_>, anyhow::Error>>()?;
-    let qualified_client = format!("{}::{}", opt.package_name, opt.client_name().to_rust_struct());
+        .collect::<anyhow::Result<Vec<_>, anyhow::Error>>()?;
+    let qualified_client = format!(
+        "{}::{}",
+        opt.package_name,
+        opt.client_name().to_rust_struct()
+    );
     let mut imports = vec![
         Import::package(&qualified_client),
         Import::package(&format!("{}::model::*", opt.package_name)),
     ];
     if operation.use_required_struct(Language::Rust) {
-        let struct_name = operation.required_struct_name().to_rust_struct().to_string();
-        imports.push(Import::package(&format!("{}::request::{}", opt.package_name, struct_name)));
+        let struct_name = operation
+            .required_struct_name()
+            .to_rust_struct()
+            .to_string();
+        imports.push(Import::package(&format!(
+            "{}::request::{}",
+            opt.package_name, struct_name
+        )));
     }
     let operation = operation.name.to_rust_ident();
     let client = opt.client_name().to_rust_struct();
