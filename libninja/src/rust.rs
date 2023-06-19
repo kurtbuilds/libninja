@@ -98,11 +98,17 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
 
     write_serde_module_if_needed(&extras, &opts)?;
 
-    let example = write_examples(&mir_spec, &opts)?;
 
     let tera = prepare_templates();
     let mut context = create_context(&opts, &mir_spec);
-    context.insert("code_sample", &example);
+
+    if opts.library_options.build_examples {
+        let example = write_examples(&mir_spec, &opts)?;
+        context.insert("code_sample", &example);
+    } else {
+        context.insert("code_sample", "// Example code not generated … enable build flag to get example code!");
+    }
+
     context.insert("client_docs_url", &format!("https://docs.rs/{}", opts.library_options.package_name));
 
     copy_files(&opts.dest_path, &opts.library_options.language.to_string(), &["src"])?;
