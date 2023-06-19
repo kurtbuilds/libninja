@@ -6,7 +6,7 @@ use ln_core::{
     hir::{MirSpec, Parameter},
 };
 use ln_macro::rfunction;
-use ln_mir::{File, Import};
+use ln_mir::{File, Ident, Import};
 
 use crate::rust::codegen;
 use crate::rust::codegen::ident::ToRustIdent;
@@ -33,14 +33,21 @@ pub fn generate_example(
     let declarations = args
         .iter()
         .map(|p| {
-            let ident = p.name.to_rust_ident();
+            // apped "arg_" prefix to avoid ident collision in generated example
+            // like:
+            //  let client = ApiClient::from_env();
+            //  let client = "bar"
+            //  let response = client.foo(client).await.unwrap();
+            let ident = Ident(format!("arg_{}", p.name.to_rust_ident()));
             let value = to_rust_example_value(&p.ty, &p.name, spec, true)?;
             Ok(quote! {
                 let #ident = #value;
             })
         })
         .collect::<anyhow::Result<Vec<_>, anyhow::Error>>()?;
-    let fn_args = args.iter().map(|p| p.name.to_rust_ident());
+    let fn_args = args
+        .iter()
+        .map(|p| Ident(format!("arg_{}", p.name.to_rust_ident())));
     let optionals = operation
         .optional_args()
         .into_iter()

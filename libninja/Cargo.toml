@@ -41,6 +41,7 @@ strum = "0.24.1"
 actix-web = { version = "4.3.1", optional = true }
 semver = "1.0.17"
 indexmap = "1.9.3"
+lazy_static = "1"
 ln-macro = { path = "../macro" }
 ln-core = { path = "../core" }
 ln-mir = { path = "../mir" }

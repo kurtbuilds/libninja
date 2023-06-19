@@ -1,5 +1,6 @@
 use anyhow::Result;
 use convert_case::{Case, Casing};
+use lazy_static::lazy_static;
 use openapiv3::{ArrayType, OpenAPI, Schema, SchemaKind};
 use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote, TokenStreamExt};
@@ -21,6 +22,25 @@ use crate::rust::format;
 mod example;
 mod ident;
 mod typ;
+
+lazy_static! {
+    static ref SANITIZE_RX: Regex = Regex::new("([a-z])_([0-9])").unwrap();
+}
+
+trait Keyword {
+    fn starts_with_digit(&self) -> bool;
+    fn is_restricted(&self) -> bool;
+}
+
+impl Keyword for str {
+    fn starts_with_digit(&self) -> bool {
+        self.chars().next().unwrap().is_numeric()
+    }
+
+    fn is_restricted(&self) -> bool {
+        ["type", "use", "ref", "self", "match", "final"].contains(&self)
+    }
+}
 
 /// Use this for codegen structs: Function, Class, etc.
 pub trait ToRustCode {
@@ -382,6 +402,10 @@ pub fn is_referenceable(schema: &Schema, spec: &OpenAPI) -> bool {
 }
 
 fn rewrite_names(s: &str) -> String {
+    if s == "_" {
+        return "underscore".to_string();
+    }
+
     // custom logic for Github openapi spec lol
     if s == "+1" {
         return "PlusOne".to_string();
@@ -395,36 +419,28 @@ fn rewrite_names(s: &str) -> String {
 }
 
 fn sanitize(s: &str) -> String {
-    let original = s;
-    let s = rewrite_names(s);
-    let regex = Regex::new("[a-z]_[0-9]").unwrap();
-    let mut s = s.to_case(Case::Snake);
-    s = regex
-        .replace_all(&s, |c: &Captures| {
-            let mut c = c.get(0).unwrap().as_str().to_string();
-            c.remove(1);
-            c
-        })
-        .into();
-    if is_restricted(&s) {
-        s += "_"
-    }
-    if s.chars().next().unwrap().is_numeric() {
-        s = format!("_{}", s)
-    }
-    assert_valid_ident(&s, original);
-    s
+    let kw = rewrite_names(s).to_case(Case::Snake);
+    let kw = SANITIZE_RX.replace_all(&kw, "$1$2");
+    let kw = match kw {
+        kw if kw.is_restricted() || kw.starts_with_digit() => format!("_{kw}"),
+        _ => kw.into(),
+    };
+
+    assert_valid_ident(&kw, s);
+    kw
 }
 
 fn sanitize_struct(s: &str) -> String {
-    let original = s;
-    let s = rewrite_names(s);
-    let mut s = s.to_case(Case::Pascal);
-    if is_restricted(&s) {
-        s += "Struct"
-    }
-    assert_valid_ident(&s, original);
-    s
+    let kw = rewrite_names(s);
+    let kw = kw.to_case(Case::Pascal);
+    let kw = if kw.is_restricted() {
+        format!("{kw}Struct")
+    } else {
+        kw
+    };
+
+    assert_valid_ident(&kw, s);
+    kw
 }
 
 pub fn assert_valid_ident(s: &str, original: &str) {
@@ -440,6 +456,14 @@ pub fn assert_valid_ident(s: &str, original: &str) {
 pub fn formatted_code(code: impl ToRustCode) -> String {
     let code = code.to_rust_code();
     format::format_code(code).unwrap()
+}
+
+pub fn serde_rename(one: &str, two: &str) -> TokenStream {
+    if one != two {
+        quote!(#[serde(rename = #one)])
+    } else {
+        TokenStream::new()
+    }
 }
 
 #[cfg(test)]
@@ -490,17 +514,5 @@ mod tests {
 
         let import = Import::package("foo_bar");
         assert_eq!(import.to_rust_code().to_string(), "use foo_bar ;");
-    }
-}
-
-pub fn is_restricted(s: &str) -> bool {
-    ["type", "use", "ref", "self", "match", "final"].contains(&s)
-}
-
-pub fn serde_rename(one: &str, two: &str) -> TokenStream {
-    if one != two {
-        quote!(#[serde(rename = #one)])
-    } else {
-        TokenStream::new()
     }
 }

@@ -3,10 +3,11 @@ use std::default::Default;
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use indoc::formatdoc;
+use lazy_static::lazy_static;
 use openapiv3::{ArrayType, OpenAPI, Operation, SchemaKind, Type};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use regex::Captures;
+use regex::{Captures, Regex};
 
 use ln_core::extractor::{extract_response_success, schema_ref_to_ty, spec_defines_auth};
 use ln_core::hir;
@@ -20,6 +21,10 @@ use ln_mir::{Class, Field, FnArg, Function, Visibility};
 use crate::rust::codegen::ToRustCode;
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
+
+lazy_static! {
+    static ref BUILD_URL_RX: Regex = Regex::new(r"\{([_\-\.\w]+)\}").unwrap();
+}
 
 pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
     let assigns = inputs
@@ -95,14 +100,19 @@ pub fn build_url(operation: &hir::Operation) -> TokenStream {
             #path
         }
     } else {
-        let re = regex::Regex::new("\\{([_\\w]+)\\}").unwrap();
         let inputs = inputs.into_iter().map(|input| {
             let name = input.name.to_rust_ident();
             quote! { #name = self.#name }
         });
-        let path = re
+        let path = BUILD_URL_RX
             .replace_all(&operation.path, |cap: &Captures| {
-                format!("{{{}}}", cap.get(1).unwrap().as_str().to_case(Case::Snake))
+                let param = cap
+                    .get(1)
+                    .unwrap()
+                    .as_str()
+                    .to_case(Case::Snake)
+                    .to_rust_ident();
+                format!("{{{param}}}")
             })
             .to_string();
         quote! {
