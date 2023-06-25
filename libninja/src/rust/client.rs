@@ -122,7 +122,7 @@ pub fn build_api_client_method(operation: &hir::Operation) -> TokenStream {
         #doc
         pub fn #name(&self, #(#fn_args),*) -> request::#request_struct {
             request::#request_struct {
-                http_client: &self,
+                http_client: self,
                 #(#struct_field_values,)*
             }
         }
