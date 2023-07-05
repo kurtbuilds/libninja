@@ -20,6 +20,8 @@ pub struct LibraryOptions {
 
     pub language: Language,
 
+    pub build_examples: bool,
+
     pub package_version: String,
 
     pub config: LibraryConfig,
@@ -30,6 +32,7 @@ impl LibraryOptions {
         Self {
             package_name: service_name.to_case(Case::Snake),
             service_name: service_name.to_string(),
+            build_examples: true,
             language,
             package_version: "0.1.0".to_string(),
             config: Default::default(),

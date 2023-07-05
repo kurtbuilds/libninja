@@ -40,6 +40,11 @@ pub struct Generate {
     #[clap(short, long)]
     output_dir: String,
 
+    /// Toggle whether to generate examples.
+    /// Defaults to true
+    #[clap(long)]
+    examples: Option<bool>,
+
     /// Package name. Defaults to the service name.
     #[clap(short, long = "package")]
     package_name: Option<String>,
@@ -65,6 +70,7 @@ impl Generate {
                     package_name,
                     service_name: self.name.to_case(Case::Pascal),
                     package_version: version,
+                    build_examples: self.examples.unwrap_or(true),
                     language: self.language,
                     config: build_config(&self.config),
                 },
