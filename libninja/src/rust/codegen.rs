@@ -318,7 +318,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
         }
         Ty::Unit => quote!(()),
         Ty::Any => quote!(serde_json::json!({})),
-        Ty::Date { .. } => quote!(chrono::Utc::now().date()),
+        Ty::Date { .. } => quote!(chrono::Utc::now().date_naive()),
         Ty::DateTime { .. } => quote!(chrono::Utc::now()),
         Ty::Currency { .. } => quote!(rust_decimal::dec!(100.01))
     };
