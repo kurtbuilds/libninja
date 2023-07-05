@@ -106,7 +106,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
         let example = write_examples(&mir_spec, &opts)?;
         context.insert("code_sample", &example);
     } else {
-        context.insert("code_sample", "// Examples were skipped. Run libninja with `--examples` flag to create them.");
+        context.insert("code_sample", "// Examples were skipped. Run libninja with `--examples true` flag to create them.");
     }
 
     context.insert("client_docs_url", &format!("https://docs.rs/{}", opts.library_options.package_name));
