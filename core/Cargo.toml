@@ -6,17 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.68"
-clap = { version = "4.1.4", features = ["derive"] }
+anyhow = "1.0.71"
+clap = { version = "4.3.11", features = ["derive"] }
 convert_case = "0.6.0"
-openapiv3-extended = "2.0.2"
-serde = { version = "1.0.152", features = ["derive"] }
-quote = "1.0.23"
-serde_json = "1.0.91"
-proc-macro2 = "1.0.50"
+openapiv3-extended = "3"
+serde = { version = "1.0.166", features = ["derive"] }
+quote = "1.0.29"
+serde_json = "1.0.100"
+proc-macro2 = "1.0.63"
 tracing-ez = "0.3.0"
-indexmap = "1.9.2"
-syn = "1.0.107"
+indexmap = "2.0"
+syn = "2.0"
 ln-mir = { path = "../mir" }
 include_dir = "0.7.3"
-tera = "1.17.1"
+tera = "1.19.0"
