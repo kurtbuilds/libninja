@@ -149,7 +149,7 @@ pub fn build_send_function(operation: &hir::Operation, spec: &hir::MirSpec) -> F
             let res = r
                 .send_awaiting_body()
                 .await?;
-            res.json()
+            res.json().map_err(Into::into)
         },
         async_: true,
         public: true,

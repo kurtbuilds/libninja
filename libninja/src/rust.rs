@@ -261,6 +261,14 @@ fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow
                 ..cargo_toml::DependencyDetail::default()
             }));
     }
+    if opts.library_options.config.ormlite {
+        manifest.dependencies.entry("ormlite".to_string())
+            .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
+                version: Some("0.16.0".to_string()),
+                features: vec!["decimal".to_string()],
+                ..cargo_toml::DependencyDetail::default()
+            }));
+    }
 
     let content = toml::to_string(&manifest).unwrap();
     fs::write_file(&cargo, &content)
