@@ -231,7 +231,7 @@ pub fn impl_Client_without_security(mir_spec: &hir::MirSpec, spec: &OpenAPI, opt
     let new_fn = quote! {
         pub fn new(url: &str) -> Self {
             let client = httpclient::Client::new()
-            .base_url(url);
+                .base_url(url);
             Self {
                 client
             }
@@ -260,7 +260,7 @@ pub fn impl_Client_with_security(mir_spec: &hir::MirSpec, spec: &OpenAPI, opt: &
     let new_fn = quote! {
         pub fn new(url: &str, authentication: #auth_struct_name) -> Self {
             let client = httpclient::Client::new()
-            .base_url(url);
+                .base_url(url);
             Self {
                 client,
                 authentication,
