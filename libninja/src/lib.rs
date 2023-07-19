@@ -8,7 +8,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 pub use ::openapiv3::OpenAPI;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 pub use openapiv3;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
@@ -31,12 +31,14 @@ mod lang;
 pub fn read_spec(path: impl AsRef<Path>, service_name: &str) -> Result<OpenAPI> {
     let path = path.as_ref();
     let file = File::open(path).map_err(|_| anyhow!("{:?}: File not found.", path))?;
-    let value: serde_yaml::Value = match path.extension().unwrap_or_default().to_str().unwrap() {
+    let ext = path.extension().unwrap_or_default().to_str().expect("File must have a file extension.");
+    let value: serde_yaml::Value = match ext {
         "yaml" => serde_yaml::from_reader(file)?,
         "json" => serde_json::from_reader(file)?,
         _ => panic!("Unknown file extension"),
     };
-    let spec = modify::modify_spec(value, service_name)?;
+    let spec = modify::modify_spec(value, service_name)
+        .context("Failed to deserialize OpenAPI spec.")?;
     Ok(spec)
 }
 
