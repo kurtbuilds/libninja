@@ -67,16 +67,12 @@ fn build_Client_from_env(spec: &MirSpec, opt: &LibraryOptions) -> Function<Token
 pub fn struct_Client(mir_spec: &MirSpec, opt: &LibraryOptions) -> Class<TokenStream> {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
 
-    let mut instance_fields = if mir_spec.has_security() {
-        vec![
-            field!(pub client: quote!(httpclient::Client)),
-            field!(authentication: quote!(#auth_struct_name)),
-        ]
-    } else {
-        vec![
-            field!(pub client: quote!(httpclient::Client)),
-        ]
-    };
+    let mut instance_fields = vec![
+        field!(pub client: quote!(httpclient::Client)),
+    ];
+    if mir_spec.has_security() {
+        instance_fields.push(field!(authentication: quote!(#auth_struct_name)));
+    }
 
     let class_methods = vec![build_Client_from_env(mir_spec, opt)];
     Class {
@@ -216,64 +212,53 @@ pub fn build_Client_authenticate(mir_spec: &MirSpec, spec: &OpenAPI, opt: &Libra
     }
 }
 
-pub fn impl_Client(mir_spec: &hir::MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
-    if mir_spec.has_security() {
-        impl_Client_with_security(mir_spec, spec, opt)
+fn build_new_fn(security: bool, opt: &LibraryOptions) -> TokenStream {
+    if security {
+        let auth_struct_name = opt.authenticator_name().to_rust_struct();
+        quote! {
+            pub fn new(url: &str, authentication: #auth_struct_name) -> Self {
+                let client = httpclient::Client::new()
+                    .base_url(url);
+                Self {
+                    client,
+                    authentication,
+                }
+            }
+        }
     } else {
-        impl_Client_without_security(mir_spec, spec, opt)
+        quote! {
+            pub fn new(url: &str) -> Self {
+                let client = httpclient::Client::new()
+                    .base_url(url);
+                Self {
+                    client
+                }
+            }
+        }
     }
 }
 
-pub fn impl_Client_without_security(mir_spec: &hir::MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
+pub fn impl_Client(mir_spec: &hir::MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
     let client_struct_name = opt.client_name().to_rust_struct();
     let path_fns = impl_ServiceClient_paths(mir_spec);
 
-    let new_fn = quote! {
-        pub fn new(url: &str) -> Self {
-            let client = httpclient::Client::new()
-                .base_url(url);
-            Self {
-                client
-            }
-        }
+    let security = mir_spec.has_security();
+    let new_fn = build_new_fn(security, opt);
+    let authenticate = if security {
+        build_Client_authenticate(mir_spec, spec, opt)
+    } else {
+        TokenStream::new()
     };
-
-    quote! {
-        impl #client_struct_name {
-            #new_fn
-
-            pub fn with_middleware<M: httpclient::Middleware + 'static>(mut self, middleware: M) -> Self {
-                self.client = self.client.with_middleware(middleware);
+    let with_authentication = if security {
+        let auth_struct_name = opt.authenticator_name().to_rust_struct();
+        quote! {
+            pub fn with_authentication(mut self, authentication: #auth_struct_name) -> Self {
+                self.authentication = authentication;
                 self
             }
-
-            #(#path_fns)*
         }
-    }
-}
-
-pub fn impl_Client_with_security(mir_spec: &hir::MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
-    let client_struct_name = opt.client_name().to_rust_struct();
-    let path_fns = impl_ServiceClient_paths(mir_spec);
-    let auth_struct_name = opt.authenticator_name().to_rust_struct();
-
-    let new_fn = quote! {
-        pub fn new(url: &str, authentication: #auth_struct_name) -> Self {
-            let client = httpclient::Client::new()
-                .base_url(url);
-            Self {
-                client,
-                authentication,
-            }
-        }
-    };
-
-    let authenticate = build_Client_authenticate(mir_spec, spec, opt);
-    let with_authentication = quote! {
-        pub fn with_authentication(mut self, authentication: #auth_struct_name) -> Self {
-            self.authentication = authentication;
-            self
-        }
+    } else {
+        TokenStream::new()
     };
 
     quote! {
