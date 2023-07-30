@@ -78,7 +78,7 @@ impl Ty {
         match self {
             Ty::String => true,
             Ty::Integer { .. } => true,
-            Ty::Float => true,
+            Ty::Float { .. } => true,
             Ty::Boolean => true,
             Ty::Array(_) => false,
             Ty::Model(_) => false,

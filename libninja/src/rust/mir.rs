@@ -75,7 +75,7 @@ impl FieldExt for MirField {
             }
             Ty::Currency { serialization: hir::DecimalSerialization::String } => {
                 decorators.push(quote! {
-                    #[serde(with = "rust_decimal::serde::str")]
+                    #[serde(with = "crate::serde::option_decimal_as_str")]
                 });
             },
             _ => {}
