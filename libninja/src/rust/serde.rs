@@ -54,6 +54,52 @@ pub fn option_i64_null_as_zero_module() -> TokenStream {
     }
 }
 
+pub fn option_i64_str_module() -> TokenStream {
+    quote! {
+        pub mod option_i64_str {
+            use std::fmt;
+            use serde::de::{Error, Unexpected, Deserializer};
+
+            struct StrVisitor;
+
+            impl<'de> serde::de::Visitor<'de> for StrVisitor {
+                type Value = Option<i64>;
+
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    write!(formatter, "an integer")
+                }
+
+                fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                    if value.is_empty() {
+                        Ok(None)
+                    } else {
+                        value.parse::<i64>().map(Some).map_err(|_| {
+                            Error::invalid_value(Unexpected::Str(value), &self)
+                        })
+                    }
+                }
+            }
+
+            pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+                where
+                    D: Deserializer<'de>,
+            {
+                deserializer.deserialize_str(StrVisitor)
+            }
+
+            pub fn serialize<S>(value: &Option<i64>, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+            {
+                if let Some(i) = value {
+                    serializer.serialize_str(&i.to_string())
+                } else {
+                    serializer.serialize_str("")
+                }
+            }
+        }
+    }
+}
 
 pub fn option_chrono_naive_date_as_int_module() -> TokenStream {
     quote! {

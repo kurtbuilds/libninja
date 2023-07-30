@@ -1,3 +1,4 @@
+use std::ptr::null;
 use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
 use tracing_ez::warn;
 
@@ -36,6 +37,7 @@ pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
                 "decimal" => Ty::Currency {
                     serialization: crate::hir::DecimalSerialization::String,
                 },
+                "integer" => Ty::Integer { serialization: crate::hir::IntegerSerialization::String },
                 "date" => Ty::Date {
                     serialization: crate::hir::DateSerialization::Iso8601,
                 },
@@ -47,11 +49,14 @@ pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         SchemaKind::Type(oa::Type::Integer(_)) => {
             let null_as_zero = schema.schema_data.extensions.get("x-null-as-zero")
                 .and_then(|v| v.as_bool()).unwrap_or(false);
+            if null_as_zero {
+                return Ty::Integer { serialization: crate::hir::IntegerSerialization::NullAsZero };
+            }
             match schema.schema_data.extensions.get("x-format").and_then(|s| s.as_str()) {
                 Some("date") => Ty::Date {
                     serialization: crate::hir::DateSerialization::Integer,
                 },
-                _ => Ty::Integer { null_as_zero }
+                _ => Ty::Integer { serialization: crate::hir::IntegerSerialization::Simple },
             }
         }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,

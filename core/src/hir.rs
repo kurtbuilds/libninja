@@ -22,11 +22,18 @@ pub enum DecimalSerialization {
     String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum IntegerSerialization {
+    Simple,
+    String,
+    NullAsZero,
+}
+
 #[derive(Debug, Clone)]
 pub enum Ty {
     String,
     Integer {
-        null_as_zero: bool,
+        serialization: IntegerSerialization,
     },
     Float,
     Boolean,
@@ -51,7 +58,7 @@ impl Default for Ty {
 impl Ty {
     pub fn integer() -> Self {
         Ty::Integer {
-            null_as_zero: false,
+            serialization: IntegerSerialization::Simple,
         }
     }
 

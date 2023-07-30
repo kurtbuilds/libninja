@@ -11,7 +11,7 @@ use ln_mir::{Field, File, Ident, Import, import, Name, Visibility};
 use ln_mir as model;
 
 use ln_core::{extractor, hir, MirSpec};
-use ln_core::hir::{DateSerialization, MirField, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
+use ln_core::hir::{DateSerialization, IntegerSerialization, MirField, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
 use ln_core::hir::AuthLocation::Token;
 use ln_core::extractor::schema_ref_to_ty;
 use ln_core::LibraryConfig;
@@ -56,11 +56,19 @@ impl FieldExt for MirField {
             });
         }
         match self.ty {
-            Ty::Integer { null_as_zero } => {
-                if null_as_zero {
-                    decorators.push(quote! {
-                        #[serde(with = "crate::serde::option_i64_null_as_zero")]
-                    });
+            Ty::Integer { serialization } => {
+                match serialization {
+                    IntegerSerialization::Simple => {}
+                    IntegerSerialization::String => {
+                        decorators.push(quote! {
+                            #[serde(with = "crate::serde::option_i64_str")]
+                        });
+                    }
+                    IntegerSerialization::NullAsZero => {
+                        decorators.push(quote! {
+                            #[serde(with = "crate::serde::option_i64_null_as_zero")]
+                        });
+                    }
                 }
             }
             Ty::Date { serialization } => {
@@ -110,7 +118,7 @@ impl StructExt for Struct {
             let ty = field.ty.to_rust_type();
             let mut optional = field.optional;
             match field.ty {
-                Ty::Integer { null_as_zero: true } => {
+                Ty::Integer { serialization: IntegerSerialization::NullAsZero | IntegerSerialization::String } => {
                     optional = true;
                 }
                 Ty::Date { serialization: DateSerialization::Integer } => {

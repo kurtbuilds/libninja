@@ -32,6 +32,7 @@ mod serde;
 
 pub struct Extras {
     null_as_zero: bool,
+    option_i64_str: bool,
     date_serialization: bool,
     currency: bool,
     integer_date_serialization: bool,
@@ -49,11 +50,15 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     let mut date_serialization = false;
     let mut currency = false;
     let mut integer_date_serialization = false;
+    let mut option_i64_str = false;
     for (_, record) in &spec.schemas {
         for field in record.fields() {
             match &field.ty {
-                Ty::Integer { null_as_zero: true } => {
+                Ty::Integer { serialization: ln_core::hir::IntegerSerialization::NullAsZero } => {
                     null_as_zero = true;
+                }
+                Ty::Integer { serialization: ln_core::hir::IntegerSerialization::String } => {
+                    option_i64_str = true;
                 }
                 Ty::Date { serialization: ln_core::hir::DateSerialization::Integer } => {
                     integer_date_serialization = true;
@@ -74,6 +79,7 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
         date_serialization,
         integer_date_serialization,
         currency,
+        option_i64_str,
     }
 }
 
@@ -322,10 +328,17 @@ fn write_serde_module_if_needed(extras: &Extras, opts: &OutputOptions) -> Result
         TokenStream::new()
     };
 
+    let int_as_str = if extras.option_i64_str {
+        serde::option_i64_str_module()
+    } else {
+        TokenStream::new()
+    };
+
     let code = quote! {
         pub use ::serde::*;
         #null_as_zero
         #date_as_int
+        #int_as_str
     };
     let code = format_code(code).unwrap();
     fs::write_file(&src_path, &code)
