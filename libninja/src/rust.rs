@@ -49,7 +49,6 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     let mut date_serialization = false;
     let mut currency = false;
     let mut integer_date_serialization = false;
-    let mut option_decimal_as_str = false;
     for (_, record) in &spec.schemas {
         for field in record.fields() {
             match &field.ty {
@@ -65,9 +64,7 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
                 }
                 Ty::Currency { .. } => {
                     currency = true;
-                    option_decimal_as_str = true
                 }
-                Ty::Float => {}
                 _ => {}
             }
         }
@@ -251,7 +248,7 @@ fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow
         manifest.dependencies.entry("rust_decimal".to_string())
             .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
                 version: Some("1.28.1".to_string()),
-                features: vec![],
+                features: vec!["serde-with-str".to_string()],
                 ..cargo_toml::DependencyDetail::default()
             }));
     }
@@ -325,17 +322,10 @@ fn write_serde_module_if_needed(extras: &Extras, opts: &OutputOptions) -> Result
         TokenStream::new()
     };
 
-    let option_decimal_as_str = if extras.currency {
-        serde::option_decimal_as_str_module()
-    } else {
-        TokenStream::new()
-    };
-
     let code = quote! {
         pub use ::serde::*;
         #null_as_zero
         #date_as_int
-        #option_decimal_as_str
     };
     let code = format_code(code).unwrap();
     fs::write_file(&src_path, &code)
