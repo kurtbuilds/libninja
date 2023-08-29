@@ -23,7 +23,7 @@ libninja gen --lang rust --repo libninjacom/plaid-rs -o . Plaid ~/path/to/plaid/
 # Installation
 
 ```
-cargo install libninja-cli
+cargo install --git https://github.com/kurtbuilds/libninja
 ```
 
 Use the command line help to see required arguments & options when generating libraries.
