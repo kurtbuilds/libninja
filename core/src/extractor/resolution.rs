@@ -1,4 +1,3 @@
-use std::ptr::null;
 use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
 use tracing_ez::warn;
 
