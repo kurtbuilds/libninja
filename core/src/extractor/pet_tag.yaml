@@ -1,0 +1,13 @@
+allOf:
+  - type: object
+    required:
+      - eye-color
+    properties:
+      eye-color:
+        type: string
+        enum:
+          - blue
+          - brown
+          - green
+      weight:
+        type: integer

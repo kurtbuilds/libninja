@@ -96,6 +96,7 @@ generate:
     cargo run -- gen --name $SERVICE --output-dir $REPO_DIR --generator $SOURCEGEN --github $REPO --version $VERSION $LIBRARY $SPEC
 
 test *ARGS:
+    cd core && cargo test -- "$@"
     cd libninja && cargo test -- "$@"
 alias t := test
 

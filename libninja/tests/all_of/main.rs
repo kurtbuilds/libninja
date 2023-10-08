@@ -35,6 +35,7 @@ fn test_transaction() {
 
     let record = record_for_schema("Transaction", TRANSACTION, &spec);
     let code = formatted_code(record);
+    println!("{}", code);
     assert_eq!(code, TRANSACTION_RS);
 }
 

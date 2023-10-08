@@ -233,6 +233,7 @@ pub struct StrEnum {
     pub variants: Vec<String>,
 }
 
+// an object type in the HIR
 #[derive(Debug, Clone)]
 pub enum Record {
     Struct(Struct),

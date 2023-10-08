@@ -119,7 +119,10 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
                 match item.properties() {
                     Some(props) => {
                         for (name, schema) in props {
-                            let field = create_field(schema, spec);
+                            let mut field = create_field(schema, spec);
+                            if !item.required(name) {
+                                field.optional = true;
+                            }
                             fields.insert(Name::new(name), field);
                         }
                     }
@@ -153,4 +156,23 @@ pub fn extract_records(spec: &OpenAPI) -> Result<BTreeMap<String, Record>> {
         })
         .collect::<Result<_>>()?;
     Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use openapiv3::{OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind};
+    use crate::extractor::record::create_record_from_all_of;
+
+    #[test]
+    fn test_all_of_required_set_correctly() {
+        let mut additional_props: Schema = serde_yaml::from_str(include_str!("./pet_tag.yaml")).unwrap();
+        let SchemaKind::AllOf { all_of } = &additional_props.schema_kind else { panic!() };
+        let spec = OpenAPI::default();
+        let rec = create_record_from_all_of("PetTag", &all_of, &SchemaData::default(), &spec);
+        let mut fields = rec.fields();
+        let eye_color = fields.next().unwrap();
+        let weight = fields.next().unwrap();
+        assert_eq!(eye_color.optional, false);
+        assert_eq!(weight.optional, true);
+    }
 }
