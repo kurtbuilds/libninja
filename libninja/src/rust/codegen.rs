@@ -1,11 +1,12 @@
 use anyhow::Result;
+use check_keyword::CheckKeyword;
 use convert_case::{Case, Casing};
 use openapiv3::{ArrayType, OpenAPI, Schema, SchemaKind};
 use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote, TokenStreamExt};
 use regex::{Captures, Regex};
 use syn::Path;
-
+use std::collections::HashSet;
 use ln_mir::{ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility};
 pub use typ::*;
 pub use example::*;
@@ -103,7 +104,6 @@ fn codegen_function(func: Function<TokenStream>, self_arg: TokenStream) -> Token
         }
     }
 }
-
 
 impl ToRustCode for Class<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
@@ -251,7 +251,24 @@ impl ToRustCode for Option<Doc> {
     }
 }
 
-pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value: bool) -> Result<TokenStream> {
+
+
+pub fn to_rust_example_value(
+    ty: &Ty,
+    name: &Name,
+    spec: &MirSpec,
+    use_ref_value: bool,
+) -> Result<TokenStream> {
+    _to_rust_example_value(ty, name, spec, use_ref_value, &mut HashSet::new())
+}
+
+fn _to_rust_example_value(
+    ty: &Ty,
+    name: &Name,
+    spec: &MirSpec,
+    use_ref_value: bool,
+    seen: &mut HashSet<Name>,
+) -> Result<TokenStream> {
     let s = match ty {
         Ty::String => {
             let s = format!("your {}", name.0.to_case(Case::Lower));
@@ -270,7 +287,9 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
             } else {
                 use_ref_value
             };
-            let inner = to_rust_example_value(inner, name, spec, use_ref_value)?;
+
+            let inner = _to_rust_example_value(inner, name, spec, use_ref_value, seen)?;
+
             if use_ref_value {
                 quote!(&[#inner])
             } else {
@@ -282,20 +301,28 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
             let force_not_ref = model.0.ends_with("Required");
             match record {
                 Record::Struct(Struct { name: _name, fields, nullable }) => {
+                    seen.insert(name.clone());
+
                     let fields = fields.iter().map(|(name, field)| {
-                        let mut value = to_rust_example_value(&field.ty, name, spec, force_not_ref)?;
-                        let name = name.to_rust_ident();
-                        if field.optional {
-                            value = quote!(Some(#value));
-                        }
-                        Ok(quote!(#name: #value))
-                    }).collect::<Result<Vec<_>, anyhow::Error>>()?;
+                            let name_ident = name.to_rust_ident();
+                            if seen.contains(name) && field.optional {
+                                Ok(quote!(#name_ident: None))
+                            } else {
+                                let mut value = _to_rust_example_value(&field.ty, name, spec, force_not_ref, seen)?;
+                                if field.optional {
+                                    value = quote!(Some(#value));
+                                }
+                                Ok(quote!(#name_ident: #value))
+                            }
+                        })
+                        .collect::<Result<Vec<_>, anyhow::Error>>()?;
                     let model = model.to_rust_struct();
+                    seen.remove(name);
                     quote!(#model{#(#fields),*})
                 }
                 Record::NewType(NewType { name, fields }) => {
                     let fields = fields.iter().map(|f| {
-                        to_rust_example_value(&f.ty, name, spec, force_not_ref)
+                        _to_rust_example_value(&f.ty, name, spec, force_not_ref, seen)
                     }).collect::<Result<Vec<_>, _>>()?;
                     let name = name.to_rust_struct();
                     quote!(#name(#(#fields),*))
@@ -307,7 +334,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
                     quote!(#model::#variant)
                 }
                 Record::TypeAlias(name, hir::MirField { ty, optional, .. }) => {
-                    let ty = to_rust_example_value(ty, name, spec, force_not_ref)?;
+                    let ty = _to_rust_example_value(ty, name, spec, force_not_ref, seen)?;
                     if *optional {
                         quote!(Some(#ty))
                     } else {
@@ -387,7 +414,7 @@ fn sanitize(s: &str) -> String {
             c
         })
         .into();
-    if is_restricted(&s) {
+    if s.is_keyword() {
         s += "_"
     }
     if s.chars().next().unwrap().is_numeric() {
@@ -401,7 +428,7 @@ fn sanitize_struct(s: &str) -> String {
     let original = s;
     let s = rewrite_names(s);
     let mut s = s.to_case(Case::Pascal);
-    if is_restricted(&s) {
+    if s.is_keyword() {
         s += "Struct"
     }
     assert_valid_ident(&s, original);
@@ -475,10 +502,6 @@ mod tests {
             "use foo_bar ;"
         );
     }
-}
-
-pub fn is_restricted(s: &str) -> bool {
-    ["type", "use", "ref", "self", "match", "final"].contains(&s)
 }
 
 pub fn serde_rename(one: &str, two: &str) -> TokenStream {
