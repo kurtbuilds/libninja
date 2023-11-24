@@ -387,7 +387,7 @@ fn sanitize(s: &str) -> String {
             c
         })
         .into();
-    if is_restricted(&s) {
+    if s.is_keyword() {
         s += "_"
     }
     if s.chars().next().unwrap().is_numeric() {
@@ -401,7 +401,7 @@ fn sanitize_struct(s: &str) -> String {
     let original = s;
     let s = rewrite_names(s);
     let mut s = s.to_case(Case::Pascal);
-    if is_restricted(&s) {
+    if s.is_keyword() {
         s += "Struct"
     }
     assert_valid_ident(&s, original);
@@ -475,10 +475,6 @@ mod tests {
             "use foo_bar ;"
         );
     }
-}
-
-pub fn is_restricted(s: &str) -> bool {
-    ["type", "use", "ref", "self", "match", "final"].contains(&s)
 }
 
 pub fn serde_rename(one: &str, two: &str) -> TokenStream {
