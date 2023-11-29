@@ -2,4 +2,5 @@
 #![allow(unused)]
 pub mod model;
 pub mod request;
+pub use httpclient::{Error, Result, InMemoryResponseExt};
 use crate::model::*;

@@ -185,19 +185,19 @@ pub fn build_request_struct_builder_methods(
 
         let mut body = if a.ty.is_reference_type() {
             quote! {
-                self.#name = Some(#name.to_owned());
+                self.params.#name = Some(#name.to_owned());
                 self
             }
         } else {
             quote! {
-                self.#name = Some(#name);
+                self.params.#name = Some(#name);
                 self
             }
         };
         if let Some(Ty::String) = a.ty.inner_iterable() {
             arg_type = quote!( impl IntoIterator<Item = impl AsRef<str>> );
             body = quote! {
-                self.#name = Some(#name.into_iter().map(|s| s.as_ref().to_owned()).collect());
+                self.params.#name = Some(#name.into_iter().map(|s| s.as_ref().to_owned()).collect());
                 self
             };
         }
@@ -227,21 +227,21 @@ pub fn build_request_struct(
     opt: &LibraryOptions,
 ) -> Vec<Class<TokenStream>> {
     let mut instance_fields = build_struct_fields(&operation.parameters, false);
-    instance_fields.insert(
-        0,
-        Field {
-            name: "http_client".to_string(),
-            ty: {
-                let c = opt.client_name().to_rust_struct();
-                quote! { &'a #c }
-            },
-            visibility: Visibility::Crate,
-            ..Field::default()
-        },
-    );
+    // instance_fields.insert(
+    //     0,
+    //     Field {
+    //         name: "http_client".to_string(),
+    //         ty: {
+    //             let c = opt.client_name().to_rust_struct();
+    //             quote! { &'a #c }
+    //         },
+    //         visibility: Visibility::Crate,
+    //         ..Field::default()
+    //     },
+    // );
 
-    let mut instance_methods = vec![build_send_function(operation, spec)];
-    let mut_self_instance_methods = build_request_struct_builder_methods(operation);
+    // let mut instance_methods = vec![build_send_function(operation, spec)];
+    // let mut_self_instance_methods = build_request_struct_builder_methods(operation);
 
     let doc = doc("Create this with the associated client method.
 
@@ -250,12 +250,13 @@ That method takes required values as arguments. Set optional values using builde
         name: operation.request_struct_name().to_rust_struct(),
         doc,
         instance_fields,
-        instance_methods,
-        mut_self_instance_methods,
+        instance_methods: Vec::new(),
+        mut_self_instance_methods: Vec::new(),
         // We need this lifetime because we hold a ref to the client.
-        lifetimes: vec!["'a".to_string()],
+        // lifetimes: vec!["'a".to_string()],
+        lifetimes: vec![],
         public: true,
-        decorators: vec![quote! {#[derive(Clone)]}],
+        decorators: vec![quote! {#[derive(Debug, Clone, Serialize, Deserialize)]}],
         ..Class::default()
     }];
 

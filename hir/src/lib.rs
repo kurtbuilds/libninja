@@ -8,8 +8,10 @@ use std::string::{String, ToString};
 use anyhow::Result;
 use convert_case::{Case, Casing};
 pub use doc::*;
+
 mod doc;
 mod lang;
+
 pub use lang::*;
 
 use openapiv3 as oa;
@@ -324,6 +326,7 @@ pub enum ServerStrategy {
     /// There's multiple choices
     Env,
 }
+
 impl ServerStrategy {
     pub fn env_var_for_strategy(&self, service_name: &str) -> Option<String> {
         match self {
@@ -373,6 +376,10 @@ impl HirSpec {
 
     pub fn has_security(&self) -> bool {
         !self.security.is_empty()
+    }
+
+    pub fn has_basic_auth(&self) -> bool {
+        self.security.iter().any(|s| s.fields.iter().any(|p| matches!(p.location, AuthLocation::Basic)))
     }
 }
 

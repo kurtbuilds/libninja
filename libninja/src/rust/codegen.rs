@@ -113,7 +113,7 @@ impl ToRustCode for Visibility {
     }
 }
 
-fn codegen_function(func: Function<TokenStream>, self_arg: TokenStream) -> TokenStream {
+pub fn codegen_function(func: Function<TokenStream>, self_arg: TokenStream) -> TokenStream {
     let name = func.name;
     let args = func.args.into_iter().map(|a| {
         let name = a.name.unwrap_ident();

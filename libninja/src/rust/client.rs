@@ -291,19 +291,29 @@ pub fn struct_Authentication(mir_spec: &HirSpec, opt: &LibraryOptions) -> TokenS
     }
 }
 
-fn build_Authentication_from_env(mir_spec: &HirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
-    let first_variant = mir_spec.security.first()
+fn build_Authentication_from_env(hir_spec: &HirSpec, spec: &OpenAPI, service_name: &str) -> TokenStream {
+    let first_variant = hir_spec.security.first()
         .unwrap();
     let fields = first_variant
         .fields
         .iter()
         .map(|f| {
+            let basic = matches!(f.location, AuthLocation::Basic);
             let field =
                 syn::Ident::new(&f.name.to_case(Case::Snake), proc_macro2::Span::call_site());
             let expect = format!("Environment variable {} is not set.", f.env_var);
-            let env_var = &f.env_var_for_service(&opt.service_name);
-            quote! {
-                #field: std::env::var(#env_var).expect(#expect)
+            let env_var = &f.env_var_for_service(service_name);
+            if basic {
+                quote! {
+                    #field: {
+                        let value = std::env::var(#env_var).expect(#expect);
+                        STANDARD_NO_PAD.encode(value)
+                    }
+                }
+            } else {
+                quote! {
+                    #field: std::env::var(#env_var).expect(#expect)
+                }
             }
         })
         .collect::<Vec<_>>();
@@ -322,7 +332,7 @@ fn build_Authentication_from_env(mir_spec: &HirSpec, spec: &OpenAPI, opt: &Libra
 
 pub fn impl_Authentication(mir_spec: &HirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
-    let from_env = build_Authentication_from_env(mir_spec, spec, opt);
+    let from_env = build_Authentication_from_env(mir_spec, spec, &opt.service_name);
 
     quote! {
         impl #auth_struct_name {
