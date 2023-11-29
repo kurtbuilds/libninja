@@ -1,10 +1,10 @@
 [package]
-name = "libninja_hir"
+name = "libninja_mir"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "hir"
+name = "mir"
 path = "src/lib.rs"
 
 [dependencies]

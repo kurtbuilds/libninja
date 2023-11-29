@@ -1,5 +1,5 @@
 use convert_case::{Case, Casing};
-use hir::{Ident, Name};
+use mir::{Ident, Name};
 use crate::rust::codegen;
 
 pub trait ToRustIdent {

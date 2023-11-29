@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use ln_macro::rfunction;
 
-use hir::Function;
+use mir::Function;
 use quote::quote;
 
 #[test]

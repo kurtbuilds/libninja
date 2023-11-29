@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use ln_macro::rfunction;
-use hir::{File, Import};
+use mir::{File, Import};
 use crate::{Language, LibraryOptions, };
 use ln_core::{mir2, mir2::{MirSpec, Parameter}};
 use crate::rust::codegen;

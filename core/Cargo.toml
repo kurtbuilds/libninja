@@ -17,7 +17,7 @@ proc-macro2 = "1.0.63"
 tracing-ez = "0.3.0"
 indexmap = "2.0"
 syn = "2.0"
-libninja_hir = { path = "../hir" }
+libninja_mir = { path = "../mir" }
 include_dir = "0.7.3"
 tera = "1.19.0"
 

@@ -1,5 +1,5 @@
 use ln_macro::function;
-use hir::{Function, ArgIdent};
+use mir::{Function, ArgIdent};
 use pretty_assertions::assert_eq;
 
 #[test]

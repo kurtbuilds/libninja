@@ -6,7 +6,7 @@ use quote::{quote, TokenStreamExt};
 use regex::{Captures, Regex};
 use syn::Path;
 
-use hir::{ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility};
+use mir::{ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility};
 pub use typ::*;
 pub use example::*;
 pub use ident::*;
@@ -425,7 +425,7 @@ pub fn formatted_code(code: impl ToRustCode) -> String {
 
 #[cfg(test)]
 mod tests {
-    use hir::{Ident, import, Import, Name};
+    use mir::{Ident, import, Import, Name};
 
     use crate::rust::codegen::{ToRustCode, ToRustIdent};
 

@@ -20,7 +20,7 @@ fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> mir2::Record {
 
 fn formatted_code(record: mir2::Record) -> String {
     let config = LibraryConfig::default();
-    let code = libninja::rust::mir::create_struct(&record, &config);
+    let code = libninja::rust::lower_mir::create_struct(&record, &config);
     libninja::rust::format::format_code(code).unwrap()
 }
 

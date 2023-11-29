@@ -5,13 +5,13 @@
 #[macro_export]
 macro_rules! import {
     ($path:expr) => {
-        ::hir::Import::package($path)
+        ::mir::Import::package($path)
     };
     ($path:expr, $($imports:ident),*) => {
-        ::hir::Import::new($path, vec![$(stringify!($imports)),*])
+        ::mir::Import::new($path, vec![$(stringify!($imports)),*])
     };
     (pub $path:expr, $($imports:ident),*) => {
-        ::hir::Import::new($path, vec![$(stringify!($imports)),*]).public()
+        ::mir::Import::new($path, vec![$(stringify!($imports)),*]).public()
     };
 }
 /// Macro to create a FnArg. Called targ because the type is a TokenStream (specifically a path), rather than a &str.
@@ -19,7 +19,7 @@ macro_rules! import {
 #[macro_export]
 macro_rules! targ {
     ($name:ident : $ty:path) => {
-        ::hir::FnArg {
+        ::mir::FnArg {
             name: stringify!($name).to_string(),
             ty: {
                 let ty = ::syn::parse_str::<::syn::Ident>(stringify!($ty)).unwrap();
@@ -35,16 +35,16 @@ macro_rules! targ {
 #[macro_export]
 macro_rules! arg {
     ($name:ident : $ty:expr) => {
-        ::hir::FnArg {
-            name: ::hir::ArgIdent::from(stringify!($name)),
+        ::mir::FnArg {
+            name: ::mir::ArgIdent::from(stringify!($name)),
             ty: $ty.to_string(),
             default: None,
             treatment: None,
         }
     };
     ($name:ident : $ty:expr , $default:expr) => {
-        ::hir::FnArg {
-            name: ::hir::ArgIdent::from(stringify!($name).to_string()),
+        ::mir::FnArg {
+            name: ::mir::ArgIdent::from(stringify!($name).to_string()),
             ty: $ty.to_string(),
             default: $default.to_string(),
             treatment: None,
@@ -56,24 +56,24 @@ macro_rules! arg {
 #[macro_export]
 macro_rules! field {
     (pub(crate) $name:ident : $ty:expr) => {
-        ::hir::Field {
-            name: ::hir::Name::new(stringify!($name)),
+        ::mir::Field {
+            name: ::mir::Name::new(stringify!($name)),
             ty: ($ty).into(),
-            visibility: ::hir::Visibility::Crate,
+            visibility: ::mir::Visibility::Crate,
             ..Field::default()
         }
     };
     (pub $name:ident : $ty:expr) => {
-        ::hir::Field {
-            name: ::hir::Name::new(stringify!($name)),
+        ::mir::Field {
+            name: ::mir::Name::new(stringify!($name)),
             ty: ($ty).into(),
-            visibility: ::hir::Visibility::Public,
+            visibility: ::mir::Visibility::Public,
             ..Field::default()
         }
     };
     ($name:ident : $ty:expr) => {
-        ::hir::Field {
-            name: ::hir::Name::new(stringify!($name)),
+        ::mir::Field {
+            name: ::mir::Name::new(stringify!($name)),
             ty: ($ty).into(),
             ..Field::default()
         }
@@ -84,6 +84,6 @@ macro_rules! field {
 #[macro_export]
 macro_rules! lit {
     ($($arg:tt)*) => {
-        ::hir::Literal(format!($($arg)*));
+        ::mir::Literal(format!($($arg)*));
     };
 }

@@ -9,7 +9,7 @@ use url::Host;
 
 use ln_core::fs;
 use ln_core::OutputOptions;
-pub use hir::build_struct;
+pub use mir::build_struct;
 
 use crate::{MirSpec, };
 

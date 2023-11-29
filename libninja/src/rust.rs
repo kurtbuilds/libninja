@@ -12,20 +12,20 @@ use codegen::ToRustIdent;
 use codegen::ToRustType;
 use format::format_code;
 use ln_core::{copy_files, copy_templates, create_context, get_template_file, prepare_templates};
-use hir::{Visibility, Import, File};
+use ::mir::{Visibility, Import, File};
 use ln_core::fs;
 
 use crate::{add_operation_models, extract_spec, LibraryOptions, MirSpec, OutputOptions, util};
 pub use crate::rust::codegen::generate_example;
 use crate::rust::codegen::ToRustCode;
 use crate::rust::io::write_rust_file_to_path;
-use crate::rust::mir::{generate_model_rs, generate_single_model_file};
+use crate::rust::lower_mir::{generate_model_rs, generate_single_model_file};
 use crate::rust::request::{build_request_struct, generate_request_model_rs};
 
 pub mod client;
 pub mod codegen;
 pub mod format;
-pub mod mir;
+pub mod lower_mir;
 pub mod request;
 mod io;
 mod serde;
@@ -158,11 +158,11 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     };
 
     let client_name = struct_Client.name.to_string();
-    let template_path = opts.dest_path.join("template").join("src").join("hir");
+    let template_path = opts.dest_path.join("template").join("src").join("../../mir");
     let lib_rs_template = if template_path.exists() {
         fs::read_to_string(template_path)?
     } else {
-        let s = get_template_file("rust/src/hir");
+        let s = get_template_file("rust/src/mir");
         formatdoc!(
             r#"
             //! [`{client}`](struct.{client}.html) is the main entry point for this library.
@@ -192,7 +192,7 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
         #security
     };
 
-    io::write_rust_to_path(&src_path.join("hir"), code, &lib_rs_template)?;
+    io::write_rust_to_path(&src_path.join("../../mir"), code, &lib_rs_template)?;
     Ok(())
 }
 

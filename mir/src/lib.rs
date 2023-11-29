@@ -1,5 +1,6 @@
 /// Models that represent code
 /// Things like, Parameters, Functions, Fields, Class, etc.
+///
 
 use core::default::Default;
 use core::fmt::{Debug, Formatter};

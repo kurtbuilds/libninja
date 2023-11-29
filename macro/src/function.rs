@@ -39,13 +39,13 @@ pub fn parse_intro(toks: &mut impl Iterator<Item=TokenTree>) -> Tags {
         }
     };
     let fn_name = if captured.is_empty() {
-        quote!( ::hir::Ident(#fn_name.to_string()) )
+        quote!( ::mir::Ident(#fn_name.to_string()) )
     } else {
         let captured = captured
             .into_iter()
             .map(|name| Ident2::new(&name, proc_macro2::Span::call_site()));
 
-        quote!( ::hir::Ident(format!("{}", #( #captured ),*)) )
+        quote!( ::mir::Ident(format!("{}", #( #captured ),*)) )
     };
     Tags {
         asyn,

@@ -1072,7 +1072,7 @@ dependencies = [
  "include_dir",
  "indexmap 2.0.0",
  "indoc",
- "libninja_hir",
+ "libninja_mir",
  "ln-core",
  "ln-macro",
  "log",
@@ -1098,7 +1098,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "libninja_hir"
+name = "libninja_mir"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -1126,7 +1126,7 @@ dependencies = [
  "convert_case 0.6.0",
  "include_dir",
  "indexmap 2.0.0",
- "libninja_hir",
+ "libninja_mir",
  "openapiv3-extended",
  "proc-macro2",
  "quote",
@@ -1142,7 +1142,7 @@ dependencies = [
 name = "ln-macro"
 version = "0.1.0"
 dependencies = [
- "libninja_hir",
+ "libninja_mir",
  "pretty_assertions",
  "proc-macro2",
  "quote",

@@ -1,7 +1,7 @@
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 
 use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StatusCode, StringType, Type};
-use hir::{Doc, Name};
+use mir::{Doc, Name};
 use std::collections::{BTreeMap, HashMap};
 use tracing_ez::warn;
 use crate::{extractor, mir2};

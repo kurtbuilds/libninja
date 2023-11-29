@@ -1,6 +1,6 @@
 use openapiv3::{OpenAPI, ReferenceOr, Schema};
 use ln_core::{mir2, mir2::Record};
-use libninja::rust::mir::StructExt;
+use libninja::rust::lower_mir::StructExt;
 
 const LINK_TOKEN_CREATE: &str = include_str!("link_token_create.yaml");
 
