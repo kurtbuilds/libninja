@@ -13,11 +13,12 @@ pub use openapiv3;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 
-use lang::*;
-use ln_core::{Language, LibraryConfig, LibraryOptions, MirSpec, OutputOptions};
+use commercial::*;
+use ln_core::{LibraryConfig, LibraryOptions, OutputOptions};
 use ln_core::extractor::{extract_api_operations, extract_spec};
 use ln_core::extractor::add_operation_models;
 use ln_core::fs::open;
+use hir::{Language, HirSpec};
 pub use repo::*;
 
 pub mod custom;
@@ -26,7 +27,7 @@ pub mod util;
 pub mod command;
 mod modify;
 pub mod repo;
-mod lang;
+mod commercial;
 
 pub fn read_spec(path: impl AsRef<Path>, service_name: &str) -> Result<OpenAPI> {
     let path = path.as_ref();
@@ -104,7 +105,7 @@ pub fn generate_examples(
             typescript,
             go,
         };
-        map.insert(operation.name.0.clone(), examples);
+        map.insert(operation.name.clone(), examples);
     }
     Ok(map)
 }

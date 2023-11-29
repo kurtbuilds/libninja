@@ -6,19 +6,50 @@ use quote::{quote, TokenStreamExt};
 use regex::{Captures, Regex};
 use syn::Path;
 
-use mir::{ArgIdent, Class, Doc, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility};
+use mir::{ArgIdent, Class, Field, File, Function, Ident, Import, ImportItem, Literal, Visibility};
 pub use typ::*;
 pub use example::*;
 pub use ident::*;
 use ln_core::extractor::is_primitive;
-use ln_core::mir2;
-
-use ln_core::mir2::{MirSpec, Name, NewType, Parameter, ParamKey, Record, StrEnum, Struct, Ty};
+use hir::{HirSpec, NewType, Parameter, ParamKey, Record, StrEnum, Struct, Ty, Doc, HirField};
 use crate::rust::format;
 
 mod example;
 mod ident;
 mod typ;
+
+pub trait ToRustIdent {
+    fn to_rust_struct(&self) -> Ident;
+    fn to_rust_ident(&self) -> Ident;
+}
+
+impl ToRustIdent for String {
+    fn to_rust_struct(&self) -> Ident {
+        sanitize_struct(self)
+    }
+
+    fn to_rust_ident(&self) -> Ident {
+        sanitize_ident(self)
+    }
+}
+
+impl ToRustIdent for &str {
+    fn to_rust_struct(&self) -> Ident {
+        sanitize_struct(self)
+    }
+
+    fn to_rust_ident(&self) -> Ident {
+        sanitize_ident(self)
+    }
+}
+
+pub fn sanitize_filename(s: &str) -> String {
+    sanitize(s)
+}
+
+pub fn sanitize_ident(s: &str) -> Ident {
+    Ident(sanitize(s))
+}
 
 /// Use this for codegen structs: Function, Class, etc.
 pub trait ToRustCode {
@@ -251,10 +282,10 @@ impl ToRustCode for Option<Doc> {
     }
 }
 
-pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value: bool) -> Result<TokenStream> {
+pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value: bool) -> Result<TokenStream> {
     let s = match ty {
         Ty::String => {
-            let s = format!("your {}", name.0.to_case(Case::Lower));
+            let s = format!("your {}", name.to_case(Case::Lower));
             if use_ref_value {
                 quote!(#s)
             } else {
@@ -279,7 +310,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
         }
         Ty::Model(model) => {
             let record = spec.get_record(model)?;
-            let force_not_ref = model.0.ends_with("Required");
+            let force_not_ref = model.ends_with("Required");
             match record {
                 Record::Struct(Struct { name: _name, fields, nullable }) => {
                     let fields = fields.iter().map(|(name, field)| {
@@ -302,11 +333,11 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
                 }
                 Record::Enum(StrEnum { name, variants }) => {
                     let variant = variants.first().unwrap();
-                    let variant = Name::new(variant).to_rust_struct();
+                    let variant = variant.to_rust_struct();
                     let model = model.to_rust_struct();
                     quote!(#model::#variant)
                 }
-                Record::TypeAlias(name, mir2::MirField { ty, optional, .. }) => {
+                Record::TypeAlias(name, HirField { ty, optional, .. }) => {
                     let ty = to_rust_example_value(ty, name, spec, force_not_ref)?;
                     if *optional {
                         quote!(Some(#ty))
@@ -375,7 +406,8 @@ fn rewrite_names(s: &str) -> String {
         .replace('.', "_")
 }
 
-fn sanitize(s: &str) -> String {
+fn sanitize(s: impl AsRef<str>) -> String {
+    let s = s.as_ref();
     let original = s;
     let s = rewrite_names(s);
     let regex = Regex::new("[a-z]_[0-9]").unwrap();
@@ -397,18 +429,19 @@ fn sanitize(s: &str) -> String {
     s
 }
 
-fn sanitize_struct(s: &str) -> String {
+fn sanitize_struct(s: impl AsRef<str>) -> Ident {
+    let s = s.as_ref();
     let original = s;
     let s = rewrite_names(s);
     let mut s = s.to_case(Case::Pascal);
     if is_restricted(&s) {
         s += "Struct"
     }
-    assert_valid_ident(&s, original);
-    s
+    assert_valid_ident(&s, &original);
+    Ident(s)
 }
 
-pub fn assert_valid_ident(s: &str, original: &str) {
+fn assert_valid_ident(s: &str, original: &str) {
     if s.chars().next().map(|c| c.is_numeric()).unwrap_or_default() {
         panic!("Numeric identifier: {}", original)
     }
@@ -425,19 +458,19 @@ pub fn formatted_code(code: impl ToRustCode) -> String {
 
 #[cfg(test)]
 mod tests {
-    use mir::{Ident, import, Import, Name};
+    use mir::{Ident, import, Import};
 
     use crate::rust::codegen::{ToRustCode, ToRustIdent};
 
     #[test]
     fn test_to_ident() {
-        assert_eq!(Name::new("meta/root").to_rust_ident().0, "meta_root");
+        assert_eq!("meta/root".to_rust_ident().0, "meta_root");
     }
 
     #[test]
     fn test_to_ident1() {
         assert_eq!(
-            Name::new("get-phone-checks-v0.1").to_rust_ident().0,
+            "get-phone-checks-v0.1".to_rust_ident().0,
             "get_phone_checks_v0_1"
         );
     }
@@ -481,8 +514,8 @@ pub fn is_restricted(s: &str) -> bool {
     ["type", "use", "ref", "self", "match", "final"].contains(&s)
 }
 
-pub fn serde_rename(one: &str, two: &str) -> TokenStream {
-    if one != two {
+pub fn serde_rename(one: &str, two: &Ident) -> TokenStream {
+    if one != &two.0 {
         quote!(#[serde(rename = #one)])
     } else {
         TokenStream::new()

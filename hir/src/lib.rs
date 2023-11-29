@@ -4,11 +4,14 @@ use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
 use std::iter::{empty, Iterator, once};
 use std::string::{String, ToString};
+
 use anyhow::Result;
 use convert_case::{Case, Casing};
+pub use doc::*;
+mod doc;
+mod lang;
+pub use lang::*;
 
-use crate::{LibraryOptions, Language};
-pub use mir::{Doc, Name};
 use openapiv3 as oa;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -39,13 +42,12 @@ pub enum Ty {
     Boolean,
     Array(Box<Ty>),
     // OpenAPI name for the model. Hasn't been converted to a language type (e.g. cased, sanitized)
-    Model(Name),
+    Model(String),
     Unit,
     Date { serialization: DateSerialization },
     DateTime,
     Currency { serialization: DecimalSerialization },
     Any,
-    // TODO add a union type and an enum type
 }
 
 impl Default for Ty {
@@ -61,7 +63,7 @@ impl Ty {
         }
     }
 
-    pub fn inner_model(&self) -> Option<&Name> {
+    pub fn inner_model(&self) -> Option<&String> {
         match self {
             Ty::Model(name) => Some(name),
             Ty::Array(ty) => ty.inner_model(),
@@ -97,14 +99,14 @@ impl Ty {
     }
 
     pub fn model(s: &str) -> Self {
-        Ty::Model(Name::new(s))
+        Ty::Model(s.to_string())
     }
 }
 
 /// Parameter is an input to an OpenAPI operation.
 #[derive(Debug, Clone)]
 pub struct Parameter {
-    pub name: Name,
+    pub name: String,
     pub ty: Ty,
     pub location: Location,
     pub optional: bool,
@@ -115,15 +117,15 @@ pub struct Parameter {
 impl Parameter {
     pub fn to_key(&self) -> ParamKey {
         if self.ty.is_iterable() && self.location == Location::Query {
-            ParamKey::RepeatedKey(self.name.0.clone())
+            ParamKey::RepeatedKey(self.name.clone())
         } else {
-            ParamKey::Key(self.name.0.clone())
+            ParamKey::Key(self.name.clone())
         }
     }
 
     pub fn path(name: &str, ty: Ty) -> Self {
         Self {
-            name: Name(name.to_string()),
+            name: name.to_string(),
             ty,
             location: Location::Path,
             optional: false,
@@ -203,13 +205,9 @@ pub struct AuthorizationStrategy {
     pub fields: Vec<AuthorizationParameter>,
 }
 
-pub enum DocFormat {
-    Markdown,
-    Rst,
-}
 
 #[derive(Debug, Default, Clone)]
-pub struct MirField {
+pub struct HirField {
     pub ty: Ty,
     pub optional: bool,
     pub doc: Option<Doc>,
@@ -219,41 +217,41 @@ pub struct MirField {
 
 #[derive(Debug, Clone)]
 pub struct Struct {
-    pub name: Name,
+    pub name: String,
     pub nullable: bool,
-    pub fields: BTreeMap<Name, MirField>,
+    pub fields: BTreeMap<String, HirField>,
 }
 
 #[derive(Debug, Clone)]
 pub struct NewType {
-    pub name: Name,
-    pub fields: Vec<MirField>,
+    pub name: String,
+    pub fields: Vec<HirField>,
 }
 
 #[derive(Debug, Clone)]
 pub struct TypeAlias {
-    pub name: Name,
+    pub name: String,
     pub ty: Ty,
     pub optional: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct StrEnum {
-    pub name: Name,
+    pub name: String,
     pub variants: Vec<String>,
 }
 
-// an object type in the HIR
+/// an object type in the HIR
 #[derive(Debug, Clone)]
 pub enum Record {
     Struct(Struct),
     NewType(NewType),
-    TypeAlias(Name, MirField),
+    TypeAlias(String, HirField),
     Enum(StrEnum),
 }
 
 impl Record {
-    pub fn name(&self) -> &Name {
+    pub fn name(&self) -> &str {
         match self {
             Record::Struct(s) => &s.name,
             Record::Enum(e) => &e.name,
@@ -271,7 +269,7 @@ impl Record {
         }
     }
 
-    pub fn fields(&self) -> Box<dyn Iterator<Item=&MirField> + '_> {
+    pub fn fields(&self) -> Box<dyn Iterator<Item=&HirField> + '_> {
         match self {
             Record::Struct(s) => Box::new(s.fields.values()),
             Record::Enum(_) => Box::new(empty()),
@@ -280,7 +278,7 @@ impl Record {
         }
     }
 
-    pub fn fields_mut(&mut self) -> Box<dyn Iterator<Item=&mut MirField> + '_> {
+    pub fn fields_mut(&mut self) -> Box<dyn Iterator<Item=&mut HirField> + '_> {
         match self {
             Record::Struct(s) => Box::new(s.fields.iter_mut().map(|(_, f)| f)),
             Record::Enum(_) => Box::new(empty()),
@@ -307,7 +305,7 @@ impl Record {
 }
 
 #[derive(Debug, Clone)]
-pub struct MirSpec {
+pub struct HirSpec {
     pub operations: Vec<Operation>,
     pub schemas: BTreeMap<String, Record>,
 
@@ -326,14 +324,23 @@ pub enum ServerStrategy {
     /// There's multiple choices
     Env,
 }
+impl ServerStrategy {
+    pub fn env_var_for_strategy(&self, service_name: &str) -> Option<String> {
+        match self {
+            ServerStrategy::BaseUrl => Some(format!("{}_BASE_URL", service_name.to_case(Case::ScreamingSnake))),
+            ServerStrategy::Single(_) => None,
+            ServerStrategy::Env => Some(format!("{}_ENV", service_name.to_case(Case::ScreamingSnake))),
+        }
+    }
+}
 
-impl MirSpec {
-    pub fn get_record(&self, name: &Name) -> Result<&Record> {
-        self.schemas.get(&name.0).ok_or_else(|| anyhow::anyhow!("No record named {}", name.0))
+impl HirSpec {
+    pub fn get_record(&self, name: &str) -> Result<&Record> {
+        self.schemas.get(name).ok_or_else(|| anyhow::anyhow!("No record named {}", name))
     }
 
     pub fn get_operation(&self, name: &str) -> Result<&Operation> {
-        self.operations.iter().find(|o| o.name.0 == name).ok_or_else(|| anyhow::anyhow!("No operation named {}", name))
+        self.operations.iter().find(|o| o.name == name).ok_or_else(|| anyhow::anyhow!("No operation named {}", name))
     }
 
     pub fn server_strategy(&self) -> ServerStrategy {
@@ -351,20 +358,14 @@ impl MirSpec {
         self.security.len() > 1
     }
 
-    pub fn env_vars(&self, opt: &LibraryOptions) -> Vec<String> {
+    pub fn env_vars(&self, service_name: &str) -> Vec<String> {
         let mut env_vars = vec![];
-        match self.server_strategy() {
-            ServerStrategy::Single(_) => {}
-            ServerStrategy::BaseUrl => {
-                env_vars.push(opt.env_var("base_url").0);
-            }
-            ServerStrategy::Env => {
-                env_vars.push(opt.env_var("env").0);
-            }
+        if let Some(env) = self.server_strategy().env_var_for_strategy(service_name) {
+            env_vars.push(env);
         }
         for strategy in &self.security {
             for param in &strategy.fields {
-                env_vars.push(param.env_var_for_service(&opt.service_name));
+                env_vars.push(param.env_var_for_service(service_name));
             }
         }
         env_vars
@@ -377,7 +378,7 @@ impl MirSpec {
 
 #[derive(Debug, Clone)]
 pub struct Operation {
-    pub name: Name,
+    pub name: String,
     pub doc: Option<Doc>,
     pub parameters: Vec<Parameter>,
     pub ret: Ty,
@@ -388,19 +389,19 @@ pub struct Operation {
 impl Operation {
     // Mostly for Go
     pub fn flat_package_name(&self) -> String {
-        self.name.0.to_case(Case::Flat)
+        self.name.to_case(Case::Flat)
     }
 
     pub fn file_name(&self) -> String {
-        self.name.0.to_case(Case::Snake)
+        self.name.to_case(Case::Snake)
     }
 
-    pub fn request_struct_name(&self) -> Name {
-        Name(format!("{}Request", self.name.0))
+    pub fn request_struct_name(&self) -> String {
+        format!("{}Request", self.name)
     }
 
-    pub fn required_struct_name(&self) -> Name {
-        Name(format!("{}Required", self.name.0))
+    pub fn required_struct_name(&self) -> String {
+        format!("{}Required", self.name)
     }
 
     pub fn crowded_args(&self) -> bool {
@@ -443,8 +444,8 @@ impl Operation {
         match generator {
             Language::Golang if self.crowded_args() => {
                 vec![Parameter {
-                    name: Name::new("args"),
-                    ty: Ty::Model(Name::new("Required")),
+                    name: "args".to_string(),
+                    ty: Ty::model("Required"),
                     location: Location::Body,
                     optional: false,
                     doc: None,
@@ -453,7 +454,7 @@ impl Operation {
             }
             _ if self.use_required_struct(generator) => {
                 vec![Parameter {
-                    name: Name::new("args"),
+                    name: "args".to_string(),
                     ty: Ty::Model(self.required_struct_name()),
                     location: Location::Body,
                     optional: false,
@@ -498,7 +499,7 @@ impl Operation {
 impl Default for Operation {
     fn default() -> Self {
         Self {
-            name: Name::new(""),
+            name: "".to_string(),
             doc: None,
             parameters: Vec::new(),
             ret: Ty::Unit,
@@ -508,7 +509,7 @@ impl Default for Operation {
     }
 }
 
-impl From<&Parameter> for MirField {
+impl From<&Parameter> for HirField {
     fn from(p: &Parameter) -> Self {
         Self {
             ty: p.ty.clone(),
@@ -519,3 +520,4 @@ impl From<&Parameter> for MirField {
         }
     }
 }
+

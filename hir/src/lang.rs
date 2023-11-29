@@ -1,8 +1,7 @@
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
 use clap::ValueEnum;
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Debug, ValueEnum)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug, ValueEnum)]
 pub enum Language {
     Rust,
     Python,

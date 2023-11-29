@@ -1,35 +1,28 @@
-use std::collections::{BTreeSet, HashSet};
-use clap::builder::Str;
-use convert_case::{Case, Casing};
-use openapiv3::{OpenAPI, ReferenceOr, Schema};
-use openapiv3::{SchemaKind, StringType, Type};
-use proc_macro2::{Span, TokenStream};
+use std::collections::BTreeSet;
+
+use convert_case::Casing;
+use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use tracing_ez::{info, span};
 
-use ::mir::{Field, File, Ident, Import, import, Name, Visibility};
-use ::mir as model;
-
-use ln_core::{extractor, mir2, MirSpec};
-use ln_core::mir2::{DateSerialization, IntegerSerialization, MirField, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
-use ln_core::mir2::AuthLocation::Token;
-use ln_core::extractor::schema_ref_to_ty;
+use hir::{DateSerialization, DecimalSerialization, HirField, HirSpec, IntegerSerialization, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
 use ln_core::LibraryConfig;
+use mir::{Field, File, Ident, Import, import, Visibility};
+
 use crate::rust::codegen;
-use crate::rust::codegen::{ToRustCode};
+use crate::rust::codegen::{sanitize_filename, ToRustCode};
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
 
 pub trait FieldExt {
-    fn decorators(&self, name: &Name, config: &LibraryConfig) -> Vec<TokenStream>;
+    fn decorators(&self, name: &str, config: &LibraryConfig) -> Vec<TokenStream>;
 }
 
-impl FieldExt for MirField {
-    fn decorators(&self, name: &Name, config: &LibraryConfig) -> Vec<TokenStream> {
+impl FieldExt for HirField {
+    fn decorators(&self, name: &str, config: &LibraryConfig) -> Vec<TokenStream> {
         let mut decorators = Vec::new();
         let rust_ident = name.to_rust_ident();
-        if rust_ident.0 != name.0 {
-            let name = &name.0;
+        if rust_ident.0 != name {
+            let name = &name;
             if self.flatten {
                 decorators.push(quote! {
                     #[serde(flatten)]
@@ -81,7 +74,7 @@ impl FieldExt for MirField {
                     }
                 }
             }
-            Ty::Currency { serialization: mir2::DecimalSerialization::String } => {
+            Ty::Currency { serialization: DecimalSerialization::String } => {
                 if self.optional {
                     decorators.push(quote! {
                         #[serde(with = "rust_decimal::serde::str_option")]
@@ -101,9 +94,10 @@ impl FieldExt for MirField {
 pub trait StructExt {
     fn implements_default(&self) -> bool;
     fn derive_default(&self) -> TokenStream;
-    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=model::Field<TokenStream>> + 'a>;
+    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=Field<TokenStream>> + 'a>;
     fn ref_target(&self) -> Option<RefTarget>;
 }
+
 impl StructExt for Struct {
 
     fn implements_default(&self) -> bool {
@@ -118,7 +112,7 @@ impl StructExt for Struct {
         }
     }
 
-    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=model::Field<TokenStream>> + 'a> {
+    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=Field<TokenStream>> + 'a> {
         Box::new(self.fields.iter().map(|(name, field)| {
             let decorators = field.decorators(name, config);
             let ty = field.ty.to_rust_type();
@@ -132,13 +126,13 @@ impl StructExt for Struct {
                 }
                 _ => {}
             }
-            model::Field {
+            Field {
                 name: name.clone(),
                 ty,
                 visibility: Visibility::Public,
                 decorators,
                 optional,
-                ..model::Field::default()
+                ..Field::default()
             }
         }))
     }
@@ -172,12 +166,13 @@ impl RecordExt for Record {
 }
 
 /// Generate a model.rs file that just imports from dependents.
-pub fn generate_model_rs(spec: &MirSpec, config: &LibraryConfig) -> File<TokenStream> {
-    let imports = spec.schemas.keys().map(|name| {
-        Import::new(&name.to_filename(), vec!["*"]).public()
+pub fn generate_model_rs(spec: &HirSpec, config: &LibraryConfig) -> File<TokenStream> {
+    let imports = spec.schemas.keys().map(|name: &String| {
+        let fname = sanitize_filename(&name);
+        Import::new(&fname, vec!["*"]).public()
     }).collect();
     let code = spec.schemas.keys().map(|name| {
-        let name = Ident::new(&name.to_filename());
+        let name = Ident(sanitize_filename(name));
         quote! {
             mod #name;
         }
@@ -190,7 +185,7 @@ pub fn generate_model_rs(spec: &MirSpec, config: &LibraryConfig) -> File<TokenSt
 }
 
 /// Generate the file for a single struct.
-pub fn generate_single_model_file(name: &str, record: &Record, spec: &MirSpec, config: &LibraryConfig) -> File<TokenStream> {
+pub fn generate_single_model_file(name: &str, record: &Record, spec: &HirSpec, config: &LibraryConfig) -> File<TokenStream> {
     let mut imports = vec![
         import!("serde", Serialize, Deserialize),
     ];
@@ -208,8 +203,8 @@ pub fn generate_single_model_file(name: &str, record: &Record, spec: &MirSpec, c
 }
 
 pub struct RefTarget {
-    name: Name,
-    ty: mir2::Ty,
+    name: String,
+    ty: Ty,
 }
 
 pub fn create_sumtype_struct(schema: &Struct, config: &LibraryConfig) -> TokenStream {
@@ -256,10 +251,10 @@ fn create_enum_struct(e: &StrEnum) -> TokenStream {
         let original_name = s.to_string();
         let mut s = original_name.clone();
         if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
-            s = format!("{}{}", e.name.0, s);
+            s = format!("{}{}", e.name, s);
         }
-        let name = Name::new(&s).to_rust_struct();
-        let serde_attr = codegen::serde_rename(&original_name, &name.to_string());
+        let name = s.to_rust_struct();
+        let serde_attr = codegen::serde_rename(&original_name, &name);
         quote! {
             #serde_attr
             #name
@@ -286,7 +281,7 @@ pub fn create_newtype_struct(schema: &NewType) -> TokenStream {
     }
 }
 
-pub fn create_typealias(name: &Name, schema: &MirField) -> TokenStream {
+pub fn create_typealias(name: &str, schema: &HirField) -> TokenStream {
     let name = name.to_rust_struct();
     let mut ty = schema.ty.to_rust_type();
     if schema.optional {
@@ -308,18 +303,20 @@ pub fn create_struct(record: &Record, config: &LibraryConfig) -> TokenStream {
 
 #[cfg(test)]
 mod tests {
-    use ln_core::mir2::{MirField, Name, Ty};
+    use hir::{HirField, Ty};
+
     use crate::rust::format::format_code;
+
     use super::*;
 
     #[test]
     fn test_struct_newtype() {
-        let name = Name::new("NewType");
+        let name = "NewType".to_string();
         let schema = NewType {
             name,
-            fields: vec![MirField {
+            fields: vec![HirField {
                 ty: Ty::String,
-                ..MirField::default()
+                ..HirField::default()
             }],
         };
         let code = create_newtype_struct(&schema);

@@ -1,11 +1,12 @@
-use ocg::extractor::{extract_api_operations, extract_inputs, extract_spec};
-use ocg::options::{LibraryConfig, LibraryOptions};
-use ocg::{generate_library, OutputOptions, rust};
-use ocg::lang::Language;
+use std::fs::File;
+
+use anyhow::Result;
+use hir::Language;
+use libninja::{generate_library, rust};
+use ln_core::extractor::{extract_api_operations, extract_inputs, extract_spec};
+use ln_core::{LibraryConfig, LibraryOptions, OutputOptions};
 use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
-use anyhow::Result;
-use std::fs::File;
 
 const BASIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/basic.yaml");
 const RECURLY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/recurly.yaml");
@@ -18,7 +19,7 @@ pub fn test_required_args() {
     let spec: OpenAPI = serde_yaml::from_reader(yaml).unwrap();
     let (operation, path) = spec.get_operation("linkTokenCreate").unwrap();
     let inputs = extract_inputs(&operation, path, &spec).unwrap();
-    assert_eq!(inputs[8].name.0, "user_token");
+    assert_eq!(inputs[8].name, "user_token");
     assert_eq!(inputs[8].optional, true);
 }
 
@@ -32,17 +33,18 @@ fn test_generate_example() -> Result<()> {
         package_name: "plaid".to_string(),
         service_name: "Plaid".to_string(),
         package_version: "0.1.0".to_string(),
-        generator: Language::Rust,
+        language: Language::Rust,
+        build_examples: false,
         config: Default::default(),
     };
     let operations = extract_api_operations(&spec).unwrap();
     let operation = operations
         .iter()
-        .find(|o| o.name.0 == "linkTokenCreate")
+        .find(|o| o.name == "linkTokenCreate")
         .unwrap();
 
-    let spec = extract_spec(&spec, &opt).unwrap();
-    let example = rust::example::generate_example(&operation, &opt, &spec)?;
+    let spec = extract_spec(&spec).unwrap();
+    let example = rust::generate_example(&operation, &opt, &spec)?;
     assert_eq!(example, EXAMPLE);
     Ok(())
 }

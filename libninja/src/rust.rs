@@ -14,10 +14,11 @@ use format::format_code;
 use ln_core::{copy_files, copy_templates, create_context, get_template_file, prepare_templates};
 use ::mir::{Visibility, Import, File};
 use ln_core::fs;
+use hir::{HirSpec, IntegerSerialization, DateSerialization};
 
-use crate::{add_operation_models, extract_spec, LibraryOptions, MirSpec, OutputOptions, util};
+use crate::{add_operation_models, extract_spec, LibraryOptions, OutputOptions, util};
 pub use crate::rust::codegen::generate_example;
-use crate::rust::codegen::ToRustCode;
+use crate::rust::codegen::{sanitize_filename, ToRustCode};
 use crate::rust::io::write_rust_file_to_path;
 use crate::rust::lower_mir::{generate_model_rs, generate_single_model_file};
 use crate::rust::request::{build_request_struct, generate_request_model_rs};
@@ -44,8 +45,8 @@ impl Extras {
     }
 }
 
-pub fn calculate_extras(spec: &MirSpec) -> Extras {
-    use ln_core::mir2::Ty;
+pub fn calculate_extras(spec: &HirSpec) -> Extras {
+    use hir::Ty;
     let mut null_as_zero = false;
     let mut date_serialization = false;
     let mut currency = false;
@@ -54,13 +55,13 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     for (_, record) in &spec.schemas {
         for field in record.fields() {
             match &field.ty {
-                Ty::Integer { serialization: ln_core::mir2::IntegerSerialization::NullAsZero } => {
+                Ty::Integer { serialization: IntegerSerialization::NullAsZero } => {
                     null_as_zero = true;
                 }
-                Ty::Integer { serialization: ln_core::mir2::IntegerSerialization::String } => {
+                Ty::Integer { serialization: IntegerSerialization::String } => {
                     option_i64_str = true;
                 }
-                Ty::Date { serialization: ln_core::mir2::DateSerialization::Integer } => {
+                Ty::Date { serialization: DateSerialization::Integer } => {
                     integer_date_serialization = true;
                     date_serialization = true;
                 }
@@ -124,7 +125,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     Ok(())
 }
 
-fn write_model_module(mir_spec: &MirSpec, opts: &OutputOptions) -> Result<()> {
+fn write_model_module(mir_spec: &HirSpec, opts: &OutputOptions) -> Result<()> {
     let config = &opts.library_options.config;
     let src_path = opts.dest_path.join("src");
 
@@ -133,14 +134,14 @@ fn write_model_module(mir_spec: &MirSpec, opts: &OutputOptions) -> Result<()> {
     fs::create_dir_all(src_path.join("model"))?;
     for (name, record) in &mir_spec.schemas {
         let file = generate_single_model_file(name, record, mir_spec, config);
-        let name = name.to_filename();
+        let name = sanitize_filename(name);
         write_rust_file_to_path(&src_path.join("model").join(name).with_extension("rs"), file)?;
     }
     Ok(())
 }
 
 /// Generates the client code for a given OpenAPI specification.
-fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &OutputOptions) -> Result<()> {
+fn write_lib_rs(mir_spec: &HirSpec, extras: &Extras, spec: &OpenAPI, opts: &OutputOptions) -> Result<()> {
     let src_path = opts.dest_path.join("src");
     let name = &opts.library_options.service_name;
     let mut struct_Client = client::struct_Client(mir_spec, &opts.library_options);
@@ -162,7 +163,7 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     let lib_rs_template = if template_path.exists() {
         fs::read_to_string(template_path)?
     } else {
-        let s = get_template_file("rust/src/mir");
+        let s = get_template_file("rust/src/lib.rs");
         formatdoc!(
             r#"
             //! [`{client}`](struct.{client}.html) is the main entry point for this library.
@@ -197,7 +198,7 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
 }
 
 
-fn write_request_module(spec: &MirSpec, opts: &OutputOptions) -> Result<()> {
+fn write_request_module(spec: &HirSpec, opts: &OutputOptions) -> Result<()> {
     let src_path = opts.dest_path.join("src");
     let client_name = opts.library_options.client_name().to_rust_struct();
     let mut imports = vec![];
@@ -293,7 +294,7 @@ fn bump_deps(current_manifest: &mut cargo_toml::Manifest, from_other: &cargo_tom
     Ok(())
 }
 
-fn write_examples(spec: &MirSpec, opts: &OutputOptions) -> Result<String> {
+fn write_examples(spec: &HirSpec, opts: &OutputOptions) -> Result<String> {
     let example_path = opts.dest_path.join("examples");
 
     let _ = fs::remove_dir_all(&example_path);

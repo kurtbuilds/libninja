@@ -11,6 +11,10 @@ use function::{Arg, Tags};
 use crate::function::{parse_intro, parse_args, parse_return} ;
 
 
+/// Define a function where the body is a string. The fn interface definition is reminiscent of Python,
+/// but because it creates a mir::Function, it will compile down into whatever language we target.
+/// The body has to be valid code for the target language though. We don't have a MIR for the AST -
+/// nor would making one make sense (languages don't have mutually compatible ASTs)
 #[proc_macro]
 pub fn function(item: TokenStream) -> TokenStream {
     let mut toks = item.into_iter().peekable();
@@ -57,6 +61,7 @@ pub fn function(item: TokenStream) -> TokenStream {
 }
 
 
+/// like function, but for Rust
 #[proc_macro]
 pub fn rfunction(item: TokenStream) -> TokenStream {
     let mut toks = item.into_iter().peekable();

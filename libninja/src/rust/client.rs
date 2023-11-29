@@ -1,23 +1,18 @@
-use ln_core::mir2::{AuthLocation, AuthorizationStrategy, DocFormat, Location, Parameter, ServerStrategy};
-use ln_core::extractor::{extract_response_success, extract_security_strategies, spec_defines_auth};
-use crate::rust::codegen::{ToRustCode};
-use ln_core::{extractor, Language, LibraryOptions, MirSpec, mir2};
 use convert_case::{Case, Casing};
-use mir::{Doc, field, Function, Ident, Name};
-use mir::{Class, Field, FnArg, Visibility};
-use openapiv3::{
-    APIKeyLocation, OpenAPI, Operation, ReferenceOr, RequestBody, Schema, SchemaKind,
-    SecurityRequirement, SecurityScheme, StatusCode,
-};
+use openapiv3::OpenAPI;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, ToTokens};
-use regex::Captures;
-use ln_macro::rfunction;
+use quote::{quote, ToTokens};
+
+use hir::{AuthLocation, AuthorizationStrategy, DocFormat, Location, Parameter, ServerStrategy, Doc, HirSpec, Language, Operation};
+use mir::{field, Function, Ident};
+use mir::{Class, Field, FnArg, Visibility};
+use ln_core::LibraryOptions;
+
+use crate::rust::codegen::ToRustCode;
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
 
-
-fn build_Client_from_env(spec: &MirSpec, opt: &LibraryOptions) -> Function<TokenStream> {
+fn build_Client_from_env(spec: &HirSpec, opt: &LibraryOptions) -> Function<TokenStream> {
     let declare_url = match spec.server_strategy() {
         ServerStrategy::Single(url) => quote! {
             .base_url(#url)
@@ -64,7 +59,7 @@ fn build_Client_from_env(spec: &MirSpec, opt: &LibraryOptions) -> Function<Token
     }
 }
 
-pub fn struct_Client(mir_spec: &MirSpec, opt: &LibraryOptions) -> Class<TokenStream> {
+pub fn struct_Client(mir_spec: &HirSpec, opt: &LibraryOptions) -> Class<TokenStream> {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
 
     let mut instance_fields = vec![
@@ -84,7 +79,7 @@ pub fn struct_Client(mir_spec: &MirSpec, opt: &LibraryOptions) -> Class<TokenStr
     }
 }
 
-pub fn build_api_client_method(operation: &mir2::Operation) -> TokenStream {
+pub fn build_api_client_method(operation: &Operation) -> TokenStream {
     let use_struct = operation.use_required_struct(Language::Rust);
 
     let fn_args = if use_struct {
@@ -143,7 +138,7 @@ pub fn build_api_client_method(operation: &mir2::Operation) -> TokenStream {
     }
 }
 
-pub fn impl_ServiceClient_paths(spec: &MirSpec) -> Vec<TokenStream> {
+pub fn impl_ServiceClient_paths(spec: &HirSpec) -> Vec<TokenStream> {
     let mut result = vec![];
     for operation in &spec.operations {
         result.push(build_api_client_method(operation));
@@ -157,7 +152,7 @@ pub fn authenticate_variant(
 ) -> TokenStream {
     let auth_struct = opt.authenticator_name().to_rust_struct();
 
-    let variant_name = Name::new(&req.name).to_rust_struct();
+    let variant_name = req.name.to_rust_struct();
     let fields = req
         .fields
         .iter()
@@ -196,7 +191,7 @@ pub fn authenticate_variant(
     }
 }
 
-pub fn build_Client_authenticate(mir_spec: &MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
+pub fn build_Client_authenticate(mir_spec: &HirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
     let authenticate_variant = mir_spec.security
         .iter()
         .map(|req| authenticate_variant(req, opt))
@@ -238,7 +233,7 @@ fn build_new_fn(security: bool, opt: &LibraryOptions) -> TokenStream {
     }
 }
 
-pub fn impl_Client(mir_spec: &mir2::MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
+pub fn impl_Client(mir_spec: &HirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
     let client_struct_name = opt.client_name().to_rust_struct();
     let path_fns = impl_ServiceClient_paths(mir_spec);
 
@@ -277,7 +272,7 @@ pub fn impl_Client(mir_spec: &mir2::MirSpec, spec: &OpenAPI, opt: &LibraryOption
     }
 }
 
-pub fn struct_Authentication(mir_spec: &MirSpec, opt: &LibraryOptions) -> TokenStream {
+pub fn struct_Authentication(mir_spec: &HirSpec, opt: &LibraryOptions) -> TokenStream {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
 
     let variants = mir_spec.security.iter().map(|strategy| {
@@ -296,7 +291,7 @@ pub fn struct_Authentication(mir_spec: &MirSpec, opt: &LibraryOptions) -> TokenS
     }
 }
 
-fn build_Authentication_from_env(mir_spec: &MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
+fn build_Authentication_from_env(mir_spec: &HirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
     let first_variant = mir_spec.security.first()
         .unwrap();
     let fields = first_variant
@@ -325,7 +320,7 @@ fn build_Authentication_from_env(mir_spec: &MirSpec, spec: &OpenAPI, opt: &Libra
     }
 }
 
-pub fn impl_Authentication(mir_spec: &MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
+pub fn impl_Authentication(mir_spec: &HirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
     let from_env = build_Authentication_from_env(mir_spec, spec, opt);
 

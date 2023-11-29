@@ -2,7 +2,8 @@ use openapiv3::{OpenAPI, ReferenceOr, Schema};
 use pretty_assertions::assert_eq;
 
 /// Tests that the `allOf` keyword is handled correctly.
-use ln_core::{LibraryConfig, mir2};
+use ln_core::{LibraryConfig};
+use hir::Record;
 
 const TRANSACTION: &str = include_str!("transaction.yaml");
 const TRANSACTION_RS: &str = include_str!("transaction.rs");
@@ -11,14 +12,14 @@ const RESTRICTION_BACS: &str = include_str!("restriction_bacs.yaml");
 const RESTRICTION_BACS_RS: &str = include_str!("restriction_bacs.rs");
 
 
-fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> mir2::Record {
+fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
     let schema = serde_yaml::from_str::<Schema>(schema).unwrap();
     let mut record = ln_core::extractor::create_record(name, &schema, spec);
     record.clear_docs();
     record
 }
 
-fn formatted_code(record: mir2::Record) -> String {
+fn formatted_code(record: Record) -> String {
     let config = LibraryConfig::default();
     let code = libninja::rust::lower_mir::create_struct(&record, &config);
     libninja::rust::format::format_code(code).unwrap()

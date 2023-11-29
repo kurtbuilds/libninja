@@ -57,7 +57,7 @@ macro_rules! arg {
 macro_rules! field {
     (pub(crate) $name:ident : $ty:expr) => {
         ::mir::Field {
-            name: ::mir::Name::new(stringify!($name)),
+            name: stringify!($name).to_string(),
             ty: ($ty).into(),
             visibility: ::mir::Visibility::Crate,
             ..Field::default()
@@ -65,7 +65,7 @@ macro_rules! field {
     };
     (pub $name:ident : $ty:expr) => {
         ::mir::Field {
-            name: ::mir::Name::new(stringify!($name)),
+            name: stringify!($name).to_string(),
             ty: ($ty).into(),
             visibility: ::mir::Visibility::Public,
             ..Field::default()
@@ -73,7 +73,7 @@ macro_rules! field {
     };
     ($name:ident : $ty:expr) => {
         ::mir::Field {
-            name: ::mir::Name::new(stringify!($name)),
+            name: stringify!($name).to_string(),
             ty: ($ty).into(),
             ..Field::default()
         }

@@ -1,17 +1,19 @@
+use std::collections::{BTreeMap, HashMap};
+
+use anyhow::Result;
+use indexmap::IndexMap;
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 
-use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StatusCode, StringType, Type};
-use mir::{Doc, Name};
-use std::collections::{BTreeMap, HashMap};
+use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type};
 use tracing_ez::warn;
-use crate::{extractor, mir2};
-use crate::extractor::{schema_to_ty, schema_ref_to_ty_already_resolved};
-use crate::mir2::{MirField, Record, StrEnum, Struct};
-use indexmap::IndexMap;
-use anyhow::Result;
-use crate::child_schemas::ChildSchemas;
 
-fn properties_to_fields(properties: &IndexMap<String, ReferenceOr<Schema>>, schema: &Schema, spec: &OpenAPI) -> BTreeMap<Name, MirField> {
+use hir::{Doc, HirField, Record, StrEnum, Struct, NewType};
+
+use crate::extractor;
+use crate::child_schemas::ChildSchemas;
+use crate::extractor::{schema_ref_to_ty_already_resolved, schema_to_ty};
+
+fn properties_to_fields(properties: &IndexMap<String, ReferenceOr<Schema>>, schema: &Schema, spec: &OpenAPI) -> BTreeMap<String, HirField> {
     properties
         .iter()
         .map(|(name, field_schema_ref)| {
@@ -22,7 +24,7 @@ fn properties_to_fields(properties: &IndexMap<String, ReferenceOr<Schema>>, sche
                 field_schema,
             );
             let optional = extractor::is_optional(name, field_schema, schema);
-            (Name::new(name), MirField {
+            (name.clone(), HirField {
                 ty,
                 optional,
                 doc: extractor::extract_schema_docs(field_schema),
@@ -46,18 +48,19 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
 }
 
 pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
+    let name = name.to_string();
     match &schema.schema_kind {
         // The base case, a regular object
         SchemaKind::Type(Type::Object(ObjectType { properties, .. })) => {
             let fields = properties_to_fields(properties, schema, spec);
-            Record::Struct(Struct { name: Name::new(name), fields, nullable: schema.schema_data.nullable })
+            Record::Struct(Struct { name, fields, nullable: schema.schema_data.nullable })
         }
         // An enum
         SchemaKind::Type(Type::String(StringType { enumeration, .. }))
         if !enumeration.is_empty() =>
             {
                 Record::Enum(StrEnum {
-                    name: Name::new(name),
+                    name,
                     variants: enumeration
                         .iter()
                         .map(|s| s.to_string())
@@ -67,19 +70,19 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
         // A newtype with multiple fields
         SchemaKind::AllOf { all_of } => {
             if effective_length(all_of) == 1 {
-                Record::TypeAlias(Name::new(name), MirField {
+                Record::TypeAlias(name, HirField {
                     ty: schema_ref_to_ty_already_resolved(&all_of[0], spec, schema),
                     optional: schema.schema_data.nullable,
-                    ..MirField::default()
+                    ..HirField::default()
                 })
             } else {
-                create_record_from_all_of(name, all_of, &schema.schema_data, spec)
+                create_record_from_all_of(&name, all_of, &schema.schema_data, spec)
             }
         }
         // Default case, a newtype with a single field
-        _ => Record::NewType(mir2::NewType {
-            name: Name::new(name),
-            fields: vec![MirField {
+        _ => Record::NewType(NewType {
+            name,
+            fields: vec![HirField {
                 ty: schema_to_ty(schema, spec),
                 optional: schema.schema_data.nullable,
                 doc: None,
@@ -91,7 +94,7 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
 }
 
 
-fn create_field(field_schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> MirField {
+fn create_field(field_schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> HirField {
     let field_schema = field_schema_ref.resolve(spec);
     let ty = schema_ref_to_ty_already_resolved(
         field_schema_ref,
@@ -101,7 +104,7 @@ fn create_field(field_schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> MirFi
     let optional = field_schema.schema_data.nullable;
     let example = field_schema.schema_data.example.clone();
     let doc = field_schema.schema_data.description.clone().map(Doc);
-    MirField { ty, optional, doc, example, flatten: false }
+    HirField { ty, optional, doc, example, flatten: false }
 }
 
 fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_data: &SchemaData, spec: &OpenAPI) -> Record {
@@ -113,7 +116,7 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
                 let name = extractor::get_name(schema_ref);
                 let mut field = create_field(schema, spec);
                 field.flatten = true;
-                fields.insert(Name(name), field);
+                fields.insert(name, field);
             }
             ReferenceOr::Item(item) => {
                 match item.properties() {
@@ -123,7 +126,7 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
                             if !item.required(name) {
                                 field.optional = true;
                             }
-                            fields.insert(Name::new(name), field);
+                            fields.insert(name.to_string(), field);
                         }
                     }
                     None => {
@@ -135,7 +138,7 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
     }
     Record::Struct(Struct {
         nullable: schema_data.nullable,
-        name: Name::new(name),
+        name: name.to_string(),
         fields,
     })
 }
@@ -147,7 +150,7 @@ pub fn extract_records(spec: &OpenAPI) -> Result<BTreeMap<String, Record>> {
     spec.add_child_schemas(&mut schema_lookup);
     for (name, schema) in schema_lookup {
         let rec = create_record(&name, schema, spec);
-        let name = rec.name().0.clone();
+        let name = rec.name().to_string();
         result.insert(name, rec);
     }
     Ok(result)
@@ -155,7 +158,8 @@ pub fn extract_records(spec: &OpenAPI) -> Result<BTreeMap<String, Record>> {
 
 #[cfg(test)]
 mod tests {
-    use openapiv3::{OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind};
+    use openapiv3::{OpenAPI, Schema, SchemaData, SchemaKind};
+
     use crate::extractor::record::create_record_from_all_of;
 
     #[test]

@@ -5,6 +5,7 @@ members = [
     "macro",
     "core",
     "mir",
+    "hir"
 ]
 exclude = [
     "commercial",

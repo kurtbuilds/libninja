@@ -9,18 +9,14 @@ use core::option::Option::None;
 use quote::TokenStreamExt;
 
 pub use function::{ArgIdent, FnArg, FnArgTreatment, Function, build_struct, build_dict};
+use hir::Doc;
 
 mod function;
 mod r#macro;
 
-/// Non-localized
-#[derive(Debug, Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Default)]
-pub struct Name(pub String);
-
 /// Localized string
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct Ident(pub String);
-
 
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -41,27 +37,10 @@ impl Default for Visibility {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Doc(pub String);
-
-impl Doc {
-    pub fn new(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
-
-pub fn doc<S: Into<String>>(s: S) -> Option<Doc> {
-    let s = s.into();
-    if s.is_empty() {
-        None
-    } else {
-        Some(Doc(s))
-    }
-}
 
 #[derive(Debug, Default)]
 pub struct Field<T> {
-    pub name: Name,
+    pub name: String,
     pub ty: T,
     pub default: Option<T>,
     pub visibility: Visibility,
@@ -327,24 +306,5 @@ impl From<Ident> for proc_macro2::TokenStream {
         let mut tok = proc_macro2::TokenStream::new();
         tok.append(proc_macro2::Ident::new(&val.0, proc_macro2::Span::call_site()));
         tok
-    }
-}
-
-impl Name {
-    pub fn new(name: &str) -> Self {
-        Self(name.to_string())
-    }
-}
-
-
-impl From<String> for Name {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&String> for Name {
-    fn from(s: &String) -> Self {
-        Self(s.clone())
     }
 }

@@ -11,7 +11,7 @@ use ln_core::fs;
 use ln_core::OutputOptions;
 pub use mir::build_struct;
 
-use crate::{MirSpec, };
+use crate::{HirSpec, };
 
 pub fn code_sample(path: &Path) -> Option<String> {
     match path.read_dir() {

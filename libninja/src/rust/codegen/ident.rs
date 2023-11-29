@@ -1,50 +1,11 @@
-use convert_case::{Case, Casing};
-use mir::{Ident, Name};
+use mir::Ident;
+
 use crate::rust::codegen;
-
-pub trait ToRustIdent {
-    fn to_rust_struct(&self) -> Ident;
-    fn to_filename(&self) -> String;
-    fn to_rust_ident(&self) -> Ident;
-}
-
-impl ToRustIdent for Name {
-    fn to_rust_struct(&self) -> Ident {
-        Ident(codegen::sanitize_struct(&self.0))
-    }
-
-    fn to_filename(&self) -> String {
-        sanitize_filename(&self.0)
-    }
-
-    fn to_rust_ident(&self) -> Ident {
-        Ident(codegen::sanitize(&self.0))
-    }
-}
-
-
-impl ToRustIdent for String {
-    fn to_rust_struct(&self) -> Ident {
-        Ident(codegen::sanitize_struct(self.as_str()))
-    }
-
-    fn to_filename(&self) -> String {
-        sanitize_filename(self.as_str())
-    }
-
-    fn to_rust_ident(&self) -> Ident {
-        Ident(codegen::sanitize(self.as_str()))
-    }
-}
-
-fn sanitize_filename(s: &str) -> String {
-    codegen::sanitize(s)
-}
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rust::codegen::{ToRustIdent, sanitize_filename};
 
     #[test]
     fn test_filename() {

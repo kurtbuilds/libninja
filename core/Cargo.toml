@@ -20,6 +20,7 @@ syn = "2.0"
 libninja_mir = { path = "../mir" }
 include_dir = "0.7.3"
 tera = "1.19.0"
+libninja_hir = { path = "../hir" }
 
 [dev-dependencies]
 serde_yaml = "0.9.25"

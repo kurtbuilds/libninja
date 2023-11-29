@@ -1,6 +1,7 @@
 use openapiv3::OpenAPI;
 use anyhow::{anyhow, Result};
-use ln_core::{mir2, LibraryOptions, OutputOptions};
+use ln_core::{LibraryOptions, OutputOptions};
+use hir::{HirSpec, Operation};
 
 #[cfg(feature = "commercial")]
 pub mod python {
@@ -15,11 +16,11 @@ pub mod python {
         Err(anyhow!("Commercial features are not enabled"))
     }
 
-    pub fn generate_sync_example(operation: &mir2::Operation, opt: &LibraryOptions, spec: &mir2::MirSpec) -> Result<String> {
+    pub fn generate_sync_example(operation: &Operation, opt: &LibraryOptions, spec: &HirSpec) -> Result<String> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 
-    pub fn generate_async_example(operation: &mir2::Operation, opt: &LibraryOptions, spec: &mir2::MirSpec) -> Result<String> {
+    pub fn generate_async_example(operation: &Operation, opt: &LibraryOptions, spec: &HirSpec) -> Result<String> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 }
@@ -37,7 +38,7 @@ pub mod go {
         Err(anyhow!("Commercial features are not enabled"))
     }
 
-    pub fn generate_example(operation: &mir2::Operation, opt: &LibraryOptions, spec: &mir2::MirSpec) -> Result<String> {
+    pub fn generate_example(operation: &Operation, opt: &LibraryOptions, spec: &HirSpec) -> Result<String> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 }
@@ -55,7 +56,7 @@ pub mod typescript {
         Err(anyhow!("Commercial features are not enabled"))
     }
 
-    pub fn generate_example(operation: &mir2::Operation, opt: &LibraryOptions, spec: &mir2::MirSpec) -> Result<String> {
+    pub fn generate_example(operation: &Operation, opt: &LibraryOptions, spec: &HirSpec) -> Result<String> {
         Err(anyhow!("Commercial features are not enabled"))
     }
 }

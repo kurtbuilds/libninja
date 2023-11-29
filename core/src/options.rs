@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 use convert_case::{Case, Casing};
-use mir::{literal, Name, Literal};
-use crate::Language;
+use mir::{literal, Literal};
+use hir::Language;
+
 
 #[derive(Debug, Clone, Default)]
 pub struct LibraryConfig {
@@ -46,20 +47,20 @@ impl LibraryOptions {
         ))
     }
 
-    pub fn client_name(&self) -> Name {
-        Name(format!("{} Client", self.service_name))
+    pub fn client_name(&self) -> String {
+        format!("{} Client", self.service_name)
     }
 
-    pub fn async_client_name(&self) -> Name {
-        Name(format!("Async {} Client", self.service_name))
+    pub fn async_client_name(&self) -> String {
+        format!("Async {} Client", self.service_name)
     }
 
-    pub fn authenticator_name(&self) -> Name {
-        Name(format!("{} Authentication", self.service_name))
+    pub fn authenticator_name(&self) -> String {
+        format!("{} Authentication", self.service_name)
     }
 
-    pub fn bare_client_name(&self) -> Name {
-        Name::new("Client")
+    pub fn bare_client_name(&self) -> String {
+        "Client".to_string()
     }
 
     pub fn env_var(&self, name: &str) -> Literal<String> {
@@ -90,11 +91,11 @@ impl OutputOptions {
         )
     }
 
-    pub fn client_name(&self) -> Name {
+    pub fn client_name(&self) -> String {
         self.library_options.client_name()
     }
 
-    pub fn async_client_name(&self) -> Name {
+    pub fn async_client_name(&self) -> String {
         self.library_options.async_client_name()
     }
 }

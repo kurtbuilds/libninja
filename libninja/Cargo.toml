@@ -10,8 +10,7 @@ default-run = "libninja"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-integration = []
-actix = ["actix-web"]
+commercial = ["libninja_commercial"]
 
 [dependencies]
 anyhow = { version = "1.0.71", features = ["backtrace"] }
@@ -26,7 +25,7 @@ tokio = { version = "1.29.1", features = ["full"] }
 openapiv3-extended = { version = "3" }
 convert_case = "0.6.0"
 prettyplease = "0.2"
-clap = { version = "4.3.11", features = ["derive"] }
+clap = { version = "4.4.10", features = ["derive"] }
 tera = "1.19.0"
 include_dir = "0.7.3"
 regex = "1.9.0"
@@ -44,6 +43,8 @@ indexmap = "2.0"
 ln-macro = { path = "../macro" }
 ln-core = { path = "../core" }
 libninja_mir = { path = "../mir" }
+libninja_hir = { path = "../hir" }
+libninja_commercial = { path = "../commercial" , optional = true }
 
 [dev-dependencies]
 env_logger = "0.10.0"

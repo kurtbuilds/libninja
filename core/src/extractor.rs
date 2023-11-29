@@ -2,23 +2,21 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
-use openapiv3::{APIKeyLocation, OpenAPI, Operation, PathItem, ReferenceOr, Schema, SchemaReference, SecurityRequirement, SecurityScheme, StatusCode};
+use openapiv3::{OpenAPI, ReferenceOr, Schema};
 use openapiv3 as oa;
 use tracing_ez::{span, warn};
 
-use mir::{Doc, Name, NewType};
+use ::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, HirSpec, Language, Location, Operation, Record, Ty, Parameter, Doc};
 pub use record::*;
-pub use resolution::{schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
+pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 pub use resolution::*;
-
-use crate::{mir2, Language, LibraryOptions};
-use crate::mir2::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirSpec, Record, Ty};
+use mir::NewType;
 
 mod resolution;
 mod record;
 
 /// You might need to call add_operation_models after this
-pub fn extract_spec(spec: &OpenAPI) -> Result<MirSpec> {
+pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
     let operations = extract_api_operations(spec)?;
     let schemas = extract_records(spec)?;
     let servers = extract_servers(spec)?;
@@ -26,7 +24,7 @@ pub fn extract_spec(spec: &OpenAPI) -> Result<MirSpec> {
 
     let api_docs_url = extract_api_docs_link(spec);
 
-    let mut s = MirSpec {
+    let mut s = HirSpec {
         operations,
         schemas,
         servers,
@@ -57,7 +55,7 @@ pub fn extract_request_schema<'a>(
     Ok(content.schema.as_ref().unwrap().resolve(spec))
 }
 
-pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<mir2::Parameter> {
+pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<Parameter> {
     span!("extract_param", param = ?param);
     let param = param.resolve(spec)?;
     let data = param.parameter_data_ref();
@@ -66,9 +64,9 @@ pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Resu
         .ok_or_else(|| anyhow!("No schema for parameter: {:?}", param))?;
     let ty = schema_ref_to_ty(param_schema_ref, spec);
     let schema = param_schema_ref.resolve(spec);
-    Ok(mir2::Parameter {
+    Ok(Parameter {
         doc: None,
-        name: Name::new(&data.name),
+        name: data.name.to_string(),
         optional: !data.required,
         location: param.into(),
         ty,
@@ -78,9 +76,9 @@ pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Resu
 
 pub fn extract_inputs<'a>(
     operation: &'a oa::Operation,
-    item: &'a PathItem,
+    item: &'a oa::PathItem,
     spec: &'a OpenAPI,
-) -> Result<Vec<mir2::Parameter>> {
+) -> Result<Vec<Parameter>> {
     let mut inputs = operation
         .parameters
         .iter()
@@ -99,15 +97,15 @@ pub fn extract_inputs<'a>(
         Ok(schema) => schema,
     };
 
-    if let oa::SchemaKind::Type(oa::Type::Array(oa::ArrayType{ items, .. })) = &schema.schema_kind {
+    if let oa::SchemaKind::Type(oa::Type::Array(oa::ArrayType { items, .. })) = &schema.schema_kind {
         let ty = if let Some(items) = items {
             schema_ref_to_ty(&items.unbox(), spec)
         } else {
             Ty::Any
         };
         let ty = Ty::Array(Box::new(ty));
-        inputs.push(mir2::Parameter {
-            name: Name::new("body"),
+        inputs.push(Parameter {
+            name: "body".to_string(),
             ty,
             optional: false,
             doc: None,
@@ -119,8 +117,9 @@ pub fn extract_inputs<'a>(
             let ty = schema_ref_to_ty(param, spec);
             let param: &Schema = param.resolve(spec);
             let optional = is_optional(name, param, schema);
-            mir2::Parameter {
-                name: name.into(),
+            let name = name.to_string();
+            Parameter {
+                name,
                 ty,
                 optional,
                 doc: None,
@@ -134,8 +133,8 @@ pub fn extract_inputs<'a>(
             }
         }
     } else {
-        inputs.push(mir2::Parameter {
-            name: Name::new("body"),
+        inputs.push(Parameter {
+            name: "body".to_string(),
             ty: Ty::Any,
             optional: false,
             doc: None,
@@ -149,7 +148,9 @@ pub fn extract_inputs<'a>(
 pub fn extract_response_success<'a>(
     operation: &'a oa::Operation,
     spec: &'a OpenAPI,
-) -> Option<&'a ReferenceOr<Schema>> {
+) -> Option<&'a ReferenceOr<oa::Schema>> {
+    use openapiv3::StatusCode;
+
     let response = operation
         .responses
         .responses
@@ -169,7 +170,7 @@ pub fn extract_response_success<'a>(
         .and_then(|media| media.schema.as_ref())
 }
 
-pub fn extract_operation_doc(operation: &Operation, format: DocFormat) -> Option<Doc> {
+pub fn extract_operation_doc(operation: &oa::Operation, format: DocFormat) -> Option<Doc> {
     let mut doc_pieces = vec![];
     if let Some(summary) = operation.summary.as_ref() {
         if !summary.is_empty() {
@@ -199,7 +200,7 @@ pub fn extract_operation_doc(operation: &Operation, format: DocFormat) -> Option
     }
 }
 
-pub fn extract_schema_docs(schema: &Schema) -> Option<Doc> {
+pub fn extract_schema_docs(schema: &oa::Schema) -> Option<Doc> {
     schema
         .schema_data
         .description
@@ -230,7 +231,7 @@ pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {
     format!("{method}{name}{last_group}")
 }
 
-pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<mir2::Operation>> {
+pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<Operation>> {
     spec.operations()
         .map(|(path, method, operation, item)| {
             let name = match &operation.operation_id {
@@ -245,8 +246,8 @@ pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<mir2::Operation>> {
                 None => Ty::Unit,
                 Some(r) => schema_ref_to_ty(r, spec),
             };
-            Ok(mir2::Operation {
-                name: name.into(),
+            Ok(Operation {
+                name,
                 doc,
                 parameters,
                 ret,
@@ -287,39 +288,36 @@ fn extract_api_docs_link(spec: &OpenAPI) -> Option<String> {
     spec.external_docs.as_ref().map(|e| e.url.clone())
 }
 
-fn remove_unused(spec: &mut MirSpec) {
-    let mut used = HashSet::new();
+/// Remove from the HirSpec anything that appears to be unused
+fn remove_unused(spec: &mut HirSpec) {
+    let mut used: HashSet<String> = HashSet::new();
     for (_name, schema) in spec.schemas.iter() {
         for field in schema.fields() {
             if let Some(name) = &field.ty.inner_model() {
-                used.insert(name.0.clone());
+                used.insert(name.to_string());
             };
         }
     }
     for operation in spec.operations.iter() {
         if let Some(name) = &operation.ret.inner_model() {
-            used.insert(name.0.clone());
+            used.insert(name.to_string());
         };
         for param in operation.parameters.iter() {
             if let Some(name) = &param.ty.inner_model() {
-                used.insert(name.0.clone());
+                used.insert(name.to_string());
             };
         }
     }
     spec.schemas.retain(|name, _| used.contains(name) || name.ends_with("Webhook"));
 }
 
-fn sanitize_spec(spec: &mut MirSpec) {
+fn sanitize_spec(spec: &mut HirSpec) {
     // skip alias structs
-    let optional_short_circuit: HashMap<Name, Name> = spec.schemas.iter()
+    let optional_short_circuit: HashMap<String, String> = spec.schemas.iter()
         .filter(|(_, r)| r.optional())
         .filter_map(|(_, r)| {
-            let Record::TypeAlias(alias, field) = r else {
-                return None;
-            };
-            let Ty::Model(resolved) = &field.ty else {
-                return None;
-            };
+            let Record::TypeAlias(alias, field) = r else { return None; };
+            let Ty::Model(resolved) = &field.ty else { return None; };
             Some((alias.clone(), resolved.clone()))
         })
         .collect();
@@ -331,7 +329,7 @@ fn sanitize_spec(spec: &mut MirSpec) {
             let Some(rename_to) = optional_short_circuit.get(name) else {
                 continue;
             };
-            field.ty = mir2::Ty::Model(rename_to.clone());
+            field.ty = Ty::model(rename_to);
             field.optional = true;
         }
     }
@@ -342,15 +340,15 @@ fn sanitize_spec(spec: &mut MirSpec) {
     // that are only unused recursively. E.g. A -> B. A is removed on first pass, B
     // but B isn't. On second pass, B is removed.
     remove_unused(spec);
-
 }
 
 
-pub fn spec_defines_auth(spec: &MirSpec) -> bool {
+pub fn spec_defines_auth(spec: &HirSpec) -> bool {
     !spec.security.is_empty()
 }
 
-fn extract_security_fields(_name: &str, requirement: &SecurityRequirement, spec: &OpenAPI) -> Result<Vec<AuthorizationParameter>> {
+fn extract_security_fields(_name: &str, requirement: &oa::SecurityRequirement, spec: &OpenAPI) -> Result<Vec<AuthorizationParameter>> {
+    use openapiv3::{SecurityScheme, APIKeyLocation};
     let security_schemas = &spec.components.as_ref().unwrap().security_schemes;
     let mut fields = vec![];
     for (name, _scopes) in requirement {
@@ -431,7 +429,7 @@ pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthorizationStrategy>
     strats
 }
 
-pub fn extract_newtype(name: &str, schema: &Schema, spec: &OpenAPI) -> NewType<Ty> {
+pub fn extract_newtype(name: &str, schema: &oa::Schema, spec: &OpenAPI) -> NewType<Ty> {
     let ty = schema_to_ty(schema, spec);
 
     NewType {
@@ -442,21 +440,21 @@ pub fn extract_newtype(name: &str, schema: &Schema, spec: &OpenAPI) -> NewType<T
     }
 }
 
-fn get_name(schema_ref: SchemaReference) -> String {
+fn get_name(schema_ref: oa::SchemaReference) -> String {
     match schema_ref {
-        SchemaReference::Schema { schema } => schema,
-        SchemaReference::Property { property, .. } => property
+        oa::SchemaReference::Schema { schema } => schema,
+        oa::SchemaReference::Property { property, .. } => property
     }
 }
 
 
 /// Add the models for operations that have structs for their required params.
 /// E.g. linkTokenCreate has >3 required params, so it has a struct.
-pub fn add_operation_models(sourcegen: Language, mut spec: MirSpec) -> Result<MirSpec> {
+pub fn add_operation_models(sourcegen: Language, mut spec: HirSpec) -> Result<HirSpec> {
     let mut new_schemas = vec![];
     for op in &spec.operations {
         if op.use_required_struct(sourcegen) {
-            new_schemas.push((op.required_struct_name().0, Record::Struct(op.required_struct(sourcegen))));
+            new_schemas.push((op.required_struct_name(), Record::Struct(op.required_struct(sourcegen))));
         }
     }
     spec.schemas.extend(new_schemas);
