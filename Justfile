@@ -96,6 +96,7 @@ generate:
     cargo run -- gen --name $SERVICE --output-dir $REPO_DIR --generator $SOURCEGEN --github $REPO --version $VERSION $LIBRARY $SPEC
 
 test *ARGS:
+    checkexec commercial -- just dummy_commercial
     cd core && cargo test -- "$@"
     cd libninja && cargo test -- "$@"
 alias t := test
@@ -129,4 +130,10 @@ push:
     bash ocg/script/push.sh
 
 commercial:
+    rm -rf commercial
     git clone https://github.com/kurtbuilds/libninja-commercial commercial
+
+# Create a dummy commercial repo that lets the workspace work
+# without the commericial code
+dummy_commercial:
+    cargo new --lib commercial --name libninja_commercial

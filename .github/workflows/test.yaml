@@ -13,7 +13,6 @@ defaults:
   run:
     shell: bash
 
-
 jobs:
   run-test:
     permissions:
@@ -27,5 +26,12 @@ jobs:
         toolchain: stable
     - uses: Swatinem/rust-cache@v1
     - run: cargo install just
-    # - run: just test
+    - name: Install checkexec
+      shell: bash
+      run: |
+        which checkexec && exit 0
+        curl -LO https://github.com/kurtbuilds/checkexec/releases/download/v0.2.0/checkexec-v0.2.0-x86_64-unknown-linux-musl.tar.gz
+        tar xvzf checkexec-v0.2.0-x86_64-unknown-linux-musl.tar.gz checkexec
+        chmod +x checkexec
+        sudo mv checkexec /usr/local/bin
     - run: cargo test

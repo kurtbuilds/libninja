@@ -29,3 +29,10 @@ cargo install --git https://github.com/kurtbuilds/libninja
 Use the command line help to see required arguments & options when generating libraries.
 
 The open source version builds client libraries for Rust. Libninja also supports other languages with a commercial license. Reach out at the email in author Github profile.
+
+
+# Development
+
+If you run into errors about a missing `commericial` package, run the command `just dummy_commericial` to create a dummy
+package.
+

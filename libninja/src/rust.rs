@@ -93,6 +93,9 @@ pub fn calculate_extras(spec: &HirSpec) -> Extras {
 
 pub fn copy_from_target_templates(opts: &OutputOptions) -> Result<()> {
     let template_path = opts.dest_path.join("template");
+    if !template_path.exists() {
+        return Ok(());
+    }
     for path in ignore::Walk::new(&template_path) {
         let path: ignore::DirEntry = path?;
         let rel_path = path.path().strip_prefix(&template_path)?;
