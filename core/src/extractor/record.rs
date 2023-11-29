@@ -1,14 +1,15 @@
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 
-use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type};
+use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StatusCode, StringType, Type};
 use ln_mir::{Doc, Name};
-use std::collections::{BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 use tracing_ez::warn;
 use crate::{extractor, hir};
-use crate::extractor::schema_ref_to_ty_already_resolved;
+use crate::extractor::{schema_to_ty, schema_ref_to_ty_already_resolved};
 use crate::hir::{MirField, Record, StrEnum, Struct};
 use indexmap::IndexMap;
 use anyhow::Result;
+use crate::child_schemas::ChildSchemas;
 
 fn properties_to_fields(properties: &IndexMap<String, ReferenceOr<Schema>>, schema: &Schema, spec: &OpenAPI) -> BTreeMap<Name, MirField> {
     properties
@@ -44,8 +45,7 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
     length
 }
 
-pub fn create_record(name: &str, schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> Record {
-    let schema = schema_ref.resolve(spec);
+pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
     match &schema.schema_kind {
         // The base case, a regular object
         SchemaKind::Type(Type::Object(ObjectType { properties, .. })) => {
@@ -80,7 +80,7 @@ pub fn create_record(name: &str, schema_ref: &ReferenceOr<Schema>, spec: &OpenAP
         _ => Record::NewType(hir::NewType {
             name: Name::new(name),
             fields: vec![MirField {
-                ty: schema_ref_to_ty_already_resolved(schema_ref, spec, schema),
+                ty: schema_to_ty(schema, spec),
                 optional: schema.schema_data.nullable,
                 doc: None,
                 example: None,
@@ -142,19 +142,14 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
 
 // records are data types: structs, newtypes
 pub fn extract_records(spec: &OpenAPI) -> Result<BTreeMap<String, Record>> {
-    if spec.components.is_none() {
-        return Ok(BTreeMap::new());
+    let mut result: BTreeMap<String, Record> = BTreeMap::new();
+    let mut schema_lookup = HashMap::new();
+    spec.add_child_schemas(&mut schema_lookup);
+    for (name, schema) in schema_lookup {
+        let rec = create_record(&name, schema, spec);
+        let name = rec.name().0.clone();
+        result.insert(name, rec);
     }
-    let result: BTreeMap<String, Record> = spec.schemas()
-        .into_iter()
-        .map(|(name, schema)| {
-            create_record(name, schema, spec)
-        })
-        .map(|r| {
-            let name = r.name().0.clone();
-            Ok((name, r))
-        })
-        .collect::<Result<_>>()?;
     Ok(result)
 }
 

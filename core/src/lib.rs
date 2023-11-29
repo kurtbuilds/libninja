@@ -4,6 +4,7 @@ mod lang;
 mod options;
 pub mod extractor;
 mod template;
+pub mod child_schemas;
 
 pub use options::*;
 pub use lang::Language;

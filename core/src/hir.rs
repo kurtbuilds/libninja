@@ -52,7 +52,6 @@ impl Default for Ty {
     fn default() -> Self {
         Ty::Any
     }
-
 }
 
 impl Ty {
@@ -175,6 +174,17 @@ pub struct AuthorizationParameter {
     pub name: String,
     pub env_var: String,
     pub location: AuthLocation,
+}
+
+impl AuthorizationParameter {
+    pub fn env_var_for_service(&self, service_name: &str) -> String {
+        let service = service_name.to_case(Case::ScreamingSnake);
+        if self.env_var.starts_with(&service) {
+            self.env_var.clone()
+        } else {
+            format!("{}_{}", service, self.env_var)
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -354,7 +364,7 @@ impl MirSpec {
         }
         for strategy in &self.security {
             for param in &strategy.fields {
-                env_vars.push(param.env_var.clone());
+                env_vars.push(param.env_var_for_service(&opt.service_name));
             }
         }
         env_vars

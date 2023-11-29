@@ -44,6 +44,8 @@ pub enum Command {
     /// `gen` will not work if the spec is split into multiple files, so use this step first if the
     /// spec is split.
     Coalesce(Resolve),
+    /// Analyze the OpenAPI spec
+    Meta(Meta),
 }
 
 fn main() -> Result<()> {
@@ -72,5 +74,6 @@ fn main() -> Result<()> {
             generate.run()
         },
         Command::Coalesce(resolve) => resolve.run(),
+        Command::Meta(meta) => meta.run(),
     }
 }

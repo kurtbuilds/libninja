@@ -70,7 +70,7 @@ pub fn generate_examples(
     mut opt: LibraryOptions,
 ) -> Result<HashMap<String, Examples>> {
     let mut map = HashMap::new();
-    let spec = extract_spec(&spec, &opt)?;
+    let spec = extract_spec(&spec)?;
 
     for operation in &spec.operations {
         let rust = {

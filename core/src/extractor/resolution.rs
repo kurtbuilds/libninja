@@ -12,7 +12,7 @@ pub fn schema_ref_to_ty(schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> Ty 
 
 pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI, schema: &Schema) -> Ty {
     if is_primitive(schema, spec) {
-        concrete_schema_to_ty(schema, spec)
+        schema_to_ty(schema, spec)
     } else {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
@@ -22,14 +22,14 @@ pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec:
                     SchemaReference::Property { schema: _, property: _ } => unimplemented!(),
                 }
             }
-            ReferenceOr::Item(schema) => concrete_schema_to_ty(schema, spec)
+            ReferenceOr::Item(schema) => schema_to_ty(schema, spec)
         }
     }
 }
 
 /// You probably want schema_ref_to_ty, not this method. Reason being, you want
 /// to use the ref'd model if one exists (e.g. User instead of resolving to Ty::Any)
-pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
+pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.schema_kind {
         SchemaKind::Type(oa::Type::String(s)) => {
             match s.format.as_str() {
@@ -59,7 +59,13 @@ pub fn concrete_schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
             }
         }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,
-        SchemaKind::Type(oa::Type::Object(_)) => Ty::Any,
+        SchemaKind::Type(oa::Type::Object(_)) => {
+            if let Some(title) = &schema.schema_data.title {
+                Ty::model(&title)
+            } else {
+                Ty::Any
+            }
+        },
         SchemaKind::Type(oa::Type::Array(ArrayType {
                                              items: Some(item), ..
                                          })) => {

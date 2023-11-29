@@ -306,7 +306,7 @@ fn build_Authentication_from_env(mir_spec: &MirSpec, spec: &OpenAPI, opt: &Libra
             let field =
                 syn::Ident::new(&f.name.to_case(Case::Snake), proc_macro2::Span::call_site());
             let expect = format!("Environment variable {} is not set.", f.env_var);
-            let env_var = &f.env_var;
+            let env_var = &f.env_var_for_service(&opt.service_name);
             quote! {
                 #field: std::env::var(#env_var).expect(#expect)
             }

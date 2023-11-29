@@ -92,7 +92,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     fs::create_dir_all(&src_path)?;
 
     // Prepare the MIR Spec.
-    let mir_spec = extract_spec(&spec, &opts.library_options)?;
+    let mir_spec = extract_spec(&spec)?;
     let mir_spec = add_operation_models(opts.library_options.language, mir_spec)?;
     let extras = calculate_extras(&mir_spec);
 
@@ -103,7 +103,6 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     write_lib_rs(&mir_spec, &extras, &spec, &opts)?;
 
     write_serde_module_if_needed(&extras, &opts)?;
-
 
     let tera = prepare_templates();
     let mut context = create_context(&opts, &mir_spec);

@@ -15,7 +15,7 @@ pub trait ToRustExample {
 
 impl ToRustExample for Parameter {
     fn to_rust_example(&self, spec: &MirSpec) -> anyhow::Result<TokenStream> {
-        codegen::to_rust_example_value(&self.ty, &self.name, spec, false)
+        to_rust_example_value(&self.ty, &self.name, spec, false)
     }
 }
 

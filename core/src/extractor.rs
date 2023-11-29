@@ -8,7 +8,7 @@ use tracing_ez::{span, warn};
 
 use ln_mir::{Doc, Name, NewType};
 pub use record::*;
-pub use resolution::{concrete_schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
+pub use resolution::{schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
 pub use resolution::*;
 
 use crate::{hir, Language, LibraryOptions};
@@ -18,12 +18,11 @@ mod resolution;
 mod record;
 
 /// You might need to call add_operation_models after this
-pub fn extract_spec(spec: &OpenAPI, opt: &LibraryOptions) -> Result<MirSpec> {
+pub fn extract_spec(spec: &OpenAPI) -> Result<MirSpec> {
     let operations = extract_api_operations(spec)?;
-    let schemas = record::extract_records(spec)?;
-
+    let schemas = extract_records(spec)?;
     let servers = extract_servers(spec)?;
-    let security = extract_security_strategies(spec, opt);
+    let security = extract_security_strategies(spec);
 
     let api_docs_url = extract_api_docs_link(spec);
 
@@ -351,7 +350,7 @@ pub fn spec_defines_auth(spec: &MirSpec) -> bool {
     !spec.security.is_empty()
 }
 
-fn extract_security_fields(_name: &str, requirement: &SecurityRequirement, spec: &OpenAPI, opt: &LibraryOptions) -> Result<Vec<AuthorizationParameter>> {
+fn extract_security_fields(_name: &str, requirement: &SecurityRequirement, spec: &OpenAPI) -> Result<Vec<AuthorizationParameter>> {
     let security_schemas = &spec.components.as_ref().unwrap().security_schemes;
     let mut fields = vec![];
     for (name, _scopes) in requirement {
@@ -403,25 +402,14 @@ fn extract_security_fields(_name: &str, requirement: &SecurityRequirement, spec:
 
         fields.push(AuthorizationParameter {
             name: name.to_string(),
-            env_var: if name
-                .to_lowercase()
-                .starts_with(&opt.service_name.to_lowercase())
-            {
-                name.to_case(Case::ScreamingSnake)
-            } else {
-                format!(
-                    "{}_{}",
-                    opt.service_name.to_case(Case::ScreamingSnake),
-                    name.to_case(Case::ScreamingSnake)
-                )
-            },
+            env_var: name.to_case(Case::ScreamingSnake),
             location,
         });
     }
     Ok(fields)
 }
 
-pub fn extract_security_strategies(spec: &OpenAPI, opt: &LibraryOptions) -> Vec<AuthorizationStrategy> {
+pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthorizationStrategy> {
     let mut strats = vec![];
     let security = match spec.security.as_ref() {
         None => return strats,
@@ -429,7 +417,7 @@ pub fn extract_security_strategies(spec: &OpenAPI, opt: &LibraryOptions) -> Vec<
     };
     for requirement in security {
         let (name, _scopes) = requirement.iter().next().unwrap();
-        let fields = match extract_security_fields(name, requirement, spec, opt) {
+        let fields = match extract_security_fields(name, requirement, spec) {
             Ok(f) => f,
             Err(_e) => {
                 continue;
@@ -444,7 +432,7 @@ pub fn extract_security_strategies(spec: &OpenAPI, opt: &LibraryOptions) -> Vec<
 }
 
 pub fn extract_newtype(name: &str, schema: &Schema, spec: &OpenAPI) -> NewType<Ty> {
-    let ty = concrete_schema_to_ty(schema, spec);
+    let ty = schema_to_ty(schema, spec);
 
     NewType {
         name: name.to_string(),
