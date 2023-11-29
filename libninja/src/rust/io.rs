@@ -5,7 +5,7 @@ use crate::rust::codegen::ToRustCode;
 use crate::rust::format::format_code;
 use crate::util;
 
-pub fn write_rust_file_to_path(path: &Path, file: ln_mir::File<TokenStream>) -> anyhow::Result<()> {
+pub fn write_rust_file_to_path(path: &Path, file: ::hir::File<TokenStream>) -> anyhow::Result<()> {
     let code = file.to_rust_code();
     write_rust_code_to_path(path, code)
 }

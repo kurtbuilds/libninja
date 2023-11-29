@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use convert_case::{Case, Casing};
-use ln_mir::{Literal, Name};
+use hir::{Literal, Name};
 use crate::Language;
 
 #[derive(Debug, Clone, Default)]

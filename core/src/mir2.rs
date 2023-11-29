@@ -8,7 +8,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 
 use crate::{LibraryOptions, Language};
-pub use ln_mir::{Doc, Name};
+pub use hir::{Doc, Name};
 use openapiv3 as oa;
 
 #[derive(Debug, Clone, Copy, PartialEq)]

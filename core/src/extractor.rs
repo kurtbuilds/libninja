@@ -6,7 +6,7 @@ use openapiv3::{APIKeyLocation, OpenAPI, Operation, PathItem, ReferenceOr, Schem
 use openapiv3 as oa;
 use tracing_ez::{span, warn};
 
-use ln_mir::{Doc, Name, NewType};
+use hir::{Doc, Name, NewType};
 pub use record::*;
 pub use resolution::{schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
 pub use resolution::*;

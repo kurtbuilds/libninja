@@ -14,8 +14,8 @@ use ln_core::extractor::{extract_response_success, schema_ref_to_ty, spec_define
 use ln_core::mir2;
 use ln_core::LibraryOptions;
 use ln_core::OutputOptions;
-use ln_mir::{Doc, doc, Ident, Name};
-use ln_mir::{Class, Field, FnArg, Function, Visibility};
+use hir::{Doc, doc, Ident, Name};
+use hir::{Class, Field, FnArg, Function, Visibility};
 
 use crate::rust::codegen::ToRustCode;
 use crate::rust::codegen::ToRustIdent;

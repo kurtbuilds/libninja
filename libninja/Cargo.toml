@@ -43,7 +43,7 @@ semver = "1.0.17"
 indexmap = "2.0"
 ln-macro = { path = "../macro" }
 ln-core = { path = "../core" }
-ln-mir = { path = "../mir" }
+hir = { path = "../hir" }
 
 [dev-dependencies]
 env_logger = "0.10.0"

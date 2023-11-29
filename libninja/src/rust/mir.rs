@@ -7,8 +7,8 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use tracing_ez::{info, span};
 
-use ln_mir::{Field, File, Ident, Import, import, Name, Visibility};
-use ln_mir as model;
+use hir::{Field, File, Ident, Import, import, Name, Visibility};
+use hir as model;
 
 use ln_core::{extractor, mir2, MirSpec};
 use ln_core::mir2::{DateSerialization, IntegerSerialization, MirField, NewType, Record, StrEnum, Struct, Ty, TypeAlias};

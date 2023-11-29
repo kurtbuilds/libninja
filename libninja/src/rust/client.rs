@@ -3,8 +3,8 @@ use ln_core::extractor::{extract_response_success, extract_security_strategies, 
 use crate::rust::codegen::{ToRustCode};
 use ln_core::{extractor, Language, LibraryOptions, MirSpec, mir2};
 use convert_case::{Case, Casing};
-use ln_mir::{Doc, field, Function, Ident, Name};
-use ln_mir::{Class, Field, FnArg, Visibility};
+use hir::{Doc, field, Function, Ident, Name};
+use hir::{Class, Field, FnArg, Visibility};
 use openapiv3::{
     APIKeyLocation, OpenAPI, Operation, ReferenceOr, RequestBody, Schema, SchemaKind,
     SecurityRequirement, SecurityScheme, StatusCode,

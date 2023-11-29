@@ -12,7 +12,7 @@ use codegen::ToRustIdent;
 use codegen::ToRustType;
 use format::format_code;
 use ln_core::{copy_files, copy_templates, create_context, get_template_file, prepare_templates};
-use ln_mir::{Visibility, Import, File};
+use hir::{Visibility, Import, File};
 use ln_core::fs;
 
 use crate::{add_operation_models, extract_spec, LibraryOptions, MirSpec, OutputOptions, util};
@@ -158,11 +158,11 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     };
 
     let client_name = struct_Client.name.to_string();
-    let template_path = opts.dest_path.join("template").join("src").join("lib.rs");
+    let template_path = opts.dest_path.join("template").join("src").join("hir");
     let lib_rs_template = if template_path.exists() {
         fs::read_to_string(template_path)?
     } else {
-        let s = get_template_file("rust/src/lib.rs");
+        let s = get_template_file("rust/src/hir");
         formatdoc!(
             r#"
             //! [`{client}`](struct.{client}.html) is the main entry point for this library.
@@ -192,7 +192,7 @@ fn write_lib_rs(mir_spec: &MirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
         #security
     };
 
-    io::write_rust_to_path(&src_path.join("lib.rs"), code, &lib_rs_template)?;
+    io::write_rust_to_path(&src_path.join("hir"), code, &lib_rs_template)?;
     Ok(())
 }
 
