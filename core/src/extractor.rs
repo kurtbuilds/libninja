@@ -11,8 +11,8 @@ pub use record::*;
 pub use resolution::{schema_to_ty, schema_ref_to_ty, schema_ref_to_ty_already_resolved};
 pub use resolution::*;
 
-use crate::{hir, Language, LibraryOptions};
-use crate::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirSpec, Record, Ty};
+use crate::{mir2, Language, LibraryOptions};
+use crate::mir2::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, Location, MirSpec, Record, Ty};
 
 mod resolution;
 mod record;
@@ -57,7 +57,7 @@ pub fn extract_request_schema<'a>(
     Ok(content.schema.as_ref().unwrap().resolve(spec))
 }
 
-pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<hir::Parameter> {
+pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<mir2::Parameter> {
     span!("extract_param", param = ?param);
     let param = param.resolve(spec)?;
     let data = param.parameter_data_ref();
@@ -66,7 +66,7 @@ pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Resu
         .ok_or_else(|| anyhow!("No schema for parameter: {:?}", param))?;
     let ty = schema_ref_to_ty(param_schema_ref, spec);
     let schema = param_schema_ref.resolve(spec);
-    Ok(hir::Parameter {
+    Ok(mir2::Parameter {
         doc: None,
         name: Name::new(&data.name),
         optional: !data.required,
@@ -80,7 +80,7 @@ pub fn extract_inputs<'a>(
     operation: &'a oa::Operation,
     item: &'a PathItem,
     spec: &'a OpenAPI,
-) -> Result<Vec<hir::Parameter>> {
+) -> Result<Vec<mir2::Parameter>> {
     let mut inputs = operation
         .parameters
         .iter()
@@ -106,7 +106,7 @@ pub fn extract_inputs<'a>(
             Ty::Any
         };
         let ty = Ty::Array(Box::new(ty));
-        inputs.push(hir::Parameter {
+        inputs.push(mir2::Parameter {
             name: Name::new("body"),
             ty,
             optional: false,
@@ -119,7 +119,7 @@ pub fn extract_inputs<'a>(
             let ty = schema_ref_to_ty(param, spec);
             let param: &Schema = param.resolve(spec);
             let optional = is_optional(name, param, schema);
-            hir::Parameter {
+            mir2::Parameter {
                 name: name.into(),
                 ty,
                 optional,
@@ -134,7 +134,7 @@ pub fn extract_inputs<'a>(
             }
         }
     } else {
-        inputs.push(hir::Parameter {
+        inputs.push(mir2::Parameter {
             name: Name::new("body"),
             ty: Ty::Any,
             optional: false,
@@ -230,7 +230,7 @@ pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {
     format!("{method}{name}{last_group}")
 }
 
-pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<hir::Operation>> {
+pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<mir2::Operation>> {
     spec.operations()
         .map(|(path, method, operation, item)| {
             let name = match &operation.operation_id {
@@ -245,7 +245,7 @@ pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<hir::Operation>> {
                 None => Ty::Unit,
                 Some(r) => schema_ref_to_ty(r, spec),
             };
-            Ok(hir::Operation {
+            Ok(mir2::Operation {
                 name: name.into(),
                 doc,
                 parameters,
@@ -331,7 +331,7 @@ fn sanitize_spec(spec: &mut MirSpec) {
             let Some(rename_to) = optional_short_circuit.get(name) else {
                 continue;
             };
-            field.ty = hir::Ty::Model(rename_to.clone());
+            field.ty = mir2::Ty::Model(rename_to.clone());
             field.optional = true;
         }
     }

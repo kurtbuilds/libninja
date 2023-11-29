@@ -1,7 +1,7 @@
-use ln_core::hir::{AuthLocation, AuthorizationStrategy, DocFormat, Location, Parameter, ServerStrategy};
+use ln_core::mir2::{AuthLocation, AuthorizationStrategy, DocFormat, Location, Parameter, ServerStrategy};
 use ln_core::extractor::{extract_response_success, extract_security_strategies, spec_defines_auth};
 use crate::rust::codegen::{ToRustCode};
-use ln_core::{extractor, Language, LibraryOptions, MirSpec, hir};
+use ln_core::{extractor, Language, LibraryOptions, MirSpec, mir2};
 use convert_case::{Case, Casing};
 use ln_mir::{Doc, field, Function, Ident, Name};
 use ln_mir::{Class, Field, FnArg, Visibility};
@@ -84,7 +84,7 @@ pub fn struct_Client(mir_spec: &MirSpec, opt: &LibraryOptions) -> Class<TokenStr
     }
 }
 
-pub fn build_api_client_method(operation: &hir::Operation) -> TokenStream {
+pub fn build_api_client_method(operation: &mir2::Operation) -> TokenStream {
     let use_struct = operation.use_required_struct(Language::Rust);
 
     let fn_args = if use_struct {
@@ -238,7 +238,7 @@ fn build_new_fn(security: bool, opt: &LibraryOptions) -> TokenStream {
     }
 }
 
-pub fn impl_Client(mir_spec: &hir::MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
+pub fn impl_Client(mir_spec: &mir2::MirSpec, spec: &OpenAPI, opt: &LibraryOptions) -> TokenStream {
     let client_struct_name = opt.client_name().to_rust_struct();
     let path_fns = impl_ServiceClient_paths(mir_spec);
 

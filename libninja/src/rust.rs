@@ -45,7 +45,7 @@ impl Extras {
 }
 
 pub fn calculate_extras(spec: &MirSpec) -> Extras {
-    use ln_core::hir::Ty;
+    use ln_core::mir2::Ty;
     let mut null_as_zero = false;
     let mut date_serialization = false;
     let mut currency = false;
@@ -54,13 +54,13 @@ pub fn calculate_extras(spec: &MirSpec) -> Extras {
     for (_, record) in &spec.schemas {
         for field in record.fields() {
             match &field.ty {
-                Ty::Integer { serialization: ln_core::hir::IntegerSerialization::NullAsZero } => {
+                Ty::Integer { serialization: ln_core::mir2::IntegerSerialization::NullAsZero } => {
                     null_as_zero = true;
                 }
-                Ty::Integer { serialization: ln_core::hir::IntegerSerialization::String } => {
+                Ty::Integer { serialization: ln_core::mir2::IntegerSerialization::String } => {
                     option_i64_str = true;
                 }
-                Ty::Date { serialization: ln_core::hir::DateSerialization::Integer } => {
+                Ty::Date { serialization: ln_core::mir2::DateSerialization::Integer } => {
                     integer_date_serialization = true;
                     date_serialization = true;
                 }

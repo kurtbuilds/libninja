@@ -10,9 +10,9 @@ use tracing_ez::{info, span};
 use ln_mir::{Field, File, Ident, Import, import, Name, Visibility};
 use ln_mir as model;
 
-use ln_core::{extractor, hir, MirSpec};
-use ln_core::hir::{DateSerialization, IntegerSerialization, MirField, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
-use ln_core::hir::AuthLocation::Token;
+use ln_core::{extractor, mir2, MirSpec};
+use ln_core::mir2::{DateSerialization, IntegerSerialization, MirField, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
+use ln_core::mir2::AuthLocation::Token;
 use ln_core::extractor::schema_ref_to_ty;
 use ln_core::LibraryConfig;
 use crate::rust::codegen;
@@ -81,7 +81,7 @@ impl FieldExt for MirField {
                     }
                 }
             }
-            Ty::Currency { serialization: hir::DecimalSerialization::String } => {
+            Ty::Currency { serialization: mir2::DecimalSerialization::String } => {
                 if self.optional {
                     decorators.push(quote! {
                         #[serde(with = "rust_decimal::serde::str_option")]
@@ -209,7 +209,7 @@ pub fn generate_single_model_file(name: &str, record: &Record, spec: &MirSpec, c
 
 pub struct RefTarget {
     name: Name,
-    ty: hir::Ty,
+    ty: mir2::Ty,
 }
 
 pub fn create_sumtype_struct(schema: &Struct, config: &LibraryConfig) -> TokenStream {
@@ -308,7 +308,7 @@ pub fn create_struct(record: &Record, config: &LibraryConfig) -> TokenStream {
 
 #[cfg(test)]
 mod tests {
-    use ln_core::hir::{MirField, Name, Ty};
+    use ln_core::mir2::{MirField, Name, Ty};
     use crate::rust::format::format_code;
     use super::*;
 

@@ -1,5 +1,5 @@
 pub mod fs;
-pub mod hir;
+pub mod mir2;
 mod lang;
 mod options;
 pub mod extractor;
@@ -10,6 +10,6 @@ pub use options::*;
 pub use lang::Language;
 
 pub use fs::*;
-pub use hir::MirSpec;
+pub use mir2::MirSpec;
 pub use extractor::extract_spec;
 pub use template::*;

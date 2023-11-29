@@ -4,9 +4,9 @@ use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind
 use ln_mir::{Doc, Name};
 use std::collections::{BTreeMap, HashMap};
 use tracing_ez::warn;
-use crate::{extractor, hir};
+use crate::{extractor, mir2};
 use crate::extractor::{schema_to_ty, schema_ref_to_ty_already_resolved};
-use crate::hir::{MirField, Record, StrEnum, Struct};
+use crate::mir2::{MirField, Record, StrEnum, Struct};
 use indexmap::IndexMap;
 use anyhow::Result;
 use crate::child_schemas::ChildSchemas;
@@ -77,7 +77,7 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
             }
         }
         // Default case, a newtype with a single field
-        _ => Record::NewType(hir::NewType {
+        _ => Record::NewType(mir2::NewType {
             name: Name::new(name),
             fields: vec![MirField {
                 ty: schema_to_ty(schema, spec),

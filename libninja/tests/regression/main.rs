@@ -1,11 +1,11 @@
 use openapiv3::{OpenAPI, ReferenceOr, Schema};
-use ln_core::{hir, hir::Record};
+use ln_core::{mir2, mir2::Record};
 use libninja::rust::mir::StructExt;
 
 const LINK_TOKEN_CREATE: &str = include_str!("link_token_create.yaml");
 
 
-fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> hir::Record {
+fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> mir2::Record {
     let schema = serde_yaml::from_str::<Schema>(schema).unwrap();
     let mut record = ln_core::extractor::create_record(name, &schema, spec);
     record.clear_docs();

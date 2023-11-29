@@ -11,9 +11,9 @@ pub use typ::*;
 pub use example::*;
 pub use ident::*;
 use ln_core::extractor::is_primitive;
-use ln_core::hir;
+use ln_core::mir2;
 
-use ln_core::hir::{MirSpec, Name, NewType, Parameter, ParamKey, Record, StrEnum, Struct, Ty};
+use ln_core::mir2::{MirSpec, Name, NewType, Parameter, ParamKey, Record, StrEnum, Struct, Ty};
 use crate::rust::format;
 
 mod example;
@@ -306,7 +306,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &Name, spec: &MirSpec, use_ref_value
                     let model = model.to_rust_struct();
                     quote!(#model::#variant)
                 }
-                Record::TypeAlias(name, hir::MirField { ty, optional, .. }) => {
+                Record::TypeAlias(name, mir2::MirField { ty, optional, .. }) => {
                     let ty = to_rust_example_value(ty, name, spec, force_not_ref)?;
                     if *optional {
                         quote!(Some(#ty))

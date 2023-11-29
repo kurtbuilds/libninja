@@ -1,7 +1,7 @@
 use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
 use tracing_ez::warn;
 
-use crate::hir::Ty;
+use crate::mir2::Ty;
 
 use openapiv3 as oa;
 
@@ -34,11 +34,11 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         SchemaKind::Type(oa::Type::String(s)) => {
             match s.format.as_str() {
                 "decimal" => Ty::Currency {
-                    serialization: crate::hir::DecimalSerialization::String,
+                    serialization: crate::mir2::DecimalSerialization::String,
                 },
-                "integer" => Ty::Integer { serialization: crate::hir::IntegerSerialization::String },
+                "integer" => Ty::Integer { serialization: crate::mir2::IntegerSerialization::String },
                 "date" => Ty::Date {
-                    serialization: crate::hir::DateSerialization::Iso8601,
+                    serialization: crate::mir2::DateSerialization::Iso8601,
                 },
                 "date-time" => Ty::DateTime,
                 _ => Ty::String,
@@ -49,13 +49,13 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
             let null_as_zero = schema.schema_data.extensions.get("x-null-as-zero")
                 .and_then(|v| v.as_bool()).unwrap_or(false);
             if null_as_zero {
-                return Ty::Integer { serialization: crate::hir::IntegerSerialization::NullAsZero };
+                return Ty::Integer { serialization: crate::mir2::IntegerSerialization::NullAsZero };
             }
             match schema.schema_data.extensions.get("x-format").and_then(|s| s.as_str()) {
                 Some("date") => Ty::Date {
-                    serialization: crate::hir::DateSerialization::Integer,
+                    serialization: crate::mir2::DateSerialization::Integer,
                 },
-                _ => Ty::Integer { serialization: crate::hir::IntegerSerialization::Simple },
+                _ => Ty::Integer { serialization: crate::mir2::IntegerSerialization::Simple },
             }
         }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,

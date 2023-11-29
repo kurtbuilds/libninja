@@ -8,10 +8,10 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use regex::Captures;
 
-use ln_core::hir::{Parameter, Location, Ty};
+use ln_core::mir2::{Parameter, Location, Ty};
 use ln_core::{extractor, Language, };
 use ln_core::extractor::{extract_response_success, schema_ref_to_ty, spec_defines_auth};
-use ln_core::hir;
+use ln_core::mir2;
 use ln_core::LibraryOptions;
 use ln_core::OutputOptions;
 use ln_mir::{Doc, doc, Ident, Name};
@@ -83,7 +83,7 @@ pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
     }
 }
 
-pub fn build_url(operation: &hir::Operation) -> TokenStream {
+pub fn build_url(operation: &mir2::Operation) -> TokenStream {
     let inputs = operation
         .parameters
         .iter()
@@ -111,7 +111,7 @@ pub fn build_url(operation: &hir::Operation) -> TokenStream {
     }
 }
 
-pub fn authorize_request(spec: &hir::MirSpec) -> TokenStream {
+pub fn authorize_request(spec: &mir2::MirSpec) -> TokenStream {
     if spec_defines_auth(spec) {
         quote! {
            r = self.http_client.authenticate(r);
@@ -121,7 +121,7 @@ pub fn authorize_request(spec: &hir::MirSpec) -> TokenStream {
     }
 }
 
-pub fn build_send_function(operation: &hir::Operation, spec: &hir::MirSpec) -> Function<TokenStream> {
+pub fn build_send_function(operation: &mir2::Operation, spec: &mir2::MirSpec) -> Function<TokenStream> {
     let assign_inputs = assign_inputs_to_request(&operation.parameters);
     let auth = authorize_request(spec);
     let response = operation.ret.to_rust_type();
@@ -183,7 +183,7 @@ pub fn build_struct_fields(
 
 /// Build the various "builder" methods for optional parameters for a request struct
 pub fn build_request_struct_builder_methods(
-    operation: &hir::Operation,
+    operation: &mir2::Operation,
 ) -> Vec<Function<TokenStream>> {
     operation.parameters.iter().filter(|a| a.optional).map(|a| {
         let name = a.name.to_rust_ident();
@@ -228,8 +228,8 @@ pub fn build_request_struct_builder_methods(
 }
 
 pub fn build_request_struct(
-    operation: &hir::Operation,
-    spec: &hir::MirSpec,
+    operation: &mir2::Operation,
+    spec: &mir2::MirSpec,
     opt: &LibraryOptions,
 ) -> Vec<Class<TokenStream>> {
     let mut instance_fields = build_struct_fields(&operation.parameters, false);
@@ -295,7 +295,7 @@ That method takes required values as arguments. Set optional values using builde
     result
 }
 
-pub fn build_request_structs(spec: &hir::MirSpec, opt: &LibraryOptions) -> Vec<Class<TokenStream>> {
+pub fn build_request_structs(spec: &mir2::MirSpec, opt: &LibraryOptions) -> Vec<Class<TokenStream>> {
     let mut result = vec![];
     for operation in &spec.operations {
         result.extend(build_request_struct(operation, spec, opt));
@@ -303,7 +303,7 @@ pub fn build_request_structs(spec: &hir::MirSpec, opt: &LibraryOptions) -> Vec<C
     result
 }
 
-pub fn generate_request_model_rs(spec: &hir::MirSpec, opt: &LibraryOptions) -> TokenStream {
+pub fn generate_request_model_rs(spec: &mir2::MirSpec, opt: &LibraryOptions) -> TokenStream {
     let classes = build_request_structs(spec, opt);
     let mut request_structs = classes
         .into_iter()
