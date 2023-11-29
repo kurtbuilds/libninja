@@ -519,4 +519,3 @@ impl From<&Parameter> for MirField {
         }
     }
 }
-

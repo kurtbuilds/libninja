@@ -127,3 +127,6 @@ delete *ARG:
 
 push:
     bash ocg/script/push.sh
+
+commercial:
+    git clone https://github.com/kurtbuilds/libninja-commercial commercial

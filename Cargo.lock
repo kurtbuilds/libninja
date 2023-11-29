@@ -846,14 +846,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "443144c8cdadd93ebf52ddb4056d257f5b52c04d3c804e657d19eb73fc33668b"
 
 [[package]]
-name = "hir"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
-]
-
-[[package]]
 name = "http"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1076,11 +1068,11 @@ dependencies = [
  "clap",
  "convert_case 0.6.0",
  "env_logger",
- "hir",
  "http",
  "include_dir",
  "indexmap 2.0.0",
  "indoc",
+ "libninja_hir",
  "ln-core",
  "ln-macro",
  "log",
@@ -1106,6 +1098,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "libninja_hir"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1124,9 +1124,9 @@ dependencies = [
  "anyhow",
  "clap",
  "convert_case 0.6.0",
- "hir",
  "include_dir",
  "indexmap 2.0.0",
+ "libninja_hir",
  "openapiv3-extended",
  "proc-macro2",
  "quote",
@@ -1142,7 +1142,7 @@ dependencies = [
 name = "ln-macro"
 version = "0.1.0"
 dependencies = [
- "hir",
+ "libninja_hir",
  "pretty_assertions",
  "proc-macro2",
  "quote",

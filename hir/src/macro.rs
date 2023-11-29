@@ -80,40 +80,10 @@ macro_rules! field {
     };
 }
 
-#[macro_export]
-macro_rules! tfunc {
-    ($name:ident ($($arg:ident : $ty:path),* $(,)?) => $body:expr) => {
-        ::hir::Function{
-            name: stringify!($name).to_string(),
-            args: vec![$(targ!($arg : $ty)),*],
-            ret: TokenStream::new(),
-            body: $body,
-            doc: None,
-            async_: false,
-            public: false,
-            annotations: vec![],
-        }
-    };
-    ($name:ident ($($arg:ident : $ty:path),* $(,)?) => $ret:path => $body:expr) => {
-        ::hir::Function{
-            name: stringify!($name).to_string(),
-            args: vec![$(targ!($arg : $ty)),*],
-            ret: {
-                let ret = ::syn::parse_str::<::syn::TypePath>(stringify!($ret)).unwrap();
-                ::quote::ToTokens::to_token_stream(&ret)
-            },
-            body: $body,
-            doc: None,
-            async_: false,
-            public: false,
-            annotations: vec![],
-        }
-    };
-}
-
+/// A literal value.
 #[macro_export]
 macro_rules! lit {
     ($($arg:tt)*) => {
-        ::hir::Literal(format!($($arg)*), false);
+        ::hir::Literal(format!($($arg)*));
     };
 }

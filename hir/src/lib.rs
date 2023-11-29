@@ -1,5 +1,6 @@
 /// Models that represent code
 /// Things like, Parameters, Functions, Fields, Class, etc.
+
 use core::default::Default;
 use core::fmt::{Debug, Formatter};
 use core::option::Option;
@@ -135,7 +136,11 @@ pub struct ImportItem {
     pub alias: Option<String>,
 }
 
-pub struct Literal<T>(pub T, pub bool);
+pub struct Literal<T>(pub T);
+
+pub struct Grave(String);
+
+pub struct FString(String);
 
 impl Visibility {
     pub fn public(&self) -> bool {
@@ -286,33 +291,29 @@ impl<T> Default for File<T>
     }
 }
 
-impl Literal<String> {
-    pub fn new(s: &str) -> Self {
-        Self(s.to_string(), false)
-    }
-
-    /// Create a python f-string
-    pub fn f(s: &str) -> Self {
-        Self(format!("f\"{}\"", s), true)
-    }
-
-    /// Grave
-    pub fn grave(s: &str) -> Self {
-        Self(format!("`{}`", s), true)
-    }
+pub fn literal(s: impl Into<String>) -> Literal<String> {
+    Literal(s.into())
 }
 
-impl From<String> for Literal<String> {
-    fn from(s: String) -> Self {
-        Self(s, false)
-    }
+pub fn grave(s: &str) -> Literal<Grave> {
+    Literal(Grave(s.to_string()))
 }
 
-impl From<Ident> for Literal<String> {
-    fn from(s: Ident) -> Self {
-        Self(s.0, false)
-    }
+pub fn f_string(s: &str) -> Literal<FString> {
+    Literal(FString(s.to_string()))
 }
+
+// impl From<String> for Literal<String> {
+//     fn from(s: String) -> Self {
+//         Self(s, false)
+//     }
+// }
+//
+// impl From<Ident> for Literal<String> {
+//     fn from(s: Ident) -> Self {
+//         Self(s.0, false)
+//     }
+// }
 
 impl quote::ToTokens for Ident {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use convert_case::{Case, Casing};
-use hir::{Literal, Name};
+use hir::{literal, Name, Literal};
 use crate::Language;
 
 #[derive(Debug, Clone, Default)]
@@ -8,8 +8,6 @@ pub struct LibraryConfig {
     /// Only for Rust. Adds ormlite::TableMeta flags to the code.
     pub ormlite: bool,
 }
-
-
 
 #[derive(Debug, Clone)]
 pub struct LibraryOptions {
@@ -40,7 +38,7 @@ impl LibraryOptions {
     }
 
     pub fn user_agent(&self) -> Literal<String> {
-        Literal::from(format!(
+        literal(format!(
             "{}/{}/{}",
             self.package_name,
             self.language.to_string(),
@@ -65,11 +63,11 @@ impl LibraryOptions {
     }
 
     pub fn env_var(&self, name: &str) -> Literal<String> {
-        Literal(format!(
+        literal(format!(
             "{}_{}",
             self.service_name.to_case(Case::ScreamingSnake),
             name.to_case(Case::ScreamingSnake)
-        ), false)
+        ))
     }
 }
 

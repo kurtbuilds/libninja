@@ -13,7 +13,7 @@ proc_macro = true
 [dependencies]
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
 quote = "1.0.29"
-hir = { path = "../hir" }
+libninja_hir = { path = "../hir" }
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"
