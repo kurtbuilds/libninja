@@ -2,7 +2,7 @@ use std::hash::Hash;
 use std::path::Path;
 use std::thread::current;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
 use indoc::formatdoc;
 use openapiv3::OpenAPI;
@@ -12,7 +12,7 @@ use quote::quote;
 use codegen::ToRustIdent;
 use codegen::ToRustType;
 use format::format_code;
-use ln_core::{copy_files, copy_templates, create_context, get_template_file, prepare_templates};
+use ln_core::{copy_builtin_files, copy_builtin_templates, create_context, get_template_file, prepare_templates};
 use ::mir::{Visibility, Import, File};
 use ln_core::fs;
 use hir::{HirSpec, IntegerSerialization, DateSerialization};
@@ -91,6 +91,24 @@ pub fn calculate_extras(spec: &HirSpec) -> Extras {
 }
 
 
+pub fn copy_from_target_templates(opts: &OutputOptions) -> Result<()> {
+    let template_path = opts.dest_path.join("template");
+    for path in ignore::Walk::new(&template_path) {
+        let path: ignore::DirEntry = path?;
+        let rel_path = path.path().strip_prefix(&template_path)?;
+        if rel_path.to_str().unwrap() == "src/lib.rs" {
+            continue;
+        }
+        if path.file_type().expect(&format!("Failed to read file: {}", path.path().display())).is_file() {
+            let dest = opts.dest_path.join(rel_path);
+            fs::create_dir_all(dest.parent().unwrap())?;
+            //copy the file
+            std::fs::copy(&path.path(), &dest)?;
+        }
+    }
+    Ok(())
+}
+
 pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
     let config = &opts.library_options.config;
     let src_path = opts.dest_path.join("src");
@@ -123,8 +141,9 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
 
     context.insert("client_docs_url", &format!("https://docs.rs/{}", opts.library_options.package_name));
 
-    copy_files(&opts.dest_path, &opts.library_options.language.to_string(), &["src"])?;
-    copy_templates(&opts, &tera, &context)?;
+    copy_builtin_files(&opts.dest_path, &opts.library_options.language.to_string(), &["src"])?;
+    copy_builtin_templates(&opts, &tera, &context)?;
+    copy_from_target_templates(&opts)?;
 
     bump_version_and_update_deps(&extras, &opts)?;
 

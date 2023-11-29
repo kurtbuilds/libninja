@@ -7,7 +7,7 @@ use crate::{OutputOptions, write_file};
 pub static TEMPLATE_DIR: include_dir::Dir<'_> =
     include_dir::include_dir!("$CARGO_MANIFEST_DIR/template");
 
-pub fn copy_templates(
+pub fn copy_builtin_templates(
     opts: &OutputOptions,
     tera: &tera::Tera,
     context: &Context,

@@ -65,7 +65,7 @@ fn copy_files_recursive(
 }
 
 /// Copy static files to the destination path.
-pub fn copy_files(dest_path: &Path, project_template: &str, ignore: &[&str]) -> anyhow::Result<()> {
+pub fn copy_builtin_files(dest_path: &Path, project_template: &str, ignore: &[&str]) -> anyhow::Result<()> {
     copy_files_recursive(
         dest_path,
         TEMPLATE_DIR.get_dir(project_template).unwrap(),

@@ -30,8 +30,8 @@ tera = "1.19.0"
 include_dir = "0.7.3"
 regex = "1.9.0"
 indoc = "2.0.2"
-cargo_toml = "0.15.3"
-toml = "0.7.6"
+cargo_toml = "0.17.1"
+toml = "0.8.8"
 topo_sort = "0.4.0"
 url = "2.4.0"
 http = "0.2.9"
@@ -45,6 +45,7 @@ ln-core = { path = "../core" }
 libninja_mir = { path = "../mir" }
 libninja_hir = { path = "../hir" }
 libninja_commercial = { path = "../commercial" , optional = true }
+ignore = "0.4.21"
 
 [dev-dependencies]
 env_logger = "0.10.0"

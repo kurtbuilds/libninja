@@ -1,3 +1,4 @@
+use std::sync::OnceLock;
 use std::default::Default;
 
 use convert_case::{Case, Casing};
@@ -77,6 +78,7 @@ pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
     }
 }
 
+/// This is complicated because we need to interpolate any param values.
 pub fn build_url(operation: &Operation) -> TokenStream {
     let inputs = operation
         .parameters
@@ -89,12 +91,15 @@ pub fn build_url(operation: &Operation) -> TokenStream {
             #path
         }
     } else {
-        let re = regex::Regex::new("\\{([_\\w]+)\\}").unwrap();
+        static FIX_PLACEHOLDERS: OnceLock<regex::Regex> = OnceLock::new();
+        let fix = FIX_PLACEHOLDERS.get_or_init(||
+            regex::Regex::new("\\{([_\\w]+)\\}").unwrap()
+        );
         let inputs = inputs.into_iter().map(|input| {
             let name = input.name.to_rust_ident();
-            quote! { #name = self.#name }
+            quote! { #name = self.params.#name }
         });
-        let path = re
+        let path = fix
             .replace_all(&operation.path, |cap: &Captures| {
                 format!("{{{}}}", cap.get(1).unwrap().as_str().to_case(Case::Snake))
             })
@@ -105,50 +110,50 @@ pub fn build_url(operation: &Operation) -> TokenStream {
     }
 }
 
-pub fn authorize_request(spec: &HirSpec) -> TokenStream {
-    if spec_defines_auth(spec) {
-        quote! {
-           r = self.http_client.authenticate(r);
-        }
-    } else {
-        quote! {}
-    }
-}
+// pub fn authorize_request(spec: &HirSpec) -> TokenStream {
+//     if spec_defines_auth(spec) {
+//         quote! {
+//            r = self.http_client.authenticate(r);
+//         }
+//     } else {
+//         quote! {}
+//     }
+// }
 
-pub fn build_send_function(operation: &Operation, spec: &HirSpec) -> Function<TokenStream> {
-    let assign_inputs = assign_inputs_to_request(&operation.parameters);
-    let auth = authorize_request(spec);
-    let response = operation.ret.to_rust_type();
-    let method = syn::Ident::new(&operation.method, proc_macro2::Span::call_site());
-    let url = build_url(operation);
-
-    let ret = if matches!(operation.ret , Ty::Unit) {
-        quote!(Ok(()))
-    } else {
-        quote!(res
-            .json()
-            .await
-            .map_err(|e| anyhow::anyhow!("{:?}", e))
-        )
-    };
-    Function {
-        name: "send".into(),
-        ret: quote! {
-            ::httpclient::InMemoryResult<#response>
-        },
-        body: quote! {
-            let mut r = self.http_client.client.#method(#url);
-            #assign_inputs
-            #auth
-            let res = r
-                .await?;
-            res.json().map_err(Into::into)
-        },
-        async_: true,
-        public: true,
-        ..Function::default()
-    }
-}
+// pub fn build_send_function(operation: &Operation, spec: &HirSpec) -> Function<TokenStream> {
+//     let assign_inputs = assign_inputs_to_request(&operation.parameters);
+//     let auth = authorize_request(spec);
+//     let response = operation.ret.to_rust_type();
+//     let method = syn::Ident::new(&operation.method, proc_macro2::Span::call_site());
+//     let url = build_url(operation);
+//
+//     let ret = if matches!(operation.ret , Ty::Unit) {
+//         quote!(Ok(()))
+//     } else {
+//         quote!(res
+//             .json()
+//             .await
+//             .map_err(|e| anyhow::anyhow!("{:?}", e))
+//         )
+//     };
+//     Function {
+//         name: "send".into(),
+//         ret: quote! {
+//             ::httpclient::InMemoryResult<#response>
+//         },
+//         body: quote! {
+//             let mut r = self.http_client.client.#method(#url);
+//             #assign_inputs
+//             #auth
+//             let res = r
+//                 .await?;
+//             res.json().map_err(Into::into)
+//         },
+//         async_: true,
+//         public: true,
+//         ..Function::default()
+//     }
+// }
 
 pub fn build_struct_fields(
     inputs: &[Parameter],

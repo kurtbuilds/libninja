@@ -129,10 +129,12 @@ pub fn build_api_client_method(operation: &Operation) -> TokenStream {
     let name = &operation.name.to_rust_ident();
     quote! {
         #doc
-        pub fn #name(&self, #(#fn_args),*) -> request::#request_struct {
-            request::#request_struct {
-                http_client: &self,
-                #(#struct_field_values,)*
+        pub fn #name(&self, #(#fn_args),*) -> FluentRequest<'_, request::#request_struct> {
+            FluentRequest {
+                client: self,
+                params: request::#request_struct {
+                    #(#struct_field_values,)*
+                }
             }
         }
     }

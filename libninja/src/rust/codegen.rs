@@ -351,7 +351,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value:
         Ty::Any => quote!(serde_json::json!({})),
         Ty::Date { .. } => quote!(chrono::Utc::now().date_naive()),
         Ty::DateTime { .. } => quote!(chrono::Utc::now()),
-        Ty::Currency { .. } => quote!(rust_decimal::dec!(100.01))
+        Ty::Currency { .. } => quote!(rust_decimal_macros::dec!(100.01))
     };
     Ok(s)
 }
