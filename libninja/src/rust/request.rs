@@ -147,7 +147,6 @@ pub fn build_send_function(operation: &hir::Operation, spec: &hir::MirSpec) -> F
             #assign_inputs
             #auth
             let res = r
-                .send_awaiting_body()
                 .await?;
             res.json().map_err(Into::into)
         },
