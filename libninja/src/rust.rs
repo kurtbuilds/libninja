@@ -252,10 +252,12 @@ fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow
     if extras.currency {
         manifest.dependencies.entry("rust_decimal".to_string())
             .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
-                version: Some("1.28.1".to_string()),
+                version: Some("1.33".to_string()),
                 features: vec!["serde-with-str".to_string()],
                 ..cargo_toml::DependencyDetail::default()
             }));
+        manifest.dependencies.entry("rust_decimal_macros".to_string())
+            .or_insert(cargo_toml::Dependency::Simple("1.33".to_string()));
     }
     if extras.date_serialization {
         manifest.dependencies.entry("chrono".to_string())
