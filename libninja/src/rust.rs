@@ -206,6 +206,7 @@ fn write_lib_rs(mir_spec: &HirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
     }).unwrap_or_default();
 
     let fluent_request = quote! {
+        #[derive(Clone)]
         pub struct FluentRequest<'a, T> {
             pub(crate) client: &'a #client_name,
             pub params: T,

@@ -1124,6 +1124,18 @@ dependencies = [
 [[package]]
 name = "libninja_commercial"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "convert_case 0.6.0",
+ "indoc",
+ "libninja_mir",
+ "ln-core",
+ "ln-macro",
+ "openapiv3-extended",
+ "proc-macro2",
+ "quote",
+ "serde_json",
+]
 
 [[package]]
 name = "libninja_hir"
@@ -1311,9 +1323,9 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "openapiv3-extended"
-version = "3.0.0"
+version = "3.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82df51e430235c0819e054c3030a974bd7a92cff47455186a9590b87e6292fd9"
+checksum = "6773ed7874529fa7b610702f138b362fc36739ba54c7cddd7ce66f07547450dc"
 dependencies = [
  "anyhow",
  "http",
