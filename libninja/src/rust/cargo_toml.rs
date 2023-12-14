@@ -24,7 +24,9 @@ pub fn update_cargo_toml(extras: &Extras, opts: &OutputConfig, context: &HashMap
     });
     let package = m.package.as_mut().expect("Cargo.toml must have a package section");
 
-    if let Inheritable::Set(t) = &mut package.version {
+    if let Some(v) = &opts.version {
+        package.version = Inheritable::Set(v.clone());
+    } else if let Inheritable::Set(t) = &mut package.version {
         if t == "" {
             *t = "0.1.0".to_string();
         } else {

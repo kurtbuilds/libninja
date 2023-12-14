@@ -65,6 +65,7 @@ pub fn test_build_full_library_recurly() -> Result<()> {
         language: Language::Rust,
         config: Default::default(),
         github_repo: Some("libninjacom/recurly".to_string()),
+        version: None,
     };
     generate_library(spec, opts)
 }

@@ -74,4 +74,6 @@ pub struct OutputConfig {
     pub config: ConfigFlags,
 
     pub github_repo: Option<String>,
+
+    pub version: Option<String>,
 }

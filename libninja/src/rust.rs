@@ -136,6 +136,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
         if let Some(github_repo) = &opts.github_repo {
             context.insert("github_repo".to_string(), github_repo.to_string());
         } else {
+            println!("Because this is a first-time generation, please provide additional information.");
             print!("Please provide a Github repo name (e.g. libninja/plaid-rs): ");
             let github_repo: String = read!("{}\n");
             context.insert("github_repo".to_string(), github_repo);

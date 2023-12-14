@@ -36,6 +36,9 @@ pub struct Generate {
     #[clap(short, long)]
     output_dir: Option<String>,
 
+    #[clap(short, long)]
+    version: Option<String>,
+
     /// config options
     #[clap(short, long)]
     config: Vec<Config>,
@@ -70,6 +73,7 @@ impl Generate {
             package_name,
             service_name: self.name.to_case(Case::Pascal),
             github_repo: self.repo,
+            version: self.version,
         })
     }
 }
