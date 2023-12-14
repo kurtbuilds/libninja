@@ -1125,18 +1125,6 @@ dependencies = [
 [[package]]
 name = "libninja_commercial"
 version = "0.1.0"
-dependencies = [
- "anyhow",
- "convert_case 0.6.0",
- "indoc",
- "libninja_mir",
- "ln-core",
- "ln-macro",
- "openapiv3-extended",
- "proc-macro2",
- "quote",
- "serde_json",
-]
 
 [[package]]
 name = "libninja_hir"
