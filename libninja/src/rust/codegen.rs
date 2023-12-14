@@ -310,11 +310,11 @@ pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value:
         }
         Ty::Model(model) => {
             let record = spec.get_record(model)?;
-            let force_not_ref = model.ends_with("Required");
+            let force_ref = model.ends_with("Required");
             match record {
                 Record::Struct(Struct { name: _name, fields, nullable }) => {
                     let fields = fields.iter().map(|(name, field)| {
-                        let not_ref = force_not_ref || field.optional;
+                        let not_ref = !force_ref || field.optional;
                         let mut value = to_rust_example_value(&field.ty, name, spec, !not_ref)?;
                         let name = name.to_rust_ident();
                         if field.optional {
@@ -339,7 +339,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value:
                     quote!(#model::#variant)
                 }
                 Record::TypeAlias(name, HirField { ty, optional, .. }) => {
-                    let not_ref = force_not_ref || !optional;
+                    let not_ref = !force_ref || !optional;
                     let ty = to_rust_example_value(ty, name, spec, not_ref)?;
                     if *optional {
                         quote!(Some(#ty))
