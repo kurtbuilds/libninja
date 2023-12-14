@@ -1114,6 +1114,7 @@ dependencies = [
  "syn 2.0.23",
  "tempfile",
  "tera",
+ "text_io",
  "tokio",
  "toml",
  "topo_sort",
@@ -1918,6 +1919,12 @@ checksum = "be55cf8942feac5c765c2c993422806843c9a9a45d4d5c407ad6dd2ea95eb9b6"
 dependencies = [
  "winapi-util",
 ]
+
+[[package]]
+name = "text_io"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5f0c8eb2ad70c12a6a69508f499b3051c924f4b1cfeae85bfad96e6bc5bba46"
 
 [[package]]
 name = "thiserror"

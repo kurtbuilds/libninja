@@ -1,0 +1,163 @@
+openapi: 3.0.0
+info:
+  title: The Plaid API
+  description: The Plaid REST API. Please see https://plaid.com/docs/api for more details.
+  termsOfService: https://plaid.com/legal/
+  contact:
+    name: Plaid Developer Team
+    url: https://plaid.com
+  version: 2020-09-14_1.474.3
+servers:
+- url: https://production.plaid.com
+  description: Production
+- url: https://development.plaid.com
+  description: Development
+- url: https://sandbox.plaid.com
+  description: Sandbox
+paths:
+  /processor/identity/match:
+    post:
+      tags:
+      - plaid
+      summary: Retrieve identity match score
+      description: |-
+        The `/processor/identity/match` endpoint generates a match score, which indicates how well the provided identity data matches the identity information on file with the account holder's financial institution.
+        
+        Fields within the `balances` object will always be null when retrieved by `/identity/match`. Instead, use the free `/accounts/get` endpoint to request balance cached data, or `/accounts/balance/get` for real-time data.
+        
+        This request may take some time to complete if Identity was not specified as an initial product when creating the Item. This is because Plaid must communicate directly with the institution to retrieve the data.
+      externalDocs:
+        url: https://plaid.com/docs/api/processors/#processoridentitymatch
+      operationId: processorIdentityMatch
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessorIdentityMatchRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessorIdentityMatchResponse'
+              examples:
+                example-1:
+                  value:
+                    account:
+                      account_id: BxBXxLj1m4HMXBm9WZZmCWVbPjX16EHwv99vp
+                      address:
+                        is_postal_code_match: true
+                        score: 100
+                      balances:
+                        available: null
+                        current: null
+                        iso_currency_code: null
+                        limit: null
+                        unofficial_currency_code: null
+                      email_address:
+                        score: 100
+                      legal_name:
+                        is_business_name_detected: false
+                        is_first_name_or_last_name_match: true
+                        is_nickname_match: true
+                        score: 90
+                      mask: '0000'
+                      name: Plaid Checking
+                      official_name: Plaid Gold Standard 0% Interest Checking
+                      phone_number:
+                        score: 100
+                      subtype: checking
+                      type: depository
+                    request_id: 3nARps6TOYtbACO
+    x-plaid-business-unit-context: BUSINESS_UNIT_PLAID
+components:
+  schemas:
+    ProcessorIdentityMatchRequest:
+      description: ProcessorIdentityMatchRequest defines the request schema for `/processor/identity/match`
+      type: object
+      properties:
+        processor_token:
+          $ref: '#/components/schemas/ProcessorToken'
+        user:
+          $ref: '#/components/schemas/IdentityMatchUser'
+      required:
+      - processor_token
+    ProcessorIdentityMatchResponse:
+      description: ProcessorIdentityMatchResponse defines the response schema for `/processor/identity/match`
+      type: object
+      properties:
+#        account:
+#          $ref: '#/components/schemas/AccountIdentityMatchScore'
+        request_id:
+          $ref: '#/components/schemas/RequestID'
+      required:
+      - account
+      - request_id
+      additionalProperties: true
+    IdentityMatchUser:
+      title: IdentityMatchUser
+      description: The user's legal name, phone number, email address and address used to perform fuzzy match. If Financial Account Matching is enabled in the Identity Verification product, leave this field empty to automatically match against PII collected from the Identity Verification checks.
+      type: object
+      properties:
+        legal_name:
+          nullable: true
+          description: The user's full legal name.
+          type: string
+        phone_number:
+          nullable: true
+          description: 'The user''s phone number, in E.164 format: +{countrycode}{number}. For example: "+14151234567". Phone numbers provided in other formats will be parsed on a best-effort basis.'
+          type: string
+        email_address:
+          nullable: true
+          description: The user's email address.
+          type: string
+        address:
+          $ref: '#/components/schemas/AddressDataNullableNoRequiredFields'
+      additionalProperties: true
+    AddressDataNullableNoRequiredFields:
+      nullable: true
+      description: Data about the components comprising an address.
+      allOf:
+      - $ref: '#/components/schemas/AddressDataNotRequired'
+      - type: object
+        additionalProperties: true
+    AddressDataNotRequired:
+      title: AddressData
+      description: Data about the components comprising an address.
+      type: object
+      properties:
+        city:
+          nullable: true
+          description: The full city name
+          type: string
+        region:
+          nullable: true
+          description: |-
+            The region or state. In API versions 2018-05-22 and earlier, this field is called `state`.
+            Example: `"NC"`
+          type: string
+        street:
+          description: |-
+            The full street address
+            Example: `"564 Main Street, APT 15"`
+          type: string
+        postal_code:
+          nullable: true
+          description: The postal code. In API versions 2018-05-22 and earlier, this field is called `zip`.
+          type: string
+        country:
+          nullable: true
+          description: The ISO 3166-1 alpha-2 country code
+          type: string
+      additionalProperties: true
+    ProcessorToken:
+      title: ProcessorToken
+      description: 'The processor token obtained from the Plaid integration partner. Processor tokens are in the format: `processor-<environment>-<identifier>`'
+      type: string
+    RequestID:
+      title: RequestID
+      description: A unique identifier for the request, which can be used for troubleshooting. This identifier, like all Plaid identifiers, is case sensitive.
+      type: string

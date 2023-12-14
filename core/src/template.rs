@@ -2,24 +2,24 @@ use tera::Context;
 
 use hir::HirSpec;
 
-use crate::{OutputOptions, write_file};
+use crate::{OutputConfig, PackageConfig, write_file};
 
 pub static TEMPLATE_DIR: include_dir::Dir<'_> =
     include_dir::include_dir!("$CARGO_MANIFEST_DIR/template");
 
 pub fn copy_builtin_templates(
-    opts: &OutputOptions,
+    opts: &PackageConfig,
     tera: &tera::Tera,
     context: &Context,
 ) -> anyhow::Result<()> {
-    let project_template = opts.library_options.language.to_string();
+    let project_template = opts.language.to_string();
     TEMPLATE_DIR
         .get_dir(&project_template)
         .unwrap()
         .files()
         .filter(|f| f.path().extension().unwrap_or_default() == "j2")
         .for_each(|f| {
-            let path = opts.dest_path.join(
+            let path = opts.dest.join(
                 f.path()
                     .strip_prefix(&project_template)
                     .unwrap()
@@ -53,21 +53,19 @@ pub fn prepare_templates() -> tera::Tera {
 }
 
 /// Create context for j2 files.
-pub fn create_context(opts: &OutputOptions, mir_spec: &HirSpec) -> tera::Context {
+pub fn create_context(opts: &PackageConfig, spec: &HirSpec) -> Context {
     let mut context = Context::new();
-    context.insert("package_name", &opts.library_options.package_name);
-    context.insert("github_repo", &opts.qualified_github_repo);
-    context.insert("package_version", &opts.library_options.package_version);
-    context.insert("lang", &opts.library_options.language.to_string());
+    context.insert("package_name", &opts.package_name);
+    context.insert("lang", &opts.language.to_string());
     context.insert(
         "short_description",
         &format!(
             "{name} client, generated from the OpenAPI spec.",
-            name = opts.library_options.service_name
+            name = opts.service_name
         ),
     );
-    context.insert("env_vars", &mir_spec.env_vars(&opts.library_options.service_name));
-    if let Some(url) = &mir_spec.api_docs_url {
+    context.insert("env_vars", &spec.env_vars(&opts.service_name));
+    if let Some(url) = &spec.api_docs_url {
         context.insert("api_docs_url", url);
     }
     context

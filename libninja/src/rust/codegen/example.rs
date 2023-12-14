@@ -5,7 +5,7 @@ use hir::{HirSpec, Language, Operation, Parameter};
 use ln_macro::rfunction;
 use mir::{File, Import};
 
-use crate::LibraryOptions;
+use crate::PackageConfig;
 use crate::rust::codegen::{to_rust_example_value, ToRustCode};
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::format::format_code;
@@ -21,7 +21,7 @@ impl ToRustExample for Parameter {
 }
 
 
-pub fn generate_example(operation: &Operation, opt: &LibraryOptions, spec: &HirSpec) -> anyhow::Result<String> {
+pub fn generate_example(operation: &Operation, opt: &PackageConfig, spec: &HirSpec) -> anyhow::Result<String> {
     let args = operation.function_args(Language::Rust);
     let declarations = args.iter().map(|p| {
         let ident = p.name.to_rust_ident();

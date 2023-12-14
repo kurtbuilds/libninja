@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::hash::Hash;
 use std::path::Path;
 use std::thread::current;
@@ -8,6 +9,7 @@ use indoc::formatdoc;
 use openapiv3::OpenAPI;
 use proc_macro2::TokenStream;
 use quote::quote;
+use text_io::read;
 
 use codegen::ToRustIdent;
 use codegen::ToRustType;
@@ -17,7 +19,7 @@ use ::mir::{Visibility, Import, File};
 use ln_core::fs;
 use hir::{HirSpec, IntegerSerialization, DateSerialization};
 
-use crate::{add_operation_models, extract_spec, LibraryOptions, OutputOptions, util};
+use crate::{add_operation_models, extract_spec, PackageConfig, OutputConfig};
 use crate::rust::client::build_Client_authenticate;
 pub use crate::rust::codegen::generate_example;
 use crate::rust::codegen::{codegen_function, sanitize_filename, ToRustCode};
@@ -32,6 +34,7 @@ pub mod lower_mir;
 pub mod request;
 mod io;
 mod serde;
+mod cargo_toml;
 
 #[derive(Debug)]
 pub struct Extras {
@@ -91,8 +94,8 @@ pub fn calculate_extras(spec: &HirSpec) -> Extras {
 }
 
 
-pub fn copy_from_target_templates(opts: &OutputOptions) -> Result<()> {
-    let template_path = opts.dest_path.join("template");
+pub fn copy_from_target_templates(dest: &Path) -> Result<()> {
+    let template_path = dest.join("template");
     if !template_path.exists() {
         return Ok(());
     }
@@ -103,7 +106,7 @@ pub fn copy_from_target_templates(opts: &OutputOptions) -> Result<()> {
             continue;
         }
         if path.file_type().expect(&format!("Failed to read file: {}", path.path().display())).is_file() {
-            let dest = opts.dest_path.join(rel_path);
+            let dest = dest.join(rel_path);
             fs::create_dir_all(dest.parent().unwrap())?;
             //copy the file
             std::fs::copy(&path.path(), &dest)?;
@@ -112,50 +115,66 @@ pub fn copy_from_target_templates(opts: &OutputOptions) -> Result<()> {
     Ok(())
 }
 
-pub fn generate_rust_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
-    let config = &opts.library_options.config;
+pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
     let src_path = opts.dest_path.join("src");
-    // Ignore failure
+
+    // Prepare the HIR Spec.
+    let spec = extract_spec(&spec)?;
+    let spec = add_operation_models(opts.language, spec)?;
+    let extras = calculate_extras(&spec);
+
+    // if src doesn't exist that's fine
     let _ = fs::remove_dir_all(&src_path);
     fs::create_dir_all(&src_path)?;
 
-    // Prepare the MIR Spec.
-    let hir_spec = extract_spec(&spec)?;
-    let hir_spec = add_operation_models(opts.library_options.language, hir_spec)?;
-    let extras = calculate_extras(&hir_spec);
+    // If there's nothing in cargo.toml, you want to prompt for it here.
+    // Then pass it back in.
+    // But you only need it if you're generating the README and/or Cargo.toml
+    let mut context = HashMap::<String, String>::new();
+    if !opts.dest_path.join("README.md").exists() ||
+        !opts.dest_path.join("Cargo.toml").exists() {
+        if let Some(github_repo) = &opts.github_repo {
+            context.insert("github_repo".to_string(), github_repo.to_string());
+        } else {
+            print!("Please provide a Github repo name (e.g. libninja/plaid-rs): ");
+            let github_repo: String = read!("{}\n");
+            context.insert("github_repo".to_string(), github_repo);
+        }
+    }
+    let version = cargo_toml::update_cargo_toml(&extras, &opts, &context)?;
+    let build_examples = opts.build_examples;
+    let opts = PackageConfig {
+        package_name: opts.package_name,
+        service_name: opts.service_name,
+        language: opts.language,
+        package_version: version,
+        config: opts.config,
+        dest: opts.dest_path,
+    };
+    write_model_module(&spec, &opts)?;
+    write_request_module(&spec, &opts)?;
+    write_lib_rs(&spec, &extras, &opts)?;
+    write_serde_module_if_needed(&extras, &opts.dest)?;
 
-    write_model_module(&hir_spec, &opts)?;
-
-    write_request_module(&hir_spec, &opts)?;
-
-    write_lib_rs(&hir_spec, &extras, &spec, &opts)?;
-
-    write_serde_module_if_needed(&extras, &opts)?;
-
-    let tera = prepare_templates();
-    let mut context = create_context(&opts, &hir_spec);
-
-    if opts.library_options.build_examples {
-        let example = write_examples(&hir_spec, &opts)?;
-        context.insert("code_sample", &example);
-    } else {
-        context.insert("code_sample", "// Examples were skipped. Run libninja with `--examples true` flag to create them.");
+    if build_examples {
+        write_examples(&spec, &opts)?;
     }
 
-    context.insert("client_docs_url", &format!("https://docs.rs/{}", opts.library_options.package_name));
-
-    copy_builtin_files(&opts.dest_path, &opts.library_options.language.to_string(), &["src"])?;
-    copy_builtin_templates(&opts, &tera, &context)?;
-    copy_from_target_templates(&opts)?;
-
-    bump_version_and_update_deps(&extras, &opts)?;
-
+    let tera = prepare_templates();
+    let mut template_context = create_context(&opts, &spec);
+    template_context.insert("client_docs_url", &format!("https://docs.rs/{}", opts.package_name));
+    if let Some(github_repo) = context.get("github_repo") {
+        template_context.insert("github_repo", github_repo);
+    }
+    copy_builtin_files(&opts.dest, &opts.language.to_string(), &["src"])?;
+    copy_builtin_templates(&opts, &tera, &template_context)?;
+    copy_from_target_templates(&opts.dest)?;
     Ok(())
 }
 
-fn write_model_module(mir_spec: &HirSpec, opts: &OutputOptions) -> Result<()> {
-    let config = &opts.library_options.config;
-    let src_path = opts.dest_path.join("src");
+fn write_model_module(mir_spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
+    let config = &opts.config;
+    let src_path = opts.dest.join("src");
 
     let model_rs = generate_model_rs(mir_spec, config);
     write_rust_file_to_path(&src_path.join("model.rs"), model_rs)?;
@@ -169,15 +188,14 @@ fn write_model_module(mir_spec: &HirSpec, opts: &OutputOptions) -> Result<()> {
 }
 
 /// Generates the client code for a given OpenAPI specification.
-fn write_lib_rs(mir_spec: &HirSpec, extras: &Extras, spec: &OpenAPI, opts: &OutputOptions) -> Result<()> {
-    let src_path = opts.dest_path.join("src");
-    let name = &opts.library_options.service_name;
-    let mut struct_Client = client::struct_Client(mir_spec, &opts.library_options);
-    let impl_Client = client::impl_Client(mir_spec, spec, &opts.library_options);
+fn write_lib_rs(spec: &HirSpec, extras: &Extras, opts: &PackageConfig) -> Result<()> {
+    let src_path = opts.dest.join("src");
+    let name = &opts.service_name;
+    let mut struct_Client = client::struct_Client(spec, &opts);
+    let impl_Client = client::impl_Client(spec, &opts);
 
     let client_name = struct_Client.name.clone();
-    let template_path = opts.dest_path.join("template").join("src").join("lib.rs");
-    dbg!(&template_path);
+    let template_path = opts.dest.join("template").join("src").join("lib.rs");
     let lib_rs_template = if template_path.exists() {
         fs::read_to_string(template_path)?
     } else {
@@ -218,10 +236,10 @@ fn write_lib_rs(mir_spec: &HirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
         }
     }).unwrap_or_default();
 
-    let security = mir_spec.has_security().then(|| {
-        let struct_ServiceAuthentication = client::struct_Authentication(mir_spec, &opts.library_options);
+    let security = spec.has_security().then(|| {
+        let struct_ServiceAuthentication = client::struct_Authentication(spec, &opts);
         let impl_ServiceAuthentication = (!template_has_from_env).then(|| {
-            client::impl_Authentication(mir_spec, spec, &opts.library_options)
+            client::impl_Authentication(spec, &opts)
         }).unwrap_or_default();
 
         quote! {
@@ -243,15 +261,15 @@ fn write_lib_rs(mir_spec: &HirSpec, extras: &Extras, spec: &OpenAPI, opts: &Outp
 }
 
 
-fn write_request_module(spec: &HirSpec, opts: &OutputOptions) -> Result<()> {
-    let src_path = opts.dest_path.join("src");
-    let client_name = opts.library_options.client_name().to_rust_struct();
+fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
+    let src_path = opts.dest.join("src");
+    let client_name = opts.client_name().to_rust_struct();
     let mut imports = vec![];
     fs::create_dir_all(src_path.join("request"))?;
     let mut modules = vec![];
     for operation in &spec.operations {
         let fname = operation.file_name();
-        let request_structs = build_request_struct(operation, spec, &opts.library_options);
+        let request_structs = build_request_struct(operation, spec, &opts);
         let struct_name = request_structs[0].name.clone();
         let response = operation.ret.to_rust_type();
         let method = syn::Ident::new(&operation.method, proc_macro2::Span::call_site());
@@ -307,109 +325,37 @@ use httpclient::InMemoryResponseExt;";
     Ok(())
 }
 
-fn bump_version_and_update_deps(extras: &Extras, opts: &OutputOptions) -> anyhow::Result<()> {
-    let cargo = opts.dest_path.join("Cargo.toml");
 
-    let mut manifest = cargo_toml::Manifest::from_path(&cargo)?;
-    let package = manifest.package.as_mut().expect("Cargo.toml does not have a package section. You might have set the output-dir to a workspace directory.");
-
-    package.version = cargo_toml::Inheritable::Set(opts.library_options.package_version.clone());
-
-    let template_manifest = cargo_toml::Manifest::from_str(get_template_file("rust/Cargo.toml.j2")).unwrap();
-    bump_deps(&mut manifest, &template_manifest)?;
-    if extras.currency {
-        manifest.dependencies.entry("rust_decimal".to_string())
-            .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
-                version: Some("1.33".to_string()),
-                features: vec!["serde-with-str".to_string()],
-                ..cargo_toml::DependencyDetail::default()
-            }));
-        manifest.dependencies.entry("rust_decimal_macros".to_string())
-            .or_insert(cargo_toml::Dependency::Simple("1.33".to_string()));
-    }
-    if extras.date_serialization {
-        manifest.dependencies.entry("chrono".to_string())
-            .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
-                version: Some("0.4.23".to_string()),
-                features: vec!["serde".to_string()],
-                default_features: true,
-                ..cargo_toml::DependencyDetail::default()
-            }));
-    }
-    if opts.library_options.config.ormlite {
-        manifest.dependencies.entry("ormlite".to_string())
-            .or_insert(cargo_toml::Dependency::Detailed(cargo_toml::DependencyDetail {
-                version: Some("0.16.0".to_string()),
-                features: vec!["decimal".to_string()],
-                ..cargo_toml::DependencyDetail::default()
-            }));
-    }
-    if extras.basic_auth {
-        manifest.dependencies.entry("base64".to_string())
-            .or_insert(cargo_toml::Dependency::Simple("0.21.0".to_string()));
-    }
-    // delete any examples that no longer exist
-    manifest.example.retain(|e| {
-        let Some(p) = &e.path else { return true; };
-        opts.dest_path.join("examples").join(p).exists()
-    });
-    let content = toml::to_string(&manifest).unwrap();
-    fs::write_file(&cargo, &content)
-}
-
-fn bump_deps(current_manifest: &mut cargo_toml::Manifest, from_other: &cargo_toml::Manifest) -> Result<()> {
-    for (name, other_dep) in &from_other.dependencies {
-        let dep = current_manifest.dependencies.entry(name.clone()).or_insert_with(|| other_dep.clone());
-        let current = semver::Version::parse(dep.req()).unwrap();
-        let other = semver::Version::parse(other_dep.req()).unwrap();
-        if current < other {
-            dep.detail_mut().version = Some(other.to_string());
-        }
+fn write_examples(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
+    let example_path = opts.dest.join("examples");
+    let _ = fs::remove_dir_all(&example_path);
+    fs::create_dir_all(&example_path)?;
+    for operation in &spec.operations {
+        let mut source = generate_example(operation, &opts, spec)?;
+        source.insert_str(0, "#![allow(unused_imports)]\n");
+        fs::write_file(&example_path.join(operation.file_name()).with_extension("rs"), &source)?;
     }
     Ok(())
 }
 
-fn write_examples(spec: &HirSpec, opts: &OutputOptions) -> Result<String> {
-    let example_path = opts.dest_path.join("examples");
-
-    let _ = fs::remove_dir_all(&example_path);
-    fs::create_dir_all(&example_path)?;
-    let mut first_example = None;
-    for operation in &spec.operations {
-        let mut source = generate_example(operation, &opts.library_options, spec)?;
-        if first_example.is_none() {
-            first_example = Some(source.clone());
-        }
-        source.insert_str(0, "#![allow(unused_imports)]\n");
-        fs::write_file(&example_path.join(operation.file_name()).with_extension("rs"), &source)?;
-    }
-    first_example.ok_or_else(|| anyhow::anyhow!("No examples were generated."))
-}
-
-fn write_serde_module_if_needed(extras: &Extras, opts: &OutputOptions) -> Result<()> {
-    let src_path = opts.dest_path.join("src").join("serde.rs");
+fn write_serde_module_if_needed(extras: &Extras, dest: &Path) -> Result<()> {
+    let src_path = dest.join("src").join("serde.rs");
 
     if !extras.needs_serde() {
         return Ok(());
     }
 
-    let null_as_zero = if extras.null_as_zero {
-        serde::option_i64_null_as_zero_module()
-    } else {
-        TokenStream::new()
-    };
+    let null_as_zero = extras.null_as_zero
+        .then(serde::option_i64_null_as_zero_module)
+        .unwrap_or_default();
 
-    let date_as_int = if extras.integer_date_serialization {
-        serde::option_chrono_naive_date_as_int_module()
-    } else {
-        TokenStream::new()
-    };
+    let date_as_int = extras.integer_date_serialization
+        .then(serde::option_chrono_naive_date_as_int_module)
+        .unwrap_or_default();
 
-    let int_as_str = if extras.option_i64_str {
-        serde::option_i64_str_module()
-    } else {
-        TokenStream::new()
-    };
+    let int_as_str = extras.option_i64_str
+        .then(serde::option_i64_str_module)
+        .unwrap_or_default();
 
     let code = quote! {
         pub use ::serde::*;

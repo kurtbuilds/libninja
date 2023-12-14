@@ -9,7 +9,7 @@ use regex::Captures;
 use hir::{Doc, HirSpec, Operation};
 use hir::{doc, Location, Parameter, Ty, Language};
 use ln_core::extractor::spec_defines_auth;
-use ln_core::LibraryOptions;
+use ln_core::PackageConfig;
 use mir::{Class, Field, FnArg, Function, Ident, Visibility};
 
 use crate::rust::codegen::ToRustCode;
@@ -229,7 +229,7 @@ pub fn build_request_struct_builder_methods(
 pub fn build_request_struct(
     operation: &Operation,
     spec: &HirSpec,
-    opt: &LibraryOptions,
+    opt: &PackageConfig,
 ) -> Vec<Class<TokenStream>> {
     let mut instance_fields = build_struct_fields(&operation.parameters, false);
     // instance_fields.insert(
@@ -295,7 +295,7 @@ That method takes required values as arguments. Set optional values using builde
     result
 }
 
-pub fn build_request_structs(spec: &HirSpec, opt: &LibraryOptions) -> Vec<Class<TokenStream>> {
+pub fn build_request_structs(spec: &HirSpec, opt: &PackageConfig) -> Vec<Class<TokenStream>> {
     let mut result = vec![];
     for operation in &spec.operations {
         result.extend(build_request_struct(operation, spec, opt));
@@ -303,7 +303,7 @@ pub fn build_request_structs(spec: &HirSpec, opt: &LibraryOptions) -> Vec<Class<
     result
 }
 
-pub fn generate_request_model_rs(spec: &HirSpec, opt: &LibraryOptions) -> TokenStream {
+pub fn generate_request_model_rs(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
     let classes = build_request_structs(spec, opt);
     let mut request_structs = classes
         .into_iter()

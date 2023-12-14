@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
 use hir::{DateSerialization, DecimalSerialization, HirField, HirSpec, IntegerSerialization, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
-use ln_core::LibraryConfig;
+use ln_core::ConfigFlags;
 use mir::{Field, File, Ident, Import, import, Visibility};
 
 use crate::rust::codegen;
@@ -14,11 +14,11 @@ use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
 
 pub trait FieldExt {
-    fn decorators(&self, name: &str, config: &LibraryConfig) -> Vec<TokenStream>;
+    fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream>;
 }
 
 impl FieldExt for HirField {
-    fn decorators(&self, name: &str, config: &LibraryConfig) -> Vec<TokenStream> {
+    fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream> {
         let mut decorators = Vec::new();
         let rust_ident = name.to_rust_ident();
         if rust_ident.0 != name {
@@ -94,7 +94,7 @@ impl FieldExt for HirField {
 pub trait StructExt {
     fn implements_default(&self) -> bool;
     fn derive_default(&self) -> TokenStream;
-    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=Field<TokenStream>> + 'a>;
+    fn model_fields<'a>(&'a self, config: &'a ConfigFlags) -> Box<dyn Iterator<Item=Field<TokenStream>> + 'a>;
     fn ref_target(&self) -> Option<RefTarget>;
 }
 
@@ -112,7 +112,7 @@ impl StructExt for Struct {
         }
     }
 
-    fn model_fields<'a>(&'a self, config: &'a LibraryConfig) -> Box<dyn Iterator<Item=Field<TokenStream>> + 'a> {
+    fn model_fields<'a>(&'a self, config: &'a ConfigFlags) -> Box<dyn Iterator<Item=Field<TokenStream>> + 'a> {
         Box::new(self.fields.iter().map(|(name, field)| {
             let decorators = field.decorators(name, config);
             let ty = field.ty.to_rust_type();
@@ -166,7 +166,7 @@ impl RecordExt for Record {
 }
 
 /// Generate a model.rs file that just imports from dependents.
-pub fn generate_model_rs(spec: &HirSpec, config: &LibraryConfig) -> File<TokenStream> {
+pub fn generate_model_rs(spec: &HirSpec, config: &ConfigFlags) -> File<TokenStream> {
     let imports = spec.schemas.keys().map(|name: &String| {
         let fname = sanitize_filename(&name);
         Import::new(&fname, vec!["*"]).public()
@@ -185,7 +185,7 @@ pub fn generate_model_rs(spec: &HirSpec, config: &LibraryConfig) -> File<TokenSt
 }
 
 /// Generate the file for a single struct.
-pub fn generate_single_model_file(name: &str, record: &Record, spec: &HirSpec, config: &LibraryConfig) -> File<TokenStream> {
+pub fn generate_single_model_file(name: &str, record: &Record, spec: &HirSpec, config: &ConfigFlags) -> File<TokenStream> {
     let mut imports = vec![
         import!("serde", Serialize, Deserialize),
     ];
@@ -207,7 +207,7 @@ pub struct RefTarget {
     ty: Ty,
 }
 
-pub fn create_sumtype_struct(schema: &Struct, config: &LibraryConfig) -> TokenStream {
+pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags) -> TokenStream {
     let default = schema.derive_default();
     let ormlite = if config.ormlite { quote! { , TableMeta, IntoArguments } } else { TokenStream::new() };
 
@@ -292,7 +292,7 @@ pub fn create_typealias(name: &str, schema: &HirField) -> TokenStream {
     }
 }
 
-pub fn create_struct(record: &Record, config: &LibraryConfig) -> TokenStream {
+pub fn create_struct(record: &Record, config: &ConfigFlags) -> TokenStream {
     match record {
         Record::Struct(s) => create_sumtype_struct(s, config),
         Record::NewType(nt) => create_newtype_struct(nt),

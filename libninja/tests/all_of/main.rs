@@ -1,8 +1,8 @@
-use openapiv3::{OpenAPI, ReferenceOr, Schema};
+use openapiv3::{OpenAPI, Schema};
 use pretty_assertions::assert_eq;
 
 /// Tests that the `allOf` keyword is handled correctly.
-use ln_core::{LibraryConfig};
+use ln_core::{ConfigFlags};
 use hir::Record;
 
 const TRANSACTION: &str = include_str!("transaction.yaml");
@@ -20,7 +20,7 @@ fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
 }
 
 fn formatted_code(record: Record) -> String {
-    let config = LibraryConfig::default();
+    let config = ConfigFlags::default();
     let code = libninja::rust::lower_mir::create_struct(&record, &config);
     libninja::rust::format::format_code(code).unwrap()
 }

@@ -4,8 +4,7 @@
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use clap::{Args, Parser, Subcommand};
-use libninja::generate_library_using_spec_at_path;
-use ln_core::{OutputOptions, LibraryOptions};
+use ln_core::{OutputConfig, PackageConfig};
 use hir::Language;
 use libninja::rust::generate_rust_library;
 use std::path::Path;

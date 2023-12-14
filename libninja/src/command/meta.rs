@@ -27,7 +27,7 @@ pub struct Meta {
 impl Meta {
     pub fn run(self) -> Result<()> {
         let path = PathBuf::from(self.spec_filepath);
-        let spec = read_spec(path, &self.service_name)?;
+        let spec = read_spec(&path)?;
         let mut schema_lookup = HashMap::new();
         spec.add_child_schemas(&mut schema_lookup);
         for (name, schema) in schema_lookup {

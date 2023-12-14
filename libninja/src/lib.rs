@@ -10,51 +10,42 @@ use std::process::ExitCode;
 pub use ::openapiv3::OpenAPI;
 use anyhow::{anyhow, Context, Result};
 pub use openapiv3;
+use openapiv3::VersionedOpenAPI;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 
 use commercial::*;
-use ln_core::{LibraryConfig, LibraryOptions, OutputOptions};
+use ln_core::{ConfigFlags, PackageConfig, OutputConfig};
 use ln_core::extractor::{extract_api_operations, extract_spec};
 use ln_core::extractor::add_operation_models;
 use ln_core::fs::open;
 use hir::{Language, HirSpec};
-pub use repo::*;
 
 pub mod custom;
 pub mod rust;
-pub mod util;
 pub mod command;
-mod modify;
-pub mod repo;
 mod commercial;
 
-pub fn read_spec(path: impl AsRef<Path>, service_name: &str) -> Result<OpenAPI> {
-    let path = path.as_ref();
+pub fn read_spec(path: &Path) -> Result<OpenAPI> {
     let file = File::open(path).map_err(|_| anyhow!("{:?}: File not found.", path))?;
-    let ext = path.extension().unwrap_or_default().to_str().expect("File must have a file extension.");
-    let value: serde_yaml::Value = match ext {
+    let ext = path.extension().map(|s| s.to_str().expect("Extension isn't utf8"))
+        .unwrap_or_else(|| "yaml");
+    let openapi: VersionedOpenAPI = match ext {
         "yaml" => serde_yaml::from_reader(file)?,
         "json" => serde_json::from_reader(file)?,
         _ => panic!("Unknown file extension"),
     };
-    let spec = modify::modify_spec(value, service_name)
-        .context("Failed to deserialize OpenAPI spec.")?;
-    Ok(spec)
+    let openapi = openapi.upgrade();
+    Ok(openapi)
 }
 
-pub fn generate_library(spec: OpenAPI, opts: OutputOptions) -> Result<()> {
-    match opts.library_options.language {
+pub fn generate_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
+    match opts.language {
         Language::Rust => rust::generate_rust_library(spec, opts),
         Language::Python => python::generate_library(spec, opts),
         Language::Typescript => typescript::generate_library(spec, opts),
         Language::Golang => go::generate_library(spec, opts),
     }
-}
-
-pub fn generate_library_using_spec_at_path(path: &Path, opts: OutputOptions) -> Result<()> {
-    let spec = read_spec(path, &opts.library_options.service_name)?;
-    generate_library(spec, opts)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,7 +59,7 @@ pub struct Examples {
 
 pub fn generate_examples(
     spec: OpenAPI,
-    mut opt: LibraryOptions,
+    mut opt: PackageConfig,
 ) -> Result<HashMap<String, Examples>> {
     let mut map = HashMap::new();
     let spec = extract_spec(&spec)?;
@@ -76,26 +67,26 @@ pub fn generate_examples(
     for operation in &spec.operations {
         let rust = {
             let generator = Language::Rust;
-            let opt = LibraryOptions { language: generator, ..opt.clone() };
+            let opt = PackageConfig { language: generator, ..opt.clone() };
             let spec = add_operation_models(generator, spec.clone())?;
             rust::generate_example(operation, &opt, &spec)?
         };
         let python = {
-            let opt = LibraryOptions { language: Language::Python, ..opt.clone() };
+            let opt = PackageConfig { language: Language::Python, ..opt.clone() };
             python::generate_sync_example(operation, &opt, &spec)?
         };
         let python_async = {
-            let opt = LibraryOptions { language: Language::Python, ..opt.clone() };
+            let opt = PackageConfig { language: Language::Python, ..opt.clone() };
             python::generate_async_example(operation, &opt, &spec)?
         };
         let typescript = {
             let generator = Language::Rust;
-            let opt = LibraryOptions { language: generator, ..opt.clone() };
+            let opt = PackageConfig { language: generator, ..opt.clone() };
             let spec = add_operation_models(generator, spec.clone())?;
             typescript::generate_example(operation, &opt, &spec)?
         };
         let go = {
-            let opt = LibraryOptions { language: Language::Golang, ..opt.clone() };
+            let opt = PackageConfig { language: Language::Golang, ..opt.clone() };
             go::generate_example(operation, &opt, &spec)?
         };
         let examples = Examples {

@@ -22,7 +22,7 @@ serde_json = "1.0.100"
 serde_yaml = "0.9.22"
 syn = "2.0"
 tokio = { version = "1.29.1", features = ["full"] }
-openapiv3-extended = { version = "3.1" }
+openapiv3-extended = { version = "3.1" , features = ["v2"] }
 convert_case = "0.6.0"
 prettyplease = "0.2"
 clap = { version = "4.4.10", features = ["derive"] }
@@ -46,6 +46,7 @@ libninja_mir = { path = "../mir" }
 libninja_hir = { path = "../hir" }
 libninja_commercial = { path = "../commercial" , optional = true }
 ignore = "0.4.21"
+text_io = "0.1.12"
 
 [dev-dependencies]
 env_logger = "0.10.0"

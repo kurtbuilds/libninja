@@ -5,13 +5,13 @@ use hir::Language;
 
 
 #[derive(Debug, Clone, Default)]
-pub struct LibraryConfig {
+pub struct ConfigFlags {
     /// Only for Rust. Adds ormlite::TableMeta flags to the code.
     pub ormlite: bool,
 }
 
 #[derive(Debug, Clone)]
-pub struct LibraryOptions {
+pub struct PackageConfig {
     // e.g. petstore-api
     pub package_name: String,
     // eg PetStore
@@ -19,25 +19,14 @@ pub struct LibraryOptions {
 
     pub language: Language,
 
-    pub build_examples: bool,
-
     pub package_version: String,
 
-    pub config: LibraryConfig,
+    pub config: ConfigFlags,
+
+    pub dest: PathBuf,
 }
 
-impl LibraryOptions {
-    pub fn new(service_name: &str, language: Language) -> Self {
-        Self {
-            package_name: service_name.to_case(Case::Snake),
-            service_name: service_name.to_string(),
-            build_examples: true,
-            language,
-            package_version: "0.1.0".to_string(),
-            config: Default::default(),
-        }
-    }
-
+impl PackageConfig {
     pub fn user_agent(&self) -> Literal<String> {
         literal(format!(
             "{}/{}/{}",
@@ -72,30 +61,17 @@ impl LibraryOptions {
     }
 }
 
-pub struct OutputOptions {
-    pub library_options: LibraryOptions,
-
-    // eg libninjacom/petstore-rs
-    pub qualified_github_repo: String,
-
+pub struct OutputConfig {
     pub dest_path: PathBuf,
-}
+    pub build_examples: bool,
+    // e.g. petstore-api
+    pub package_name: String,
+    // eg PetStore
+    pub service_name: String,
 
-impl OutputOptions {
-    pub fn user_agent(&self) -> String {
-        format!(
-            "{}/{}/{}",
-            self.library_options.package_name,
-            self.library_options.language.to_string(),
-            self.library_options.package_version
-        )
-    }
+    pub language: Language,
 
-    pub fn client_name(&self) -> String {
-        self.library_options.client_name()
-    }
+    pub config: ConfigFlags,
 
-    pub fn async_client_name(&self) -> String {
-        self.library_options.async_client_name()
-    }
+    pub github_repo: Option<String>,
 }

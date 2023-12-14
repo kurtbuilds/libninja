@@ -1,12 +1,14 @@
 use std::fs::File;
+use std::str::FromStr;
 
 use anyhow::Result;
 use hir::Language;
 use libninja::{generate_library, rust};
 use ln_core::extractor::{extract_api_operations, extract_inputs, extract_spec};
-use ln_core::{LibraryConfig, LibraryOptions, OutputOptions};
+use ln_core::{PackageConfig, OutputConfig};
 use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
+use std::path::PathBuf;
 
 const BASIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/basic.yaml");
 const RECURLY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/recurly.yaml");
@@ -29,13 +31,13 @@ fn test_generate_example() -> Result<()> {
     let spec: OpenAPI = serde_yaml::from_reader(yaml).unwrap();
     // let operation = spec.get_operation("linkTokenCreate").unwrap();
 
-    let opt = LibraryOptions {
+    let opt = PackageConfig {
         package_name: "plaid".to_string(),
         service_name: "Plaid".to_string(),
-        package_version: "0.1.0".to_string(),
         language: Language::Rust,
-        build_examples: false,
+        package_version: "0.1.0".to_string(),
         config: Default::default(),
+        dest: PathBuf::from_str("..").unwrap(),
     };
     let operations = extract_api_operations(&spec).unwrap();
     let operation = operations
@@ -55,10 +57,14 @@ pub fn test_build_full_library_recurly() -> Result<()> {
     let temp = tempfile::tempdir()?;
 
     let spec: OpenAPI = serde_yaml::from_reader(yaml).unwrap();
-    let opts = OutputOptions {
-        library_options: LibraryOptions::new("Recurly", Language::Rust),
-        qualified_github_repo: "libninja".to_string(),
+    let opts = OutputConfig {
         dest_path: temp.path().to_path_buf(),
+        build_examples: false,
+        package_name: "recurly".to_string(),
+        service_name: "Recurly".to_string(),
+        language: Language::Rust,
+        config: Default::default(),
+        github_repo: Some("libninjacom/recurly".to_string()),
     };
     generate_library(spec, opts)
 }
