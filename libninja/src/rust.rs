@@ -267,6 +267,12 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     let mut imports = vec![];
     fs::create_dir_all(src_path.join("request"))?;
     let mut modules = vec![];
+
+    let authenticate = spec.has_security()
+        .then(|| quote! {
+                r = self.client.authenticate(r);
+            }).unwrap_or_default();
+
     for operation in &spec.operations {
         let fname = operation.file_name();
         let request_structs = build_request_struct(operation, spec, &opts);
@@ -284,6 +290,7 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
         let builder_methods = builder_methods
             .into_iter()
             .map(|s| codegen_function(s, quote! { mut self , }));
+
         let file = quote! {
             use crate::#client_name;
             #(#request_structs)*
@@ -301,7 +308,7 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
                         let url = #url;
                         let mut r = self.client.client.#method(url);
                         r = r.set_query(self.params);
-                        r = self.client.authenticate(r);
+                        #authenticate
                         let res = r.await?;
                         res.json().map_err(Into::into)
                     })

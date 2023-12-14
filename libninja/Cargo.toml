@@ -22,7 +22,7 @@ serde_json = "1.0.100"
 serde_yaml = "0.9.22"
 syn = "2.0"
 tokio = { version = "1.29.1", features = ["full"] }
-openapiv3-extended = { version = "3.1" , features = ["v2"] }
+openapiv3-extended = { version = "3.1", features = ["v2"] }
 convert_case = "0.6.0"
 prettyplease = "0.2"
 clap = { version = "4.4.10", features = ["derive"] }
@@ -30,7 +30,7 @@ tera = "1.19.0"
 include_dir = "0.7.3"
 regex = "1.9.0"
 indoc = "2.0.2"
-cargo_toml = "0.17.1"
+cargo_toml = { git = "https://github.com/kurtbuilds/cargo_toml" }
 toml = "0.8.8"
 topo_sort = "0.4.0"
 url = "2.4.0"
@@ -44,7 +44,7 @@ ln-macro = { path = "../macro" }
 ln-core = { path = "../core" }
 libninja_mir = { path = "../mir" }
 libninja_hir = { path = "../hir" }
-libninja_commercial = { path = "../commercial" , optional = true }
+libninja_commercial = { path = "../commercial", optional = true }
 ignore = "0.4.21"
 text_io = "0.1.12"
 

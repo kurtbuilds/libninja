@@ -248,9 +248,12 @@ pub fn build_request_struct(
     // let mut instance_methods = vec![build_send_function(operation, spec)];
     // let mut_self_instance_methods = build_request_struct_builder_methods(operation);
 
-    let doc = doc("Create this with the associated client method.
+    let fn_name = operation.name.to_rust_ident().0;
+    let response = operation.ret.to_rust_type().to_string().replace(" ", "");
+    let client = opt.client_name().to_rust_struct().to_string().replace(" ", "");
+    let doc = Some(Doc(format!(r#"You should use this struct via [`{client}::{fn_name}`].
 
-That method takes required values as arguments. Set optional values using builder methods on this struct.");
+On request success, this will return a [`{response}`]."#, )));
     let mut result = vec![Class {
         name: operation.request_struct_name().to_rust_struct(),
         doc,

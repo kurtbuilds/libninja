@@ -193,8 +193,8 @@ pub fn authenticate_variant(
     }
 }
 
-pub fn build_Client_authenticate(mir_spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
-    let authenticate_variant = mir_spec.security
+pub fn build_Client_authenticate(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
+    let authenticate_variant = spec.security
         .iter()
         .map(|req| authenticate_variant(req, opt))
         .collect::<Vec<_>>();
@@ -235,14 +235,14 @@ fn build_new_fn(security: bool, opt: &PackageConfig) -> TokenStream {
     }
 }
 
-pub fn impl_Client(mir_spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
+pub fn impl_Client(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
     let client_struct_name = opt.client_name().to_rust_struct();
-    let path_fns = impl_ServiceClient_paths(mir_spec);
+    let path_fns = impl_ServiceClient_paths(spec);
 
-    let security = mir_spec.has_security();
+    let security = spec.has_security();
     let new_fn = build_new_fn(security, opt);
     let authenticate = if security {
-        build_Client_authenticate(mir_spec, opt)
+        build_Client_authenticate(spec, opt)
     } else {
         TokenStream::new()
     };
