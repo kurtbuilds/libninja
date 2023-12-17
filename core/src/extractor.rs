@@ -17,22 +17,19 @@ mod record;
 
 /// You might need to call add_operation_models after this
 pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
-    let operations = extract_api_operations(spec)?;
-    let schemas = extract_records(spec)?;
+    let mut result = HirSpec::default();
+    extract_api_operations(spec, &mut result)?;
+    extract_records(spec, &mut result)?;
     let servers = extract_servers(spec)?;
     let security = extract_security_strategies(spec);
 
     let api_docs_url = extract_api_docs_link(spec);
 
-    let mut s = HirSpec {
-        operations,
-        schemas,
-        servers,
-        security,
-        api_docs_url,
-    };
-    sanitize_spec(&mut s);
-    Ok(s)
+    result.servers = servers;
+    result.security = security;
+    result.api_docs_url = api_docs_url;
+    sanitize_spec(&mut result);
+    Ok(result)
 }
 
 pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
@@ -149,7 +146,7 @@ pub fn extract_inputs<'a>(
 pub fn extract_response_success<'a>(
     operation: &'a oa::Operation,
     spec: &'a OpenAPI,
-) -> Option<&'a ReferenceOr<oa::Schema>> {
+) -> Option<&'a ReferenceOr<Schema>> {
     use openapiv3::StatusCode;
 
     let response = operation
@@ -232,31 +229,46 @@ pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {
     format!("{method}{name}{last_group}")
 }
 
-pub fn extract_api_operations(spec: &OpenAPI) -> Result<Vec<Operation>> {
-    spec.operations()
-        .map(|(path, method, operation, item)| {
-            let name = match &operation.operation_id {
-                None => make_name_from_method_and_url(method, path),
-                Some(name) => name.clone(),
-            };
-            let doc = extract_operation_doc(operation, DocFormat::Markdown);
-            let mut parameters = extract_inputs(operation, item, spec)?;
-            parameters.sort_by(|a, b| a.name.cmp(&b.name));
-            let response_success = extract_response_success(operation, spec);
-            let ret = match response_success {
-                None => Ty::Unit,
-                Some(r) => schema_ref_to_ty(r, spec),
-            };
-            Ok(Operation {
-                name,
-                doc,
-                parameters,
-                ret,
-                path: path.to_string(),
-                method: method.to_string(),
-            })
-        })
-        .collect()
+pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()> {
+    for (path, method, operation, item) in spec.operations() {
+        let name = match &operation.operation_id {
+            None => make_name_from_method_and_url(method, path),
+            Some(name) => name.clone(),
+        };
+        let doc = extract_operation_doc(operation, DocFormat::Markdown);
+        let mut parameters = extract_inputs(operation, item, spec)?;
+        parameters.sort_by(|a, b| a.name.cmp(&b.name));
+        let response_success = extract_response_success(operation, spec);
+        let mut needs_response_model = None;
+        let ret = match response_success {
+            None => Ty::Unit,
+            Some(ReferenceOr::Item(s)) => {
+                if matches!(s.schema_kind, oa::SchemaKind::Type(oa::Type::Object(_))) {
+                    needs_response_model = Some(s);
+                    Ty::model(&format!("{}Response", name))
+                } else {
+                    schema_to_ty(s, spec)
+                }
+            },
+            Some(x @ ReferenceOr::Reference { .. }) => {
+                schema_ref_to_ty(x, spec)
+            }
+        };
+
+        if let Some(s) = needs_response_model {
+            let response_name = format!("{}Response", name);
+            result.schemas.insert(response_name.clone(), create_record(&response_name, s, spec));
+        }
+        result.operations.push(Operation {
+            name,
+            doc,
+            parameters,
+            ret,
+            path: path.to_string(),
+            method: method.to_string(),
+        });
+    }
+    Ok(())
 }
 
 

@@ -306,7 +306,7 @@ impl Record {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HirSpec {
     pub operations: Vec<Operation>,
     pub schemas: BTreeMap<String, Record>,

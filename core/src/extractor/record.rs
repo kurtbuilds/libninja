@@ -7,7 +7,7 @@ use indexmap::IndexMap;
 use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type};
 use tracing::warn;
 
-use hir::{Doc, HirField, Record, StrEnum, Struct, NewType};
+use hir::{Doc, HirField, Record, StrEnum, Struct, NewType, HirSpec};
 
 use crate::extractor;
 use crate::child_schemas::ChildSchemas;
@@ -144,23 +144,21 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
 }
 
 // records are data types: structs, newtypes
-pub fn extract_records(spec: &OpenAPI) -> Result<BTreeMap<String, Record>> {
-    let mut result: BTreeMap<String, Record> = BTreeMap::new();
+pub fn extract_records(spec: &OpenAPI, result: &mut HirSpec) -> Result<()> {
     let mut schema_lookup = HashMap::new();
 
     spec.add_child_schemas(&mut schema_lookup);
     for (mut name, schema) in schema_lookup {
         let rec = create_record(&name, schema, spec);
         let name = rec.name().to_string();
-        result.insert(name, rec);
+        result.schemas.insert(name, rec);
     }
 
     for (name, schema_ref)  in spec.schemas() {
         let Some(reference) = schema_ref.as_ref_str() else { continue; };
-        result.insert(name.clone(), Record::TypeAlias(name.clone(), create_field(&schema_ref, spec)));
+        result.schemas.insert(name.clone(), Record::TypeAlias(name.clone(), create_field(&schema_ref, spec)));
     }
-
-    Ok(result)
+    Ok(())
 }
 
 #[cfg(test)]
