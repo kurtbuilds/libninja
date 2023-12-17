@@ -17,6 +17,12 @@ use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
 
 pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
+    let params_except_path: Vec<&Parameter> = inputs.iter().filter(|&input| input.location != Location::Path).collect();
+    if params_except_path.iter().all(|&input| input.location == Location::Query) {
+        return quote! {
+            r = r.set_query(self.params);
+        };
+    }
     let assigns = inputs
         .iter()
         .filter(|input| input.location != Location::Path)
@@ -32,7 +38,7 @@ pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
                 } else if input.optional {
                     quote! { unwrapped }
                 } else {
-                    quote! { self.#field }
+                    quote! { self.params.#field }
                 };
                 match input.location {
                     Location::Path => panic!("Should be filtered."),
@@ -55,7 +61,7 @@ pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
                 let container = if input.optional {
                     quote! { unwrapped }
                 } else {
-                    quote! { self.#field }
+                    quote! { self.params.#field }
                 };
                 assign = quote! {
                     for item in #container {
@@ -66,7 +72,7 @@ pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
 
             if input.optional {
                 assign = quote! {
-                    if let Some(ref unwrapped) = self.#field {
+                    if let Some(ref unwrapped) = self.params.#field {
                         #assign
                     }
                 };

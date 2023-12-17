@@ -17,7 +17,8 @@ use format::format_code;
 use ln_core::{copy_builtin_files, copy_builtin_templates, create_context, get_template_file, prepare_templates};
 use ::mir::{Visibility, Import, File};
 use ln_core::fs;
-use hir::{HirSpec, IntegerSerialization, DateSerialization};
+use hir::{HirSpec, IntegerSerialization, DateSerialization, Location, Parameter};
+use mir::Ident;
 
 use crate::{add_operation_models, extract_spec, PackageConfig, OutputConfig};
 use crate::rust::client::build_Client_authenticate;
@@ -25,7 +26,7 @@ pub use crate::rust::codegen::generate_example;
 use crate::rust::codegen::{codegen_function, sanitize_filename, ToRustCode};
 use crate::rust::io::write_rust_file_to_path;
 use crate::rust::lower_mir::{generate_model_rs, generate_single_model_file};
-use crate::rust::request::{build_request_struct, build_request_struct_builder_methods, build_url, generate_request_model_rs};
+use crate::rust::request::{assign_inputs_to_request, build_request_struct, build_request_struct_builder_methods, build_url, generate_request_model_rs};
 
 pub mod client;
 pub mod codegen;
@@ -262,7 +263,6 @@ fn write_lib_rs(spec: &HirSpec, extras: &Extras, opts: &PackageConfig) -> Result
     Ok(())
 }
 
-
 fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     let src_path = opts.dest.join("src");
     let client_name = opts.client_name().to_rust_struct();
@@ -293,6 +293,9 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
             .into_iter()
             .map(|s| codegen_function(s, quote! { mut self , }));
 
+
+        let assign_inputs = assign_inputs_to_request(&operation.parameters);
+
         let file = quote! {
             use crate::#client_name;
             #(#request_structs)*
@@ -306,10 +309,10 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
                 type IntoFuture = ::futures::future::BoxFuture<'a, Self::Output>;
 
                 fn into_future(self) -> Self::IntoFuture {
-                    Box::pin(async {
+                    Box::pin(async move {
                         let url = #url;
                         let mut r = self.client.client.#method(url);
-                        r = r.set_query(self.params);
+                        #assign_inputs
                         #authenticate
                         let res = r.await?;
                         res.json().map_err(Into::into)
