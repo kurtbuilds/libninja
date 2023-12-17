@@ -8,7 +8,10 @@ use ln_core::{OutputConfig, PackageConfig};
 use hir::Language;
 use libninja::rust::generate_rust_library;
 use std::path::Path;
+use tracing::Level;
 use libninja::command::*;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::layer::SubscriberExt;
 
 fn warn_if_not_found(command: &str) {
     if std::process::Command::new(command)
@@ -30,12 +33,6 @@ struct Cli {
     verbose: bool,
 }
 
-#[derive(Args, Debug)]
-pub struct Foobar {
-    pub foo: String,
-    pub bar: String,
-}
-
 #[derive(Subcommand, Debug)]
 pub enum Command {
     Gen(Generate),
@@ -50,8 +47,19 @@ pub enum Command {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-
-    tracing_ez::set_global_default_stderr();
+    let level = if cli.verbose { Level::DEBUG } else { Level::INFO };
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer()
+            .without_time()
+        )
+        .with(tracing_subscriber::filter::Targets::new()
+            .with_target(env!("CARGO_BIN_NAME"), level)
+            .with_target("libninja_mir", level)
+            .with_target("libninja_hir", level)
+            .with_target("ln_core", level)
+            .with_target("ln_macro", level)
+        )
+        .init();
 
     match cli.command {
         Command::Gen(generate) => {

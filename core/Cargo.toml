@@ -1,9 +1,11 @@
 [package]
-name = "ln-core"
+name = "libninja_core"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "ln_core"
 
 [dependencies]
 anyhow = "1.0.71"
@@ -14,13 +16,14 @@ serde = { version = "1.0.166", features = ["derive"] }
 quote = "1.0.29"
 serde_json = "1.0.100"
 proc-macro2 = "1.0.63"
-tracing-ez = "0.3.0"
 indexmap = "2.0"
 syn = "2.0"
 libninja_mir = { path = "../mir" }
 include_dir = "0.7.3"
 tera = "1.19.0"
 libninja_hir = { path = "../hir" }
+tracing = "0.1.40"
+tracing-ez = "0.3.0"
 
 [dev-dependencies]
 serde_yaml = "0.9.25"

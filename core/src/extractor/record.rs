@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 
 use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type};
-use tracing_ez::warn;
+use tracing::warn;
 
 use hir::{Doc, HirField, Record, StrEnum, Struct, NewType};
 
@@ -147,12 +147,19 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
 pub fn extract_records(spec: &OpenAPI) -> Result<BTreeMap<String, Record>> {
     let mut result: BTreeMap<String, Record> = BTreeMap::new();
     let mut schema_lookup = HashMap::new();
+
     spec.add_child_schemas(&mut schema_lookup);
-    for (name, schema) in schema_lookup {
+    for (mut name, schema) in schema_lookup {
         let rec = create_record(&name, schema, spec);
         let name = rec.name().to_string();
         result.insert(name, rec);
     }
+
+    for (name, schema_ref)  in spec.schemas() {
+        let Some(reference) = schema_ref.as_ref_str() else { continue; };
+        result.insert(name.clone(), Record::TypeAlias(name.clone(), create_field(&schema_ref, spec)));
+    }
+
     Ok(result)
 }
 

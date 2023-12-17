@@ -3,6 +3,7 @@ use std::process::Output;
 use anyhow::Result;
 use clap::{Args, ValueEnum};
 use convert_case::{Case, Casing};
+use tracing::debug;
 use crate::{OutputConfig, Language, PackageConfig, read_spec, generate_library};
 use ln_core::{ConfigFlags};
 
@@ -36,7 +37,7 @@ pub struct Generate {
     #[clap(short, long)]
     output_dir: Option<String>,
 
-    #[clap(short, long)]
+    #[clap(long)]
     version: Option<String>,
 
     /// config options

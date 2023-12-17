@@ -317,7 +317,6 @@ pub struct HirSpec {
     pub api_docs_url: Option<String>,
 }
 
-
 pub enum ServerStrategy {
     /// No servers were provided, so we pass a base URL
     BaseUrl,

@@ -1,5 +1,5 @@
 [package]
-name = "ln-macro"
+name = "libninja_macro"
 version = "0.1.0"
 authors = [
 ]
@@ -8,6 +8,7 @@ license = "MIT"
 edition = "2021"
 
 [lib]
+name = "ln_macro"
 proc_macro = true
 
 [dependencies]

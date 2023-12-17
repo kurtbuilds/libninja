@@ -4,13 +4,13 @@ use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
 use openapiv3::{OpenAPI, ReferenceOr, Schema};
 use openapiv3 as oa;
-use tracing_ez::{span, warn};
 
 use ::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, HirSpec, Language, Location, Operation, Record, Ty, Parameter, Doc};
 pub use record::*;
 pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 pub use resolution::*;
 use mir::NewType;
+use tracing_ez::{warn, debug, span};
 
 mod resolution;
 mod record;
@@ -35,7 +35,7 @@ pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
     Ok(s)
 }
 
-pub fn is_optional(name: &str, param: &oa::Schema, parent: &Schema) -> bool {
+pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
     param.schema_data.nullable || !parent.required(name)
 }
 
@@ -57,6 +57,7 @@ pub fn extract_request_schema<'a>(
 
 pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<Parameter> {
     span!("extract_param", param = ?param);
+
     let param = param.resolve(spec)?;
     let data = param.parameter_data_ref();
     let param_schema_ref = data
@@ -308,7 +309,18 @@ fn remove_unused(spec: &mut HirSpec) {
             };
         }
     }
-    spec.schemas.retain(|name, _| used.contains(name) || name.ends_with("Webhook"));
+    let count_before = spec.schemas.len();
+    spec.schemas.retain(|name, _| {
+        let needed = used.contains(name) || name.ends_with("Webhook");
+        if !needed {
+            debug!("Removing unused schema: {}", name);
+        }
+        needed
+    });
+    let count_after = spec.schemas.len();
+    if count_before == count_after {
+        debug!("No schemas removed in removed_unused");
+    }
 }
 
 fn sanitize_spec(spec: &mut HirSpec) {
@@ -323,9 +335,7 @@ fn sanitize_spec(spec: &mut HirSpec) {
         .collect();
     for record in spec.schemas.values_mut() {
         for field in record.fields_mut() {
-            let Ty::Model(name) = &field.ty else {
-                continue;
-            };
+            let Ty::Model(name) = &field.ty else { continue; };
             let Some(rename_to) = optional_short_circuit.get(name) else {
                 continue;
             };
@@ -450,11 +460,11 @@ fn get_name(schema_ref: oa::SchemaReference) -> String {
 
 /// Add the models for operations that have structs for their required params.
 /// E.g. linkTokenCreate has >3 required params, so it has a struct.
-pub fn add_operation_models(sourcegen: Language, mut spec: HirSpec) -> Result<HirSpec> {
+pub fn add_operation_models(lang: Language, mut spec: HirSpec) -> Result<HirSpec> {
     let mut new_schemas = vec![];
     for op in &spec.operations {
-        if op.use_required_struct(sourcegen) {
-            new_schemas.push((op.required_struct_name(), Record::Struct(op.required_struct(sourcegen))));
+        if op.use_required_struct(lang) {
+            new_schemas.push((op.required_struct_name(), Record::Struct(op.required_struct(lang))));
         }
     }
     spec.schemas.extend(new_schemas);

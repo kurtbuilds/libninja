@@ -1,5 +1,5 @@
 use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
-use tracing_ez::warn;
+use tracing::warn;
 
 use hir::Ty;
 

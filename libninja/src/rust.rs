@@ -120,7 +120,6 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
 
     // Prepare the HIR Spec.
     let spec = extract_spec(&spec)?;
-    let spec = add_operation_models(opts.language, spec)?;
     let extras = calculate_extras(&spec);
 
     // if src doesn't exist that's fine
@@ -157,6 +156,8 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
     write_lib_rs(&spec, &extras, &opts)?;
     write_serde_module_if_needed(&extras, &opts.dest)?;
 
+    let spec = add_operation_models(opts.language, spec)?;
+
     if build_examples {
         write_examples(&spec, &opts)?;
     }
@@ -173,15 +174,15 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
     Ok(())
 }
 
-fn write_model_module(mir_spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
+fn write_model_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     let config = &opts.config;
     let src_path = opts.dest.join("src");
 
-    let model_rs = generate_model_rs(mir_spec, config);
+    let model_rs = generate_model_rs(spec, config);
     write_rust_file_to_path(&src_path.join("model.rs"), model_rs)?;
     fs::create_dir_all(src_path.join("model"))?;
-    for (name, record) in &mir_spec.schemas {
-        let file = generate_single_model_file(name, record, mir_spec, config);
+    for (name, record) in &spec.schemas {
+        let file = generate_single_model_file(name, record, spec, config);
         let name = sanitize_filename(name);
         write_rust_file_to_path(&src_path.join("model").join(name).with_extension("rs"), file)?;
     }

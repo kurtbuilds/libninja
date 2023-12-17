@@ -35,18 +35,19 @@ toml = "0.8.8"
 topo_sort = "0.4.0"
 url = "2.4.0"
 http = "0.2.9"
-tracing-ez = "0.3.0"
 strum = "0.25"
 actix-web = { version = "4.3.1", optional = true }
 semver = "1.0.17"
 indexmap = "2.0"
-ln-macro = { path = "../macro" }
-ln-core = { path = "../core" }
+libninja_macro = { path = "../macro" }
+libninja_core = { path = "../core" }
 libninja_mir = { path = "../mir" }
 libninja_hir = { path = "../hir" }
 libninja_commercial = { path = "../commercial", optional = true }
 ignore = "0.4.21"
 text_io = "0.1.12"
+tracing-subscriber = "0.3.18"
+tracing = "0.1.40"
 
 [dev-dependencies]
 env_logger = "0.10.0"
