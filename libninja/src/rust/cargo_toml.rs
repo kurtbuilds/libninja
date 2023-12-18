@@ -31,9 +31,14 @@ pub fn update_cargo_toml(extras: &Extras, opts: &OutputConfig, context: &HashMap
             *t = "0.1.0".to_string();
         } else {
             let mut ver = semver::Version::parse(t).unwrap();
-            ver.major += 1;
-            ver.minor = 0;
-            ver.patch = 0;
+            if ver.major == 0 {
+                ver.minor += 1;
+                ver.patch = 0;
+            } else {
+                ver.major += 1;
+                ver.minor = 0;
+                ver.patch = 0;
+            }
             *t = ver.to_string();
         }
     }
@@ -76,6 +81,7 @@ fn detailed(version: &str, features: &[&str]) -> Dependency {
     Dependency::Detailed(DependencyDetail {
         version: Some(version.to_string()),
         features: features.iter().map(|f| f.to_string()).collect(),
+        default_features: true,
         ..DependencyDetail::default()
     })
 }

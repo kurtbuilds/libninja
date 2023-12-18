@@ -10,6 +10,7 @@ pub trait ToRustType {
     fn to_reference_type(&self, specifier: TokenStream) -> TokenStream;
     fn is_reference_type(&self) -> bool;
     fn implements_default(&self, spec: &HirSpec) -> bool;
+    fn implements_dummy(&self, spec: &HirSpec) -> bool;
 }
 
 impl ToRustType for Ty {
@@ -81,6 +82,27 @@ impl ToRustType for Ty {
             }
             Ty::Unit => true,
             Ty::Any => true,
+            Ty::Date { .. } => true,
+            Ty::DateTime => true,
+            Ty::Currency { .. } => true,
+        }
+    }
+
+    fn implements_dummy(&self, spec: &HirSpec) -> bool {
+        match self {
+            Ty::String => true,
+            Ty::Integer { .. } => true,
+            Ty::Float => true,
+            Ty::Boolean => true,
+            Ty::Array(inner) => {
+                inner.implements_dummy(spec)
+            }
+            Ty::Model(name) => {
+                let model = spec.get_record(name.as_str()).expect("Model not found");
+                model.fields().all(|f| f.ty.implements_dummy(spec))
+            }
+            Ty::Unit => true,
+            Ty::Any => false,
             Ty::Date { .. } => true,
             Ty::DateTime => true,
             Ty::Currency { .. } => true,

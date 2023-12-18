@@ -224,7 +224,8 @@ pub struct RefTarget {
 pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags, spec: &HirSpec) -> TokenStream {
     let default = schema.derive_default(spec);
     let ormlite = config.ormlite.then(|| { quote! { , TableMeta, IntoArguments } }).unwrap_or_default();
-    let dummy = config.fake.then(|| { quote! { , Dummy } }).unwrap_or_default();
+    let fake = config.fake && schema.fields.values().all(|f| f.ty.implements_dummy(spec));
+    let dummy = fake.then(|| { quote! { , Dummy } }).unwrap_or_default();
     let docs = schema.docs.clone().to_rust_code();
 
     let name = schema.name.to_rust_struct();
@@ -335,6 +336,7 @@ mod tests {
                 ty: Ty::String,
                 ..HirField::default()
             }],
+            docs: None,
         };
         let code = create_newtype_struct(&schema);
         let code = format_code(code).unwrap();
