@@ -2,7 +2,7 @@ use std::fs::File;
 use std::str::FromStr;
 
 use anyhow::Result;
-use hir::Language;
+use hir::{HirSpec, Language};
 use libninja::{generate_library, rust};
 use ln_core::extractor::{extract_api_operations, extract_inputs, extract_spec};
 use ln_core::{PackageConfig, OutputConfig};
@@ -39,8 +39,9 @@ fn test_generate_example() -> Result<()> {
         config: Default::default(),
         dest: PathBuf::from_str("..").unwrap(),
     };
-    let operations = extract_api_operations(&spec).unwrap();
-    let operation = operations
+    let mut result = HirSpec::default();
+    extract_api_operations(&spec, &mut result).unwrap();
+    let operation = result.operations
         .iter()
         .find(|o| o.name == "linkTokenCreate")
         .unwrap();

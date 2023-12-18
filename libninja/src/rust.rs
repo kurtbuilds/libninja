@@ -44,7 +44,7 @@ pub struct Extras {
     date_serialization: bool,
     currency: bool,
     integer_date_serialization: bool,
-    basic_auth: bool
+    basic_auth: bool,
 }
 
 impl Extras {

@@ -61,6 +61,9 @@ pub fn update_cargo_toml(extras: &Extras, opts: &OutputConfig, context: &HashMap
     if opts.config.ormlite {
         ensure_dependency(&mut m.dependencies, "ormlite", "0.16.0", &["decimal"]);
     }
+    if opts.config.fake {
+        ensure_dependency(&mut m.dependencies, "fake", "2.9", &["derive", "chrono", "rust_decimal", "http", "uuid"]);
+    }
     if extras.basic_auth {
         ensure_dependency(&mut m.dependencies, "base64", "0.21.0", &[]);
     }

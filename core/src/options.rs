@@ -8,6 +8,8 @@ use hir::Language;
 pub struct ConfigFlags {
     /// Only for Rust. Adds ormlite::TableMeta flags to the code.
     pub ormlite: bool,
+    /// Only for Rust (for now). Adds fake::Dummy flags to the code.
+    pub fake: bool
 }
 
 #[derive(Debug, Clone)]

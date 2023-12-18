@@ -92,20 +92,20 @@ impl FieldExt for HirField {
 }
 
 pub trait StructExt {
-    fn implements_default(&self) -> bool;
-    fn derive_default(&self) -> TokenStream;
+    fn implements_default(&self, spec: &HirSpec) -> bool;
+    fn derive_default(&self, spec: &HirSpec) -> TokenStream;
     fn model_fields<'a>(&'a self, config: &'a ConfigFlags) -> Box<dyn Iterator<Item=Field<TokenStream>> + 'a>;
     fn ref_target(&self) -> Option<RefTarget>;
 }
 
 impl StructExt for Struct {
 
-    fn implements_default(&self) -> bool {
-        self.fields.iter().all(|(_, f)| f.optional || f.ty.implements_default())
+    fn implements_default(&self, spec: &HirSpec) -> bool {
+        self.fields.values().all(|f| f.implements_default(spec))
     }
 
-    fn derive_default(&self) -> TokenStream {
-        if self.implements_default() {
+    fn derive_default(&self, spec: &HirSpec) -> TokenStream {
+        if self.implements_default(spec) {
             quote! { , Default }
         } else {
             TokenStream::new()
@@ -132,6 +132,7 @@ impl StructExt for Struct {
                 visibility: Visibility::Public,
                 decorators,
                 optional,
+                doc: field.doc.clone(),
                 ..Field::default()
             }
         }))
@@ -165,6 +166,16 @@ impl RecordExt for Record {
     }
 }
 
+pub trait HirFieldExt {
+    fn implements_default(&self, spec: &HirSpec) -> bool;
+}
+
+impl HirFieldExt for HirField {
+    fn implements_default(&self, spec: &HirSpec) -> bool {
+        self.optional || self.ty.implements_default(spec)
+    }
+}
+
 /// Generate a model.rs file that just imports from dependents.
 pub fn generate_model_rs(spec: &HirSpec, config: &ConfigFlags) -> File<TokenStream> {
     let imports = spec.schemas.keys().map(|name: &String| {
@@ -195,8 +206,11 @@ pub fn generate_single_model_file(name: &str, record: &Record, spec: &HirSpec, c
     if config.ormlite {
         imports.push(import!("ormlite", TableMeta, IntoArguments));
     }
+    if config.fake {
+        imports.push(import!("fake", Dummy));
+    }
     File {
-        code: Some(create_struct(record, config)),
+        code: Some(create_struct(record, config, spec)),
         imports,
         ..File::default()
     }
@@ -207,9 +221,11 @@ pub struct RefTarget {
     ty: Ty,
 }
 
-pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags) -> TokenStream {
-    let default = schema.derive_default();
-    let ormlite = if config.ormlite { quote! { , TableMeta, IntoArguments } } else { TokenStream::new() };
+pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags, spec: &HirSpec) -> TokenStream {
+    let default = schema.derive_default(spec);
+    let ormlite = config.ormlite.then(|| { quote! { , TableMeta, IntoArguments } }).unwrap_or_default();
+    let dummy = config.fake.then(|| { quote! { , Dummy } }).unwrap_or_default();
+    let docs = schema.docs.clone().to_rust_code();
 
     let name = schema.name.to_rust_struct();
     let fields = schema.model_fields(config).map(ToRustCode::to_rust_code);
@@ -232,7 +248,8 @@ pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags) -> TokenStre
     }).unwrap_or_default();
 
     quote! {
-        #[derive(Debug, Clone, Serialize, Deserialize #default #ormlite)]
+        #docs
+        #[derive(Debug, Clone, Serialize, Deserialize #default #ormlite #dummy)]
         pub struct #name {
             #(#fields)*
         }
@@ -292,9 +309,9 @@ pub fn create_typealias(name: &str, schema: &HirField) -> TokenStream {
     }
 }
 
-pub fn create_struct(record: &Record, config: &ConfigFlags) -> TokenStream {
+pub fn create_struct(record: &Record, config: &ConfigFlags, spec: &HirSpec) -> TokenStream {
     match record {
-        Record::Struct(s) => create_sumtype_struct(s, config),
+        Record::Struct(s) => create_sumtype_struct(s, config, spec),
         Record::NewType(nt) => create_newtype_struct(nt),
         Record::Enum(en) => create_enum_struct(en),
         Record::TypeAlias(name, field) => create_typealias(name, field),

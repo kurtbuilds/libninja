@@ -11,6 +11,8 @@ use ln_core::{ConfigFlags};
 pub enum Config {
     /// Only used by Rust. Adds ormlite::TableMeta flags to the code.
     Ormlite,
+    /// Only used by Rust (for now). Adds fake::Dummy flags to the code.
+    Fake,
 }
 
 fn build_config(configs: &[Config]) -> ConfigFlags {
@@ -18,6 +20,7 @@ fn build_config(configs: &[Config]) -> ConfigFlags {
     for c in configs {
         match c {
             Config::Ormlite => config.ormlite = true,
+            Config::Fake => config.fake = true,
         }
     }
     config

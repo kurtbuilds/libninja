@@ -3,7 +3,8 @@ use pretty_assertions::assert_eq;
 
 /// Tests that the `allOf` keyword is handled correctly.
 use ln_core::{ConfigFlags};
-use hir::Record;
+use hir::{HirSpec, Record};
+use ln_core::extractor::{extract_api_operations, extract_records};
 
 const TRANSACTION: &str = include_str!("transaction.yaml");
 const TRANSACTION_RS: &str = include_str!("transaction.rs");
@@ -19,9 +20,9 @@ fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
     record
 }
 
-fn formatted_code(record: Record) -> String {
+fn formatted_code(record: Record, spec: &HirSpec) -> String {
     let config = ConfigFlags::default();
-    let code = libninja::rust::lower_mir::create_struct(&record, &config);
+    let code = libninja::rust::lower_mir::create_struct(&record, &config, spec);
     libninja::rust::format::format_code(code).unwrap()
 }
 
@@ -33,9 +34,10 @@ fn test_transaction() {
     spec.add_schema("PersonalFinanceCategory", Schema::new_string());
     spec.add_schema("TransactionCounterparty", Schema::new_string());
 
+    let mut result = HirSpec::default();
+    extract_records(&spec, &mut result).unwrap();
     let record = record_for_schema("Transaction", TRANSACTION, &spec);
-    let code = formatted_code(record);
-    println!("{}", code);
+    let code = formatted_code(record, &result);
     assert_eq!(code, TRANSACTION_RS);
 }
 
@@ -45,6 +47,6 @@ fn test_nullable_doesnt_deref() {
     spec.add_schema("RecipientBACS", Schema::new_object());
 
     let record = record_for_schema("PaymentInitiationOptionalRestrictionBacs", RESTRICTION_BACS, &spec);
-    let code = formatted_code(record);
+    let code = formatted_code(record, &HirSpec::default());
     assert_eq!(code, RESTRICTION_BACS_RS);
 }

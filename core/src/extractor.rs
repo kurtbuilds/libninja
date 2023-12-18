@@ -198,12 +198,12 @@ pub fn extract_operation_doc(operation: &oa::Operation, format: DocFormat) -> Op
     }
 }
 
-pub fn extract_schema_docs(schema: &oa::Schema) -> Option<Doc> {
+pub fn extract_schema_docs(schema: &Schema) -> Option<Doc> {
     schema
         .schema_data
         .description
         .as_ref()
-        .map(|d| Doc(d.clone()))
+        .map(|d| Doc(d.trim().to_string()))
 }
 
 pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {

@@ -1,6 +1,6 @@
 use openapiv3::{OpenAPI, Schema};
 
-use hir::Record;
+use hir::{HirSpec, Record};
 use libninja::rust::lower_mir::StructExt;
 
 const LINK_TOKEN_CREATE: &str = include_str!("link_token_create.yaml");
@@ -23,5 +23,5 @@ fn test_link_token_create() {
     let Record::Struct(struc) = record else {
         panic!("expected struct");
     };
-    assert!(struc.implements_default());
+    assert!(struc.implements_default(&HirSpec::default()));
 }

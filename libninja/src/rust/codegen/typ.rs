@@ -1,14 +1,15 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use hir::Ty;
+use hir::{HirSpec, Ty};
 use crate::rust::codegen::ToRustIdent;
+use crate::rust::lower_mir::HirFieldExt;
 
 /// Use this to generate Rust code types.
 pub trait ToRustType {
     fn to_rust_type(&self) -> TokenStream;
     fn to_reference_type(&self, specifier: TokenStream) -> TokenStream;
     fn is_reference_type(&self) -> bool;
-    fn implements_default(&self) -> bool;
+    fn implements_default(&self, spec: &HirSpec) -> bool;
 }
 
 impl ToRustType for Ty {
@@ -67,20 +68,22 @@ impl ToRustType for Ty {
         }
     }
 
-
-    fn implements_default(&self) -> bool {
+    fn implements_default(&self, spec: &HirSpec) -> bool {
         match self {
             Ty::String => true,
             Ty::Integer { .. } => true,
             Ty::Float => true,
             Ty::Boolean => true,
             Ty::Array(_) => true,
-            Ty::Model(..) => false,
+            Ty::Model(name) => {
+                let model = spec.get_record(name.as_str()).expect("Model not found");
+                model.fields().all(|f| f.implements_default(spec))
+            }
             Ty::Unit => true,
-            Ty::Any => false,
-            Ty::Date { .. } => false,
-            Ty::DateTime => false,
-            Ty::Currency { .. } => false,
+            Ty::Any => true,
+            Ty::Date { .. } => true,
+            Ty::DateTime => true,
+            Ty::Currency { .. } => true,
         }
     }
 }

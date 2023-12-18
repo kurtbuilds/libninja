@@ -277,7 +277,10 @@ impl ToRustCode for Option<Doc> {
     fn to_rust_code(self) -> TokenStream {
         match self {
             None => TokenStream::new(),
-            Some(Doc(doc)) => quote!(#[doc = #doc]),
+            Some(Doc(doc)) => {
+                let doc = doc.trim();
+                quote!(#[doc = #doc])
+            },
         }
     }
 }
@@ -312,7 +315,7 @@ pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value:
             let record = spec.get_record(model)?;
             let force_ref = model.ends_with("Required");
             match record {
-                Record::Struct(Struct { name: _name, fields, nullable }) => {
+                Record::Struct(Struct { name: _name, fields, nullable, docs: _docs }) => {
                     let fields = fields.iter().map(|(name, field)| {
                         let not_ref = !force_ref || field.optional;
                         let mut value = to_rust_example_value(&field.ty, name, spec, !not_ref)?;
@@ -325,14 +328,14 @@ pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value:
                     let model = model.to_rust_struct();
                     quote!(#model{#(#fields),*})
                 }
-                Record::NewType(NewType { name, fields }) => {
+                Record::NewType(NewType { name, fields, docs: _docs }) => {
                     let fields = fields.iter().map(|f| {
                         to_rust_example_value(&f.ty, name, spec, false)
                     }).collect::<Result<Vec<_>, _>>()?;
                     let name = name.to_rust_struct();
                     quote!(#name(#(#fields),*))
                 }
-                Record::Enum(StrEnum { name, variants }) => {
+                Record::Enum(StrEnum { name, variants, docs: _docs }) => {
                     let variant = variants.first().unwrap();
                     let variant = variant.to_rust_struct();
                     let model = model.to_rust_struct();
@@ -450,12 +453,6 @@ fn assert_valid_ident(s: &str, original: &str) {
     if s.contains('.') {
         panic!("Dot in identifier: {}", original)
     }
-}
-
-/// This is for testing more than anything else
-pub fn formatted_code(code: impl ToRustCode) -> String {
-    let code = code.to_rust_code();
-    format::format_code(code).unwrap()
 }
 
 #[cfg(test)]

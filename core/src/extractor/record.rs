@@ -40,8 +40,8 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
     for schema_ref in all_of {
         length += schema_ref.as_ref_str().map(|_s| 1).unwrap_or_default();
         length += schema_ref.as_item()
-            .and_then(|s| s.properties() )
-            .map(|s| s.iter().len() )
+            .and_then(|s| s.properties())
+            .map(|s| s.iter().len())
             .unwrap_or_default();
     }
     length
@@ -53,7 +53,12 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
         // The base case, a regular object
         SchemaKind::Type(Type::Object(ObjectType { properties, .. })) => {
             let fields = properties_to_fields(properties, schema, spec);
-            Record::Struct(Struct { name, fields, nullable: schema.schema_data.nullable })
+            Record::Struct(Struct {
+                name,
+                fields,
+                nullable: schema.schema_data.nullable,
+                docs: schema.schema_data.description.as_ref().map(|d| Doc(d.trim().to_string())),
+            })
         }
         // An enum
         SchemaKind::Type(Type::String(StringType { enumeration, .. }))
@@ -65,6 +70,7 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
                         .iter()
                         .map(|s| s.to_string())
                         .collect(),
+                    docs: schema.schema_data.description.as_ref().map(|d| Doc(d.clone())),
                 })
             }
         // A newtype with multiple fields
@@ -89,6 +95,7 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
                 example: None,
                 flatten: false,
             }],
+            docs: schema.schema_data.description.as_ref().map(|d| Doc(d.clone())),
         }),
     }
 }
@@ -140,6 +147,7 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
         nullable: schema_data.nullable,
         name: name.to_string(),
         fields,
+        docs: schema_data.description.as_ref().map(|d| Doc(d.clone())),
     })
 }
 
@@ -154,7 +162,7 @@ pub fn extract_records(spec: &OpenAPI, result: &mut HirSpec) -> Result<()> {
         result.schemas.insert(name, rec);
     }
 
-    for (name, schema_ref)  in spec.schemas() {
+    for (name, schema_ref) in spec.schemas() {
         let Some(reference) = schema_ref.as_ref_str() else { continue; };
         result.schemas.insert(name.clone(), Record::TypeAlias(name.clone(), create_field(&schema_ref, spec)));
     }

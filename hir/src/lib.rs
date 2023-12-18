@@ -222,12 +222,14 @@ pub struct Struct {
     pub name: String,
     pub nullable: bool,
     pub fields: BTreeMap<String, HirField>,
+    pub docs: Option<Doc>,
 }
 
 #[derive(Debug, Clone)]
 pub struct NewType {
     pub name: String,
     pub fields: Vec<HirField>,
+    pub docs: Option<Doc>,
 }
 
 #[derive(Debug, Clone)]
@@ -241,6 +243,7 @@ pub struct TypeAlias {
 pub struct StrEnum {
     pub name: String,
     pub variants: Vec<String>,
+    pub docs: Option<Doc>,
 }
 
 /// an object type in the HIR
@@ -498,6 +501,7 @@ impl Operation {
             nullable: false,
             name: self.required_struct_name(),
             fields,
+            docs: None,
         }
     }
 }
