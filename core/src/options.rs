@@ -61,6 +61,11 @@ impl PackageConfig {
             name.to_case(Case::ScreamingSnake)
         ))
     }
+
+    pub fn get_file_template(&self, path: &str) -> Option<String> {
+        let path = self.dest.join("template").join(path);
+        std::fs::read_to_string(path).ok()
+    }
 }
 
 pub struct OutputConfig {

@@ -9,6 +9,7 @@ use indoc::formatdoc;
 use openapiv3::OpenAPI;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Item;
 use text_io::read;
 
 use codegen::ToRustIdent;
@@ -103,11 +104,11 @@ pub fn copy_from_target_templates(dest: &Path) -> Result<()> {
     for path in ignore::Walk::new(&template_path) {
         let path: ignore::DirEntry = path?;
         let rel_path = path.path().strip_prefix(&template_path)?;
-        if rel_path.to_str().unwrap() == "src/lib.rs" {
-            continue;
-        }
         if path.file_type().expect(&format!("Failed to read file: {}", path.path().display())).is_file() {
             let dest = dest.join(rel_path);
+            if dest.exists() {
+                continue;
+            }
             fs::create_dir_all(dest.parent().unwrap())?;
             //copy the file
             std::fs::copy(&path.path(), &dest)?;
@@ -175,6 +176,36 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
     Ok(())
 }
 
+fn write_file_with_template(mut file: File<TokenStream>, template: Option<String>, path: &Path) -> Result<()> {
+    let Some(template) = template else {
+        return write_rust_file_to_path(path, file);
+    };
+    // Write things in this order
+    // file.doc
+    // file.imports
+    // template.imports
+    // template.defs
+    // file.defs
+    // let template = syn::parse_file(&template)?;
+    let doc = std::mem::take(&mut file.doc)
+        .to_rust_code();
+    let imports = std::mem::take(&mut file.imports)
+        .into_iter()
+        .filter(|i| !template.contains(&i.path))
+        .map(|i| i.to_rust_code());
+    let pre = quote! {
+        #doc
+        #(#imports)*
+    };
+    let mut code = format_code(pre)?;
+    code.push('\n');
+    code += template.trim();
+    code.push('\n');
+    let after = file.to_rust_code();
+    code += &format_code(after)?;
+    fs::write_file(path, &code)
+}
+
 fn write_model_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     let config = &opts.config;
     let src_path = opts.dest.join("src");
@@ -185,7 +216,8 @@ fn write_model_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     for (name, record) in &spec.schemas {
         let file = generate_single_model_file(name, record, spec, config);
         let name = sanitize_filename(name);
-        write_rust_file_to_path(&src_path.join("model").join(name).with_extension("rs"), file)?;
+        let dest = src_path.join("model").join(&name).with_extension("rs");
+        write_file_with_template(file, opts.get_file_template(&format!("src/model/{}.rs", name)), &dest)?;
     }
     Ok(())
 }
@@ -198,23 +230,18 @@ fn write_lib_rs(spec: &HirSpec, extras: &Extras, opts: &PackageConfig) -> Result
     let impl_Client = client::impl_Client(spec, &opts);
 
     let client_name = struct_Client.name.clone();
-    let template_path = opts.dest.join("template").join("src").join("lib.rs");
-    let lib_rs_template = if template_path.exists() {
-        fs::read_to_string(template_path)?
-    } else {
+    let lib_rs_template = opts.get_file_template("src/lib.rs").unwrap_or_else(|| {
         let s = get_template_file("rust/src/lib.rs");
         formatdoc!(
             r#"
             //! [`{client}`](struct.{client}.html) is the main entry point for this library.
             //!
             //! Library created with [`libninja`](https://www.libninja.com).
-            {s}
             "#,
             client = client_name.0
-        )
-    };
+        ) + s
+    });
     let template_has_from_env = lib_rs_template.contains("from_env");
-
     if template_has_from_env {
         struct_Client.class_methods.retain(|m| m.name.0 != "from_env");
     }
