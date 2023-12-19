@@ -16,7 +16,6 @@ const RESTRICTION_BACS_RS: &str = include_str!("restriction_bacs.rs");
 fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
     let schema = serde_yaml::from_str::<Schema>(schema).unwrap();
     let mut record = ln_core::extractor::create_record(name, &schema, spec);
-    record.clear_docs();
     record
 }
 
@@ -38,6 +37,7 @@ fn test_transaction() {
     extract_records(&spec, &mut result).unwrap();
     let record = record_for_schema("Transaction", TRANSACTION, &spec);
     let code = formatted_code(record, &result);
+    println!("{}", code);
     assert_eq!(code, TRANSACTION_RS);
 }
 

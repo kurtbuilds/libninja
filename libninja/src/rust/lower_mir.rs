@@ -340,10 +340,10 @@ mod tests {
             }],
             docs: None,
         };
-        let code = create_newtype_struct(&schema);
+        let code = create_newtype_struct(&schema, &HirSpec::default());
         let code = format_code(code).unwrap();
         assert_eq!(&code, "
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NewType(pub String);
 ".trim());
     }

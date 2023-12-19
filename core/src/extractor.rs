@@ -199,6 +199,7 @@ pub fn extract_operation_doc(operation: &oa::Operation, format: DocFormat) -> Op
 }
 
 pub fn extract_schema_docs(schema: &Schema) -> Option<Doc> {
+    dbg!(schema);
     schema
         .schema_data
         .description
