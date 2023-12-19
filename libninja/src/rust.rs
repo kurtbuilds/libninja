@@ -187,6 +187,9 @@ fn write_file_with_template(mut file: File<TokenStream>, template: Option<String
     // template.defs
     // file.defs
     // let template = syn::parse_file(&template)?;
+    if template.contains("libninja: static") {
+        return write_rust_file_to_path(path, file);
+    }
     let doc = std::mem::take(&mut file.doc)
         .to_rust_code();
     let imports = std::mem::take(&mut file.imports)

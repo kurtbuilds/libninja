@@ -31,6 +31,26 @@ Use the command line help to see required arguments & options when generating li
 The open source version builds client libraries for Rust. Libninja also supports other languages with a commercial license. Reach out at the email in author Github profile.
 
 
+# Usage
+
+## Customizing generation
+
+There are two ways to customize codegen, first by modifying the OpenAPI spec, and second, using a file template system.
+
+During codegen, `libninja` will look for a directory called `template`, and use files there to customize the generated code.
+
+For example, if libninja generates `src/model/user.rs`, it will check for `template/src/model/user.rs`.
+
+If it's found, `libninja` will try to intelligently interpolate generated code with the templated file. The specific order of items in the output file will be:
+
+1. codegen docstring
+2. codegen imports
+3. template imports
+4. template items (structs, enums, traits, impl, etc)
+5. codegen items
+
+Alternatively, if the string `libninja: static` is found in the file template, it will ignore all codegen for that file, and pass the template file through as-is.
+
 # Development
 
 If you run into errors about a missing `commericial` package, run the command `just dummy_commericial` to create a dummy
