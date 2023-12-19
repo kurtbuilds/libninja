@@ -4,7 +4,7 @@ use ln_core::fs;
 use crate::rust::codegen::ToRustCode;
 use crate::rust::format::format_code;
 
-pub fn write_rust_file_to_path(path: &Path, file: ::mir::File<TokenStream>) -> anyhow::Result<()> {
+pub fn write_rust_file_to_path(path: &Path, file: mir::File<TokenStream>) -> anyhow::Result<()> {
     let code = file.to_rust_code();
     write_rust_code_to_path(path, code)
 }
@@ -17,7 +17,7 @@ pub fn write_rust_to_path(path: &Path, code: TokenStream, template: &str) -> any
     let code = format_code(code)?;
     let mut f = fs::open(path)?;
     let mut s = template.to_string();
-    if !s.ends_with('\n') {
+    if !s.is_empty() && !s.ends_with('\n') {
         s += "\n";
     }
     s += &code;

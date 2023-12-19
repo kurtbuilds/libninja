@@ -11,6 +11,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Item;
 use text_io::read;
+use tracing::debug;
 
 use codegen::ToRustIdent;
 use codegen::ToRustType;
@@ -188,7 +189,8 @@ fn write_file_with_template(mut file: File<TokenStream>, template: Option<String
     // file.defs
     // let template = syn::parse_file(&template)?;
     if template.contains("libninja: static") {
-        return write_rust_file_to_path(path, file);
+        debug!("Writing file from template/ as-is: {}", path.display());
+        return fs::write_file(path, &template);
     }
     let doc = std::mem::take(&mut file.doc)
         .to_rust_code();
