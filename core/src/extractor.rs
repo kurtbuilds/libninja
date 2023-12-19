@@ -49,7 +49,7 @@ pub fn extract_request_schema<'a>(
         .content
         .get("application/json")
         .ok_or_else(|| anyhow!("No json body"))?;
-    Ok(content.schema.as_ref().unwrap().resolve(spec))
+    Ok(content.schema.as_ref().expect(&format!("Expecting a ref for {}", operation.operation_id.as_ref().map(|s| s.as_str()).unwrap_or_default())).resolve(spec))
 }
 
 pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<Parameter> {

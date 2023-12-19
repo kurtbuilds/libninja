@@ -84,7 +84,7 @@ impl FieldExt for HirField {
                         #[serde(with = "rust_decimal::serde::str")]
                     });
                 }
-            },
+            }
             _ => {}
         }
         decorators
@@ -99,7 +99,6 @@ pub trait StructExt {
 }
 
 impl StructExt for Struct {
-
     fn implements_default(&self, spec: &HirSpec) -> bool {
         self.fields.values().all(|f| f.implements_default(spec))
     }
@@ -288,13 +287,16 @@ fn create_enum_struct(e: &StrEnum) -> TokenStream {
 }
 
 
-pub fn create_newtype_struct(schema: &NewType) -> TokenStream {
+pub fn create_newtype_struct(schema: &NewType, spec: &HirSpec) -> TokenStream {
     let name = schema.name.to_rust_struct();
     let fields = schema.fields.iter().map(|f| {
         f.ty.to_rust_type()
     });
+    let default = schema.fields.iter().all(|f| f.implements_default(spec))
+        .then(|| { quote! { , Default } })
+        .unwrap_or_default();
     quote! {
-        #[derive(Debug, Clone, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Serialize, Deserialize #default)]
         pub struct #name(#(pub #fields),*);
     }
 }
@@ -313,7 +315,7 @@ pub fn create_typealias(name: &str, schema: &HirField) -> TokenStream {
 pub fn create_struct(record: &Record, config: &ConfigFlags, spec: &HirSpec) -> TokenStream {
     match record {
         Record::Struct(s) => create_sumtype_struct(s, config, spec),
-        Record::NewType(nt) => create_newtype_struct(nt),
+        Record::NewType(nt) => create_newtype_struct(nt, spec),
         Record::Enum(en) => create_enum_struct(en),
         Record::TypeAlias(name, field) => create_typealias(name, field),
     }
