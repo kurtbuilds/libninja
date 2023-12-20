@@ -34,7 +34,7 @@ impl FieldExt for HirField {
             }
             if config.ormlite {
                 decorators.push(quote! {
-                    #[ormlite(column = #name)]
+                    #[cfg_attr(feature = "ormlite", ormlite(column = #name))]
                 });
             }
         }
@@ -45,7 +45,7 @@ impl FieldExt for HirField {
         }
         if self.ty.inner_model().is_some() && config.ormlite {
             decorators.push(quote! {
-                #[ormlite(experimental_encode_as_json)]
+                #[cfg_attr(feature = "ormlite", ormlite(experimental_encode_as_json))]
             });
         }
         match self.ty {
@@ -202,12 +202,6 @@ pub fn generate_single_model_file(name: &str, record: &Record, spec: &HirSpec, c
     if let Some(import) = record.imports("super") {
         imports.push(import);
     }
-    if config.ormlite {
-        imports.push(import!("ormlite", TableMeta, IntoArguments, FromRow));
-    }
-    if config.fake {
-        imports.push(import!("fake", Dummy));
-    }
     File {
         code: Some(create_struct(record, config, spec)),
         imports,
@@ -222,8 +216,14 @@ pub struct RefTarget {
 
 pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags, spec: &HirSpec) -> TokenStream {
     let default = schema.derive_default(spec);
-    let ormlite = config.ormlite.then(|| { quote! { , TableMeta, IntoArguments, FromRow } }).unwrap_or_default();
+    let ormlite = config.ormlite.then(|| quote! {
+        #[cfg_attr(feature = "ormlite", derive(ormlite::TableMeta, ormlite::IntoArguments, ormlite::FromRow))]
+    }).unwrap_or_default();
     let fake = config.fake && schema.fields.values().all(|f| f.ty.implements_dummy(spec));
+    let dummy = fake.then(|| quote! {
+        #[cfg_attr(feature = "fake", derive(fake::Dummy))]
+    }).unwrap_or_default();
+
     let dummy = fake.then(|| { quote! { , Dummy } }).unwrap_or_default();
     let docs = schema.docs.clone().to_rust_code();
 
@@ -249,7 +249,9 @@ pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags, spec: &HirSp
 
     quote! {
         #docs
-        #[derive(Debug, Clone, Serialize, Deserialize #default #ormlite #dummy)]
+        #ormlite
+        #dummy
+        #[derive(Debug, Clone, Serialize, Deserialize #default)]
         pub struct #name {
             #(#fields)*
         }

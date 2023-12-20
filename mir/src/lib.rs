@@ -108,6 +108,7 @@ pub struct Import {
     /// If a wildcard import and if we want to alias, then alias
     pub alias: Option<String>,
     pub vis: Visibility,
+    pub feature: Option<String>
 }
 
 pub struct ImportItem {
@@ -224,6 +225,7 @@ impl Import {
             imports: vec![],
             alias: None,
             vis: Visibility::Private,
+            feature: None,
         }
     }
 
@@ -236,6 +238,7 @@ impl Import {
                 .collect(),
             alias: None,
             vis: Visibility::Private,
+            feature: None,
         }
     }
 
@@ -245,6 +248,7 @@ impl Import {
             imports: Vec::new(),
             alias: Some(alias.to_string()),
             vis: Visibility::Private,
+            feature: None,
         }
     }
 
