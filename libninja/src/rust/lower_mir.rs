@@ -224,7 +224,6 @@ pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags, spec: &HirSp
         #[cfg_attr(feature = "fake", derive(fake::Dummy))]
     }).unwrap_or_default();
 
-    let dummy = fake.then(|| { quote! { , Dummy } }).unwrap_or_default();
     let docs = schema.docs.clone().to_rust_code();
 
     let name = schema.name.to_rust_struct();
