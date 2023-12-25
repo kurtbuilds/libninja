@@ -241,16 +241,16 @@ fn static_shared_http_client(spec: &HirSpec, opt: &PackageConfig) -> TokenStream
         }
 
         /// Use this method if you want to add custom middleware to the httpclient.
+        /// It must be called before any requests are made, otherwise it will have no effect.
         /// Example usage:
         ///
         /// ```
-        /// init_http_client(|| {
-        ///     default_http_client()
-        ///         .with_middleware(..)
-        ///  });
+        /// init_http_client(default_http_client()
+        ///     .with_middleware(..)
+        /// );
         /// ```
-        pub fn init_http_client(init: fn() -> httpclient::Client) {
-            SHARED_HTTPCLIENT.get_or_init(init);
+        pub fn init_http_client(init: httpclient::Client) {
+            let _ = SHARED_HTTPCLIENT.set(init);
         }
 
         fn shared_http_client() -> &'static httpclient::Client {
@@ -275,21 +275,18 @@ fn shared_oauth2_flow(auth: &Oauth2Auth, spec: &HirSpec, opts: &PackageConfig) -
     quote! {
         static SHARED_OAUTH2FLOW: OnceLock<httpclient_oauth2::OAuth2Flow> = OnceLock::new();
 
-        pub fn init_oauth2_flow(init: fn() -> httpclient_oauth2::OAuth2Flow) {
-            SHARED_OAUTH2FLOW.get_or_init(init);
+        pub fn init_oauth2_flow(init: httpclient_oauth2::OAuth2Flow) {
+            let _ = SHARED_OAUTH2FLOW.set(init);
         }
 
         fn shared_oauth2_flow() -> &'static httpclient_oauth2::OAuth2Flow {
-            let client_id = std::env::var(#client_id).expect(#client_id_expect);
-            let client_secret = std::env::var(#client_secret).expect(#client_secret_expect);
-            let redirect_uri = std::env::var(#redirect_uri).expect(#redirect_uri_expect);
             SHARED_OAUTH2FLOW.get_or_init(|| httpclient_oauth2::OAuth2Flow {
-                client_id,
-                client_secret,
+                client_id: std::env::var(#client_id).expect(#client_id_expect),
+                client_secret: std::env::var(#client_secret).expect(#client_secret_expect),
                 init_endpoint: #init_endpoint.to_string(),
                 exchange_endpoint: #exchange_endpoint.to_string(),
                 refresh_endpoint: #refresh_endpoint.to_string(),
-                redirect_uri,
+                redirect_uri: std::env::var(#redirect_uri).expect(#redirect_uri_expect),
             })
         }
     }
