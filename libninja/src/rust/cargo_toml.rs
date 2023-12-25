@@ -77,7 +77,7 @@ pub fn update_cargo_toml(extras: &Extras, opts: &OutputConfig, context: &HashMap
         ensure_dependency(&mut m.dependencies, "base64", "0.21.0", &[]);
     }
     if extras.oauth2 {
-        ensure_dependency(&mut m.dependencies, "httpclient_oauth2", "0.1.0", &[]);
+        ensure_dependency(&mut m.dependencies, "httpclient_oauth2", "0.1.2", &[]);
     }
     m.example = vec![];
     fs::write_file(&cargo, &toml::to_string(&m).unwrap())?;

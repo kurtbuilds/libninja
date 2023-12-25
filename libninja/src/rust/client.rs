@@ -378,7 +378,7 @@ pub fn impl_Authentication(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
     let oauth2 = spec.oauth2_auth().map(|oauth| {
         quote! {
             pub fn oauth2(access: String, refresh: String) -> Self {
-                let mw = shared_oauth2_flow().middleware_from_pieces(access, refresh, httpclient_oauth2::TokenType::Bearer);
+                let mw = shared_oauth2_flow().bearer_middleware(access, refresh);
                 Self::OAuth2 { middleware: Arc::new(mw) }
             }
         }
