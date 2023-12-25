@@ -8,23 +8,22 @@ pub trait ChildSchemas {
 
 impl ChildSchemas for Schema {
     fn add_child_schemas<'a>(&'a self, acc: &mut HashMap<String, &'a Schema>) {
-        match &self.schema_kind {
+        match &self.kind {
             SchemaKind::Type(Type::Array(a)) => {
                 let Some(items) = &a.items else { return; };
-                let Some(items) = items.as_item() else { return; };
-                let items = items.as_ref();
-                if let Some(title) = &items.schema_data.title {
-                    acc.entry(title.clone()).or_insert(items);
+                let Some(item) = items.as_item() else { return; };
+                if let Some(title) = &item.title {
+                    acc.entry(title.clone()).or_insert(item);
                 }
-                items.add_child_schemas(acc);
+                item.add_child_schemas(acc);
             }
             SchemaKind::Type(Type::Object(o)) => {
-                if let Some(title) = &self.schema_data.title {
+                if let Some(title) = &self.title {
                     acc.entry(title.clone()).or_insert(self);
                 }
                 for (_name, prop) in &o.properties {
                     let Some(prop) = prop.as_item() else { continue; };
-                    if let Some(title) = &prop.schema_data.title {
+                    if let Some(title) = &prop.title {
                         acc.entry(title.clone()).or_insert(prop);
                     }
                     prop.add_child_schemas(acc);
@@ -36,7 +35,7 @@ impl ChildSchemas for Schema {
             | SchemaKind::AnyOf { any_of: schemas} => {
                 for schema in schemas {
                     let Some(schema) = schema.as_item() else { continue; };
-                    if let Some(title) = &schema.schema_data.title {
+                    if let Some(title) = &schema.title {
                         acc.entry(title.clone()).or_insert(schema);
                     }
                     schema.add_child_schemas(acc);
@@ -57,7 +56,7 @@ impl ChildSchemas for Operation {
         }
         for par in &self.parameters {
             let Some(par) = par.as_item() else { continue; };
-            let Some(schema) = par.parameter_data_ref().schema() else { continue; };
+            let Some(schema) = par.data.schema() else { continue; };
             let Some(schema) = schema.as_item() else { continue; };
             schema.add_child_schemas(acc);
         }
@@ -73,7 +72,7 @@ impl ChildSchemas for RequestBody {
         for (_key, content) in &self.content {
             let Some(schema) = &content.schema else { continue; };
             let Some(schema) = schema.as_item() else { continue; };
-            if let Some(title) = &schema.schema_data.title {
+            if let Some(title) = &schema.title {
                 acc.entry(title.clone()).or_insert(schema);
             }
             schema.add_child_schemas(acc);
@@ -86,7 +85,7 @@ impl ChildSchemas for Response {
         for (k, content) in &self.content {
             let Some(schema) = &content.schema else { continue; };
             let Some(schema) = schema.as_item() else { continue; };
-            if let Some(title) = &schema.schema_data.title {
+            if let Some(title) = &schema.title {
                 acc.entry(title.clone()).or_insert(schema);
             }
             schema.add_child_schemas(acc);
@@ -99,7 +98,7 @@ impl ChildSchemas for OpenAPI {
         for (_path, _method, op, _item) in self.operations() {
             op.add_child_schemas(acc);
         }
-        for (name, schema) in self.schemas() {
+        for (name, schema) in &self.schemas {
             let Some(schema) = schema.as_item() else { continue; };
             acc.entry(name.clone()).or_insert(schema);
             schema.add_child_schemas(acc);

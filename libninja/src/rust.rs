@@ -19,11 +19,11 @@ use format::format_code;
 use ln_core::{copy_builtin_files, copy_builtin_templates, create_context, get_template_file, prepare_templates};
 use ::mir::{Visibility, Import, File};
 use ln_core::fs;
-use hir::{HirSpec, IntegerSerialization, DateSerialization, Location, Parameter};
+use hir::{HirSpec, IntegerSerialization, DateSerialization, Location, Parameter, AuthStrategy, Oauth2Auth, qualified_env_var};
 use mir::Ident;
 
 use crate::{add_operation_models, extract_spec, PackageConfig, OutputConfig};
-use crate::rust::client::build_Client_authenticate;
+use crate::rust::client::{build_Client_authenticate, server_url};
 pub use crate::rust::codegen::generate_example;
 use crate::rust::codegen::{codegen_function, sanitize_filename, ToRustCode};
 use crate::rust::io::write_rust_file_to_path;
@@ -47,6 +47,7 @@ pub struct Extras {
     currency: bool,
     integer_date_serialization: bool,
     basic_auth: bool,
+    oauth2: bool,
 }
 
 impl Extras {
@@ -85,7 +86,8 @@ pub fn calculate_extras(spec: &HirSpec) -> Extras {
             }
         }
     }
-    let basic_auth = spec.security.iter().any(|f| f.fields.iter().any(|f| matches!(f.location, hir::AuthLocation::Basic)));
+    let basic_auth = spec.has_basic_auth();
+    let oauth2 = spec.oauth2_auth().is_some();
     Extras {
         null_as_zero,
         date_serialization,
@@ -93,6 +95,7 @@ pub fn calculate_extras(spec: &HirSpec) -> Extras {
         currency,
         option_i64_str,
         basic_auth,
+        oauth2,
     }
 }
 
@@ -227,6 +230,71 @@ fn write_model_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     Ok(())
 }
 
+fn static_shared_http_client(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
+    let url = server_url(spec, opt);
+    quote! {
+        static SHARED_HTTPCLIENT: OnceLock<httpclient::Client> = OnceLock::new();
+
+        pub fn default_http_client() -> httpclient::Client {
+            httpclient::Client::new()
+                .base_url(#url)
+        }
+
+        /// Use this method if you want to add custom middleware to the httpclient.
+        /// Example usage:
+        ///
+        /// ```
+        /// init_http_client(|| {
+        ///     default_http_client()
+        ///         .with_middleware(..)
+        ///  });
+        /// ```
+        pub fn init_http_client(init: fn() -> httpclient::Client) {
+            SHARED_HTTPCLIENT.get_or_init(init);
+        }
+
+        fn shared_http_client() -> &'static httpclient::Client {
+            SHARED_HTTPCLIENT.get_or_init(default_http_client)
+        }
+    }
+}
+
+fn shared_oauth2_flow(auth: &Oauth2Auth, spec: &HirSpec, opts: &PackageConfig) -> TokenStream {
+    let service_name = opts.service_name.as_str();
+
+    let client_id = qualified_env_var(service_name, "client id");
+    let client_id_expect = format!("{} must be set", client_id);
+    let client_secret = qualified_env_var(service_name, "client secret");
+    let client_secret_expect = format!("{} must be set", client_secret);
+    let redirect_uri = qualified_env_var(service_name, "redirect uri");
+    let redirect_uri_expect = format!("{} must be set", redirect_uri);
+
+    let init_endpoint = auth.auth_url.as_str();
+    let exchange_endpoint = auth.exchange_url.as_str();
+    let refresh_endpoint = auth.refresh_url.as_str();
+    quote! {
+        static SHARED_OAUTH2FLOW: OnceLock<httpclient_oauth2::OAuth2Flow> = OnceLock::new();
+
+        pub fn init_oauth2_flow(init: fn() -> httpclient_oauth2::OAuth2Flow) {
+            SHARED_OAUTH2FLOW.get_or_init(init);
+        }
+
+        fn shared_oauth2_flow() -> &'static httpclient_oauth2::OAuth2Flow {
+            let client_id = std::env::var(#client_id).expect(#client_id_expect);
+            let client_secret = std::env::var(#client_secret).expect(#client_secret_expect);
+            let redirect_uri = std::env::var(#redirect_uri).expect(#redirect_uri_expect);
+            SHARED_OAUTH2FLOW.get_or_init(|| httpclient_oauth2::OAuth2Flow {
+                client_id,
+                client_secret,
+                init_endpoint: #init_endpoint.to_string(),
+                exchange_endpoint: #exchange_endpoint.to_string(),
+                refresh_endpoint: #refresh_endpoint.to_string(),
+                redirect_uri,
+            })
+        }
+    }
+}
+
 /// Generates the client code for a given OpenAPI specification.
 fn write_lib_rs(spec: &HirSpec, extras: &Extras, opts: &PackageConfig) -> Result<()> {
     let src_path = opts.dest.join("src");
@@ -282,10 +350,20 @@ fn write_lib_rs(spec: &HirSpec, extras: &Extras, opts: &PackageConfig) -> Result
             #impl_ServiceAuthentication
         }
     }).unwrap_or_default();
+    let static_shared_http_client = static_shared_http_client(spec, opts);
+    let oauth = spec.security.iter().filter_map(|s| match s {
+        AuthStrategy::OAuth2(auth) => Some(auth),
+        _ => None,
+    }).next();
+    let shared_oauth2_flow = oauth.map(|auth| {
+        shared_oauth2_flow(auth, spec, opts)
+    }).unwrap_or_default();
 
     let code = quote! {
         #base64_import
         #serde
+        #static_shared_http_client
+        #shared_oauth2_flow
         #fluent_request
         #struct_Client
         #impl_Client

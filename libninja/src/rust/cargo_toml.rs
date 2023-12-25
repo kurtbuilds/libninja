@@ -44,7 +44,7 @@ pub fn update_cargo_toml(extras: &Extras, opts: &OutputConfig, context: &HashMap
     }
     let package_version = package.version().to_string();
 
-    ensure_dependency(&mut m.dependencies, "httpclient", "0.19.0", &[]);
+    ensure_dependency(&mut m.dependencies, "httpclient", "0.20.0", &[]);
     ensure_dependency(&mut m.dependencies, "serde", "1.0.137", &["derive"]);
     ensure_dependency(&mut m.dependencies, "serde_json", "1.0.81", &[]);
     ensure_dependency(&mut m.dependencies, "futures", "0.3.25", &[]);
@@ -75,6 +75,9 @@ pub fn update_cargo_toml(extras: &Extras, opts: &OutputConfig, context: &HashMap
     }
     if extras.basic_auth {
         ensure_dependency(&mut m.dependencies, "base64", "0.21.0", &[]);
+    }
+    if extras.oauth2 {
+        ensure_dependency(&mut m.dependencies, "httpclient_oauth2", "0.1.0", &[]);
     }
     m.example = vec![];
     fs::write_file(&cargo, &toml::to_string(&m).unwrap())?;

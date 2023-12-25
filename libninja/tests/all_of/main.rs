@@ -28,10 +28,10 @@ fn formatted_code(record: Record, spec: &HirSpec) -> String {
 #[test]
 fn test_transaction() {
     let mut spec = OpenAPI::default();
-    spec.add_schema("TransactionBase", Schema::new_object());
-    spec.add_schema("TransactionCode", Schema::new_string());
-    spec.add_schema("PersonalFinanceCategory", Schema::new_string());
-    spec.add_schema("TransactionCounterparty", Schema::new_string());
+    spec.schemas.insert("TransactionBase", Schema::new_object());
+    spec.schemas.insert("TransactionCode", Schema::new_string());
+    spec.schemas.insert("PersonalFinanceCategory", Schema::new_string());
+    spec.schemas.insert("TransactionCounterparty", Schema::new_string());
 
     let mut result = HirSpec::default();
     extract_records(&spec, &mut result).unwrap();
@@ -44,7 +44,7 @@ fn test_transaction() {
 #[test]
 fn test_nullable_doesnt_deref() {
     let mut spec = OpenAPI::default();
-    spec.add_schema("RecipientBACS", Schema::new_object());
+    spec.schemas.insert("RecipientBACS", Schema::new_object());
 
     let record = record_for_schema("PaymentInitiationOptionalRestrictionBacs", RESTRICTION_BACS, &spec);
     let code = formatted_code(record, &HirSpec::default());

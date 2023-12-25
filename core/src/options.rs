@@ -47,11 +47,7 @@ impl PackageConfig {
     }
 
     pub fn authenticator_name(&self) -> String {
-        format!("{} Authentication", self.service_name)
-    }
-
-    pub fn bare_client_name(&self) -> String {
-        "Client".to_string()
+        format!("{} Auth", self.service_name)
     }
 
     pub fn env_var(&self, name: &str) -> Literal<String> {

@@ -7,14 +7,13 @@ use std::string::{String, ToString};
 
 use anyhow::Result;
 use convert_case::{Case, Casing};
+use openapiv3 as oa;
+
 pub use doc::*;
+pub use lang::*;
 
 mod doc;
 mod lang;
-
-pub use lang::*;
-
-use openapiv3 as oa;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DateSerialization {
@@ -149,11 +148,11 @@ pub enum Location {
 
 impl From<&oa::Parameter> for Location {
     fn from(p: &oa::Parameter) -> Self {
-        match p {
-            oa::Parameter::Query { .. } => Location::Query,
-            oa::Parameter::Header { .. } => Location::Header,
-            oa::Parameter::Path { .. } => Location::Path,
-            oa::Parameter::Cookie { .. } => Location::Cookie,
+        match p.kind {
+            oa::ParameterKind::Query { .. } => Location::Query,
+            oa::ParameterKind::Header { .. } => Location::Header,
+            oa::ParameterKind::Path { .. } => Location::Path,
+            oa::ParameterKind::Cookie { .. } => Location::Cookie,
         }
     }
 }
@@ -174,22 +173,21 @@ impl std::fmt::Display for ParamKey {
 }
 
 #[derive(Debug, Clone)]
-pub struct AuthorizationParameter {
+pub struct AuthParam {
     pub name: String,
-    pub env_var: String,
     pub location: AuthLocation,
 }
 
-impl AuthorizationParameter {
-    pub fn env_var_for_service(&self, service_name: &str) -> String {
-        let service = service_name.to_case(Case::ScreamingSnake);
-        if self.env_var.starts_with(&service) {
-            self.env_var.clone()
-        } else {
-            format!("{}_{}", service, self.env_var)
-        }
-    }
-}
+// impl AuthParam {
+//     pub fn env_var_for_service(&self, service_name: &str) -> String {
+//         let service = service_name.to_case(Case::ScreamingSnake);
+//         if self.env_var.starts_with(&service) {
+//             self.env_var.clone()
+//         } else {
+//             format!("{}_{}", service, self.env_var)
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone)]
 pub enum AuthLocation {
@@ -202,11 +200,26 @@ pub enum AuthLocation {
 }
 
 #[derive(Debug, Clone)]
-pub struct AuthorizationStrategy {
-    pub name: String,
-    pub fields: Vec<AuthorizationParameter>,
+pub enum AuthStrategy {
+    Token(TokenAuth),
+    OAuth2(Oauth2Auth),
+    NoAuth,
 }
 
+#[derive(Debug, Clone)]
+pub struct TokenAuth {
+    pub name: String,
+    pub fields: Vec<AuthParam>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Oauth2Auth {
+    pub auth_url: String,
+    pub exchange_url: String,
+    pub refresh_url: String,
+    // scope name, scope description
+    pub scopes: Vec<(String, String)>,
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct HirField {
@@ -315,7 +328,7 @@ pub struct HirSpec {
     pub schemas: BTreeMap<String, Record>,
 
     pub servers: BTreeMap<String, String>,
-    pub security: Vec<AuthorizationStrategy>,
+    pub security: Vec<AuthStrategy>,
 
     pub api_docs_url: Option<String>,
 }
@@ -337,6 +350,10 @@ impl ServerStrategy {
             ServerStrategy::Env => Some(format!("{}_ENV", service_name.to_case(Case::ScreamingSnake))),
         }
     }
+}
+
+pub fn qualified_env_var(service: &str, var_name: &str) -> String {
+    format!("{} {}", service, var_name).to_case(Case::ScreamingSnake)
 }
 
 impl HirSpec {
@@ -369,8 +386,18 @@ impl HirSpec {
             env_vars.push(env);
         }
         for strategy in &self.security {
-            for param in &strategy.fields {
-                env_vars.push(param.env_var_for_service(service_name));
+            match strategy {
+                AuthStrategy::Token(t) => {
+                    for f in &t.fields {
+                        let qev = qualified_env_var(service_name, &f.name);
+                        env_vars.push(qev);
+                    }
+                }
+                AuthStrategy::OAuth2(_) => {
+                    env_vars.push(qualified_env_var(service_name, "CLIENT_ID"));
+                    env_vars.push(qualified_env_var(service_name, "CLIENT_SECRET"));
+                }
+                AuthStrategy::NoAuth => {}
             }
         }
         env_vars
@@ -381,7 +408,14 @@ impl HirSpec {
     }
 
     pub fn has_basic_auth(&self) -> bool {
-        self.security.iter().any(|s| s.fields.iter().any(|p| matches!(p.location, AuthLocation::Basic)))
+        self.security.iter().any(|s| matches!(s, AuthStrategy::Token(_)))
+    }
+
+    pub fn oauth2_auth(&self) -> Option<&Oauth2Auth> {
+        self.security.iter().filter_map(|s| match s {
+            AuthStrategy::OAuth2(o) => Some(o),
+            _ => None,
+        }).next()
     }
 }
 

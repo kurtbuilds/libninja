@@ -2,15 +2,16 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
-use openapiv3::{OpenAPI, ReferenceOr, Schema};
+use openapiv3::{APIKeyLocation, OpenAPI, ReferenceOr, Schema, SecurityScheme};
 use openapiv3 as oa;
 
-use ::hir::{AuthLocation, AuthorizationParameter, AuthorizationStrategy, DocFormat, HirSpec, Language, Location, Operation, Record, Ty, Parameter, Doc};
+use ::hir::{AuthLocation, AuthParam, AuthStrategy, DocFormat, HirSpec, Language, Location, Operation, Record, Ty, Parameter, Doc};
 pub use record::*;
 pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 pub use resolution::*;
 use mir::NewType;
 use tracing_ez::{warn, debug, span};
+use hir::{Oauth2Auth, TokenAuth};
 
 mod resolution;
 mod record;
@@ -33,7 +34,7 @@ pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
 }
 
 pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
-    param.schema_data.nullable || !parent.required(name)
+    param.nullable || !parent.required(name)
 }
 
 pub fn extract_request_schema<'a>(
@@ -56,7 +57,7 @@ pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Resu
     span!("extract_param", param = ?param);
 
     let param = param.resolve(spec)?;
-    let data = param.parameter_data_ref();
+    let data = &param.data;
     let param_schema_ref = data
         .schema()
         .ok_or_else(|| anyhow!("No schema for parameter: {:?}", param))?;
@@ -68,7 +69,7 @@ pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Resu
         optional: !data.required,
         location: param.into(),
         ty,
-        example: schema.schema_data.example.clone(),
+        example: schema.example.clone(),
     })
 }
 
@@ -95,9 +96,9 @@ pub fn extract_inputs<'a>(
         Ok(schema) => schema,
     };
 
-    if let oa::SchemaKind::Type(oa::Type::Array(oa::ArrayType { items, .. })) = &schema.schema_kind {
+    if let oa::SchemaKind::Type(oa::Type::Array(oa::ArrayType { items, .. })) = &schema.kind {
         let ty = if let Some(items) = items {
-            schema_ref_to_ty(&items.unbox(), spec)
+            schema_ref_to_ty(&items, spec)
         } else {
             Ty::Any
         };
@@ -108,7 +109,7 @@ pub fn extract_inputs<'a>(
             optional: false,
             doc: None,
             location: Location::Body,
-            example: schema.schema_data.example.clone(),
+            example: schema.example.clone(),
         });
     } else if let Ok(props) = schema.properties_iter(spec) {
         let body_args = props.map(|(name, param)| {
@@ -122,7 +123,7 @@ pub fn extract_inputs<'a>(
                 optional,
                 doc: None,
                 location: Location::Body,
-                example: schema.schema_data.example.clone(),
+                example: schema.example.clone(),
             }
         });
         for param in body_args {
@@ -137,7 +138,7 @@ pub fn extract_inputs<'a>(
             optional: false,
             doc: None,
             location: Location::Body,
-            example: schema.schema_data.example.clone(),
+            example: schema.example.clone(),
         });
     }
     Ok(inputs)
@@ -200,7 +201,6 @@ pub fn extract_operation_doc(operation: &oa::Operation, format: DocFormat) -> Op
 
 pub fn extract_schema_docs(schema: &Schema) -> Option<Doc> {
     schema
-        .schema_data
         .description
         .as_ref()
         .map(|d| Doc(d.trim().to_string()))
@@ -243,7 +243,7 @@ pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()
         let ret = match response_success {
             None => Ty::Unit,
             Some(ReferenceOr::Item(s)) => {
-                if matches!(s.schema_kind, oa::SchemaKind::Type(oa::Type::Object(_))) {
+                if matches!(s.kind, oa::SchemaKind::Type(oa::Type::Object(_))) {
                     needs_response_model = Some(s);
                     Ty::model(&format!("{}Response", name))
                 } else {
@@ -369,85 +369,67 @@ pub fn spec_defines_auth(spec: &HirSpec) -> bool {
     !spec.security.is_empty()
 }
 
-fn extract_security_fields(_name: &str, requirement: &oa::SecurityRequirement, spec: &OpenAPI) -> Result<Vec<AuthorizationParameter>> {
-    use openapiv3::{SecurityScheme, APIKeyLocation};
-    let security_schemas = &spec.components.as_ref().unwrap().security_schemes;
-    let mut fields = vec![];
-    for (name, _scopes) in requirement {
-        let schema = security_schemas.get(name).unwrap().as_item().unwrap();
-        let location = match schema {
-            SecurityScheme::APIKey {
-                location,
-                name,
-                description: _,
-            } => match location {
-                APIKeyLocation::Header => {
-                    if ["bearer_auth", "bearer"].contains(&&*name.to_case(Case::Snake)) {
-                        AuthLocation::Bearer
-                    } else {
-                        AuthLocation::Header {
-                            key: name.to_string(),
-                        }
-                    }
-                }
-                APIKeyLocation::Query => {
-                    AuthLocation::Query {
-                        key: name.to_string(),
-                    }
-                }
-                APIKeyLocation::Cookie => {
-                    AuthLocation::Cookie {
-                        key: name.to_string(),
-                    }
-                }
-            },
-            SecurityScheme::HTTP {
-                scheme,
-                bearer_format: _,
-                description: _,
-            } => match scheme.as_str() {
-                "basic" => AuthLocation::Basic,
-                "bearer" => AuthLocation::Bearer,
-                "token" => AuthLocation::Token,
-                _ => {
-                    println!("{:?}", schema);
-                    unimplemented!()
-                }
-            },
-            _ => {
-                warn!("Skipping authorization for {:?}", schema);
-                return Err(anyhow!("Unsupported authorization schema"));
+fn extract_key_location(loc: &APIKeyLocation, name: &str) -> AuthLocation {
+    match loc {
+        APIKeyLocation::Header => {
+            if ["bearer_auth", "bearer"].contains(&&*name.to_case(Case::Snake)) {
+                AuthLocation::Bearer
+            } else {
+                AuthLocation::Header { key: name.to_string() }
             }
-        };
-
-        fields.push(AuthorizationParameter {
-            name: name.to_string(),
-            env_var: name.to_case(Case::ScreamingSnake),
-            location,
-        });
+        }
+        APIKeyLocation::Query => AuthLocation::Query { key: name.to_string() },
+        APIKeyLocation::Cookie => AuthLocation::Cookie { key: name.to_string() },
     }
-    Ok(fields)
 }
-
-pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthorizationStrategy> {
+pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
+    dbg!("extracting security", &spec.security);
     let mut strats = vec![];
-    let security = match spec.security.as_ref() {
-        None => return strats,
-        Some(s) => s,
-    };
-    for requirement in security {
-        let (name, _scopes) = requirement.iter().next().unwrap();
-        let fields = match extract_security_fields(name, requirement, spec) {
-            Ok(f) => f,
-            Err(_e) => {
-                continue;
+    let schemes = &spec.security_schemes;
+    for requirement in &spec.security {
+        if requirement.is_empty() {
+            strats.push(AuthStrategy::NoAuth);
+            continue;
+        }
+        let (scheme_name, _scopes) = requirement.iter().next().unwrap();
+        let scheme = schemes.get(scheme_name).expect(&format!("Security scheme {} not found.", scheme_name));
+        debug!("Found security scheme for {}: {:?}", scheme_name, scheme);
+        let scheme = scheme.as_item().expect("TODO support refs in securitySchemes");
+        match scheme {
+            SecurityScheme::APIKey { location, name, .. } => {
+                let location = extract_key_location(&location, &name);
+                strats.push(AuthStrategy::Token(TokenAuth {
+                    name: scheme_name.to_string(),
+                    fields: vec![AuthParam {
+                        name: name.to_string(),
+                        location,
+                    }],
+                }));
             }
-        };
-        strats.push(AuthorizationStrategy {
-            name: name.clone(),
-            fields,
-        })
+            SecurityScheme::OAuth2 { flows, .. } => {
+                if let Some(flow) = &flows.authorization_code {
+                    strats.push(AuthStrategy::OAuth2(Oauth2Auth {
+                        auth_url: flow.authorization_url.clone(),
+                        exchange_url: flow.token_url.clone(),
+                        refresh_url: flow.refresh_url.as_ref().expect("Must have refresh URL").clone(),
+                        scopes: flow.scopes.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+                    }))
+                }
+            }
+            SecurityScheme::HTTP { scheme, bearer_format, description } => {
+                strats.push(AuthStrategy::Token(TokenAuth {
+                    name: scheme_name.to_string(),
+                    fields: vec![AuthParam {
+                        name: scheme_name.to_string(),
+                        // env_var: scheme_name.to_case(Case::ScreamingSnake),
+                        location: AuthLocation::Bearer,
+                    }],
+                }));
+            }
+            SecurityScheme::OpenIDConnect { .. } => {}
+        }
     }
+    debug!("extracted {} security: {:?}", strats.len(), strats);
     strats
 }
 

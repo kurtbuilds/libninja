@@ -30,7 +30,7 @@ pub fn schema_ref_to_ty_already_resolved(schema_ref: &ReferenceOr<Schema>, spec:
 /// You probably want schema_ref_to_ty, not this method. Reason being, you want
 /// to use the ref'd model if one exists (e.g. User instead of resolving to Ty::Any)
 pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
-    match &schema.schema_kind {
+    match &schema.kind {
         SchemaKind::Type(oa::Type::String(s)) => {
             match s.format.as_str() {
                 "decimal" => Ty::Currency {
@@ -46,12 +46,12 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         }
         SchemaKind::Type(oa::Type::Number(_)) => Ty::Float,
         SchemaKind::Type(oa::Type::Integer(_)) => {
-            let null_as_zero = schema.schema_data.extensions.get("x-null-as-zero")
+            let null_as_zero = schema.data.extensions.get("x-null-as-zero")
                 .and_then(|v| v.as_bool()).unwrap_or(false);
             if null_as_zero {
                 return Ty::Integer { serialization: hir::IntegerSerialization::NullAsZero };
             }
-            match schema.schema_data.extensions.get("x-format").and_then(|s| s.as_str()) {
+            match schema.data.extensions.get("x-format").and_then(|s| s.as_str()) {
                 Some("date") => Ty::Date {
                     serialization: hir::DateSerialization::Integer,
                 },
@@ -60,7 +60,7 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,
         SchemaKind::Type(oa::Type::Object(_)) => {
-            if let Some(title) = &schema.schema_data.title {
+            if let Some(title) = &schema.title {
                 Ty::model(&title)
             } else {
                 Ty::Any
@@ -69,8 +69,7 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         SchemaKind::Type(oa::Type::Array(ArrayType {
                                              items: Some(item), ..
                                          })) => {
-            let inner = item.unbox();
-            let inner = schema_ref_to_ty(&inner, spec);
+            let inner = schema_ref_to_ty(&item, spec);
             Ty::Array(Box::new(inner))
         }
         SchemaKind::Type(oa::Type::Array(ArrayType { items: None, .. })) => {
@@ -95,7 +94,7 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
 pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
     use openapiv3::SchemaKind::*;
     use openapiv3::Type::*;
-    match &schema.schema_kind {
+    match &schema.kind {
         Type(String(_)) => true,
         Type(Number(_)) => true,
         Type(Integer(_)) => true,
@@ -103,7 +102,6 @@ pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
         Type(Array(ArrayType {
                        items: Some(inner), ..
                    })) => {
-            let inner = inner.unbox();
             let inner = inner.resolve(spec);
             is_primitive(inner, spec)
         }

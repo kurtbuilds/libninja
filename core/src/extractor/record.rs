@@ -4,7 +4,7 @@ use anyhow::Result;
 use indexmap::IndexMap;
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 
-use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type};
+use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type, RefOrMap};
 use tracing::warn;
 
 use hir::{Doc, HirField, Record, StrEnum, Struct, NewType, HirSpec};
@@ -13,7 +13,7 @@ use crate::extractor;
 use crate::child_schemas::ChildSchemas;
 use crate::extractor::{schema_ref_to_ty_already_resolved, schema_to_ty};
 
-fn properties_to_fields(properties: &IndexMap<String, ReferenceOr<Schema>>, schema: &Schema, spec: &OpenAPI) -> BTreeMap<String, HirField> {
+fn properties_to_fields(properties: &RefOrMap<Schema>, schema: &Schema, spec: &OpenAPI) -> BTreeMap<String, HirField> {
     properties
         .iter()
         .map(|(name, field_schema_ref)| {
@@ -49,15 +49,15 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
 
 pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
     let name = name.to_string();
-    match &schema.schema_kind {
+    match &schema.kind {
         // The base case, a regular object
         SchemaKind::Type(Type::Object(ObjectType { properties, .. })) => {
             let fields = properties_to_fields(properties, schema, spec);
             Record::Struct(Struct {
                 name,
                 fields,
-                nullable: schema.schema_data.nullable,
-                docs: schema.schema_data.description.as_ref().map(|d| Doc(d.trim().to_string())),
+                nullable: schema.nullable,
+                docs: schema.description.as_ref().map(|d| Doc(d.trim().to_string())),
             })
         }
         // An enum
@@ -70,19 +70,20 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
                         .iter()
                         .map(|s| s.to_string())
                         .collect(),
-                    docs: schema.schema_data.description.as_ref().map(|d| Doc(d.clone())),
+                    docs: schema.description.as_ref().map(|d| Doc(d.clone())),
                 })
             }
         // A newtype with multiple fields
         SchemaKind::AllOf { all_of } => {
+            let all_of = all_of.as_slice();
             if effective_length(all_of) == 1 {
                 Record::TypeAlias(name, HirField {
                     ty: schema_ref_to_ty_already_resolved(&all_of[0], spec, schema),
-                    optional: schema.schema_data.nullable,
+                    optional: schema.nullable,
                     ..HirField::default()
                 })
             } else {
-                create_record_from_all_of(&name, all_of, &schema.schema_data, spec)
+                create_record_from_all_of(&name, all_of, &schema.data, spec)
             }
         }
         // Default case, a newtype with a single field
@@ -90,12 +91,12 @@ pub fn create_record(name: &str, schema: &Schema, spec: &OpenAPI) -> Record {
             name,
             fields: vec![HirField {
                 ty: schema_to_ty(schema, spec),
-                optional: schema.schema_data.nullable,
+                optional: schema.nullable,
                 doc: None,
                 example: None,
                 flatten: false,
             }],
-            docs: schema.schema_data.description.as_ref().map(|d| Doc(d.clone())),
+            docs: schema.description.as_ref().map(|d| Doc(d.clone())),
         }),
     }
 }
@@ -108,9 +109,9 @@ fn create_field(field_schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> HirFi
         spec,
         field_schema,
     );
-    let optional = field_schema.schema_data.nullable;
-    let example = field_schema.schema_data.example.clone();
-    let doc = field_schema.schema_data.description.clone().map(Doc);
+    let optional = field_schema.nullable;
+    let example = field_schema.example.clone();
+    let doc = field_schema.description.clone().map(Doc);
     HirField { ty, optional, doc, example, flatten: false }
 }
 
@@ -162,7 +163,7 @@ pub fn extract_records(spec: &OpenAPI, result: &mut HirSpec) -> Result<()> {
         result.schemas.insert(name, rec);
     }
 
-    for (name, schema_ref) in spec.schemas() {
+    for (name, schema_ref) in &spec.schemas {
         let Some(reference) = schema_ref.as_ref_str() else { continue; };
         result.schemas.insert(name.clone(), Record::TypeAlias(name.clone(), create_field(&schema_ref, spec)));
     }
@@ -178,7 +179,7 @@ mod tests {
     #[test]
     fn test_all_of_required_set_correctly() {
         let mut additional_props: Schema = serde_yaml::from_str(include_str!("./pet_tag.yaml")).unwrap();
-        let SchemaKind::AllOf { all_of } = &additional_props.schema_kind else { panic!() };
+        let SchemaKind::AllOf { all_of } = &additional_props.kind else { panic!() };
         let spec = OpenAPI::default();
         let rec = create_record_from_all_of("PetTag", &all_of, &SchemaData::default(), &spec);
         let mut fields = rec.fields();

@@ -17,8 +17,8 @@ fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
 #[test]
 fn test_link_token_create() {
     let mut spec = OpenAPI::default();
-    spec.add_schema("UserAddress", Schema::new_object());
-    spec.add_schema("UserIDNumber", Schema::new_string());
+    spec.schemas.insert("UserAddress", Schema::new_object());
+    spec.schemas.insert("UserIDNumber", Schema::new_string());
     let record = record_for_schema("LinkTokenCreateRequestUser", LINK_TOKEN_CREATE, &spec);
     let Record::Struct(struc) = record else {
         panic!("expected struct");

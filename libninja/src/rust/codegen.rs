@@ -391,12 +391,11 @@ impl ToRustCode for ParamKey {
 
 /// If you can use reference types to represent the data (e.g. &str instead of String)
 pub fn is_referenceable(schema: &Schema, spec: &OpenAPI) -> bool {
-    match &schema.schema_kind {
+    match &schema.kind {
         SchemaKind::Type(openapiv3::Type::String(_)) => true,
         SchemaKind::Type(openapiv3::Type::Array(ArrayType {
                                                     items: Some(inner), ..
                                                 })) => {
-            let inner = inner.unbox();
             let inner = inner.resolve(spec);
             is_primitive(inner, spec)
         }

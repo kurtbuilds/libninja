@@ -52,34 +52,6 @@ macro_rules! arg {
     };
 }
 
-
-#[macro_export]
-macro_rules! field {
-    (pub(crate) $name:ident : $ty:expr) => {
-        ::mir::Field {
-            name: stringify!($name).to_string(),
-            ty: ($ty).into(),
-            visibility: ::mir::Visibility::Crate,
-            ..Field::default()
-        }
-    };
-    (pub $name:ident : $ty:expr) => {
-        ::mir::Field {
-            name: stringify!($name).to_string(),
-            ty: ($ty).into(),
-            visibility: ::mir::Visibility::Public,
-            ..Field::default()
-        }
-    };
-    ($name:ident : $ty:expr) => {
-        ::mir::Field {
-            name: stringify!($name).to_string(),
-            ty: ($ty).into(),
-            ..Field::default()
-        }
-    };
-}
-
 /// A literal value.
 #[macro_export]
 macro_rules! lit {
