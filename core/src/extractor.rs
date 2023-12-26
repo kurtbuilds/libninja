@@ -385,7 +385,6 @@ fn extract_key_location(loc: &APIKeyLocation, name: &str) -> AuthLocation {
 }
 
 pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
-    dbg!("extracting security", &spec.security);
     let mut strats = vec![];
     let schemes = &spec.security_schemes;
     for requirement in &spec.security {
@@ -413,7 +412,7 @@ pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
                     strats.push(AuthStrategy::OAuth2(Oauth2Auth {
                         auth_url: flow.authorization_url.clone(),
                         exchange_url: flow.token_url.clone(),
-                        refresh_url: flow.refresh_url.as_ref().expect("Must have refresh URL").clone(),
+                        refresh_url: flow.refresh_url.clone().unwrap_or_else(|| flow.token_url.clone()),
                         scopes: flow.scopes.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
                     }))
                 }
