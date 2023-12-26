@@ -232,8 +232,9 @@ pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {
 pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()> {
     for (path, method, operation, item) in spec.operations() {
         let name = match &operation.operation_id {
+            Some(name) => name
+                .replace(".", "_"),
             None => make_name_from_method_and_url(method, path),
-            Some(name) => name.clone(),
         };
         let doc = extract_operation_doc(operation, DocFormat::Markdown);
         let mut parameters = extract_inputs(operation, item, spec)?;
@@ -249,7 +250,7 @@ pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()
                 } else {
                     schema_to_ty(s, spec)
                 }
-            },
+            }
             Some(x @ ReferenceOr::Reference { .. }) => {
                 schema_ref_to_ty(x, spec)
             }
@@ -382,6 +383,7 @@ fn extract_key_location(loc: &APIKeyLocation, name: &str) -> AuthLocation {
         APIKeyLocation::Cookie => AuthLocation::Cookie { key: name.to_string() },
     }
 }
+
 pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
     dbg!("extracting security", &spec.security);
     let mut strats = vec![];
