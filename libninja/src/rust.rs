@@ -279,7 +279,7 @@ fn shared_oauth2_flow(auth: &Oauth2Auth, spec: &HirSpec, opts: &PackageConfig) -
             let _ = SHARED_OAUTH2FLOW.set(init);
         }
 
-        fn shared_oauth2_flow() -> &'static httpclient_oauth2::OAuth2Flow {
+        pub fn shared_oauth2_flow() -> &'static httpclient_oauth2::OAuth2Flow {
             SHARED_OAUTH2FLOW.get_or_init(|| httpclient_oauth2::OAuth2Flow {
                 client_id: std::env::var(#client_id).expect(#client_id_expect),
                 client_secret: std::env::var(#client_secret).expect(#client_secret_expect),
