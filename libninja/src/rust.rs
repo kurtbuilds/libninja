@@ -253,8 +253,8 @@ fn static_shared_http_client(spec: &HirSpec, opt: &PackageConfig) -> TokenStream
             let _ = SHARED_HTTPCLIENT.set(init);
         }
 
-        fn shared_http_client() -> &'static httpclient::Client {
-            SHARED_HTTPCLIENT.get_or_init(default_http_client)
+        fn shared_http_client() -> Cow<'static, httpclient::Client> {
+            Cow::Borrowed(SHARED_HTTPCLIENT.get_or_init(default_http_client))
         }
     }
 }

@@ -4,4 +4,5 @@ pub mod model;
 pub mod request;
 pub use httpclient::{Error, Result, InMemoryResponseExt};
 use std::sync::{Arc, OnceLock};
+use std::borrow::Cow;
 use crate::model::*;

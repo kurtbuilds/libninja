@@ -83,7 +83,7 @@ fn build_Client_new_with(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenS
     let auth_struct = opt.authenticator_name().to_rust_struct();
     let body = quote! {
         Self {
-            client,
+            client: Cow::Owned(client),
             authentication,
         }
     };
@@ -94,7 +94,7 @@ fn build_Client_new_with(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenS
         body,
         args: vec![FnArg {
             name: ArgIdent::Ident("client".to_string()),
-            ty: quote!(&'static httpclient::Client),
+            ty: quote!(httpclient::Client),
             default: None,
             treatment: None,
         }, FnArg {
@@ -113,7 +113,7 @@ pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> 
     let mut instance_fields = vec![
         Field {
             name: "client".to_string(),
-            ty: quote!(&'static httpclient::Client),
+            ty: quote!(Cow<'static, httpclient::Client>),
             ..Field::default()
         }
     ];
