@@ -40,15 +40,15 @@ impl FieldExt for HirField {
         }
         if self.optional {
             decorators.push(quote! {
-                #[serde(skip_serializing_if = "Option::is_none")]
+                #[serde(default, skip_serializing_if = "Option::is_none")]
             });
         } else if self.ty.is_iterable() {
             decorators.push(quote! {
-                #[serde(skip_serializing_if = "Vec::is_empty")]
+                #[serde(default, skip_serializing_if = "Vec::is_empty")]
             });
         } else if matches!(self.ty, Ty::Any) {
             decorators.push(quote! {
-                #[serde(skip_serializing_if = "serde_json::Value::is_null")]
+                #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
             });
         }
         if self.ty.inner_model().is_some() && config.ormlite {
