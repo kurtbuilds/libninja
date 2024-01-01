@@ -83,8 +83,8 @@ fn build_Client_new_with(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenS
     let auth_struct = opt.authenticator_name().to_rust_struct();
     let body = quote! {
         Self {
-            client
-            authentication
+            client,
+            authentication,
         }
     };
     Function {
