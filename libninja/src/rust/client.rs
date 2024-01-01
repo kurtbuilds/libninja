@@ -79,6 +79,34 @@ fn build_Client_with_auth(spec: &HirSpec, opt: &PackageConfig) -> Function<Token
     }
 }
 
+fn build_Client_new_with(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenStream> {
+    let auth_struct = opt.authenticator_name().to_rust_struct();
+    let body = quote! {
+        Self {
+            client
+            authentication
+        }
+    };
+    Function {
+        name: Ident::new("new_with"),
+        public: true,
+        ret: quote!(Self),
+        body,
+        args: vec![FnArg {
+            name: ArgIdent::Ident("client".to_string()),
+            ty: quote!(&'static httpclient::Client),
+            default: None,
+            treatment: None,
+        }, FnArg {
+            name: ArgIdent::Ident("authentication".to_string()),
+            ty: quote!(#auth_struct),
+            default: None,
+            treatment: None,
+        }],
+        ..Function::default()
+    }
+}
+
 pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
 
@@ -115,6 +143,7 @@ pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> 
             ..Function::default()
         });
     }
+    class_methods.push(build_Client_new_with(spec, opt));
     Class {
         name: opt.client_name().to_rust_struct(),
         instance_fields,
