@@ -351,54 +351,67 @@ pub fn struct_Authentication(mir_spec: &HirSpec, opt: &PackageConfig) -> TokenSt
 }
 
 fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStream {
-    for strat in &spec.security {
-        match strat {
-            AuthStrategy::Token(strat) => {
-                let fields = strat.fields
-                    .iter()
-                    .map(|f| {
-                        let basic = matches!(f.location, AuthLocation::Basic);
-                        let field =
-                            syn::Ident::new(&f.name.to_case(Case::Snake), proc_macro2::Span::call_site());
-                        let env_var = qualified_env_var(service_name, &f.name);
-                        let expect = format!("Environment variable {} is not set.", env_var);
-                        if basic {
-                            quote! {
+    let Some(strat) = spec.security.first() else {
+        return TokenStream::new();
+    };
+    match strat {
+        AuthStrategy::Token(strat) => {
+            let fields = strat.fields
+                .iter()
+                .map(|f| {
+                    let basic = matches!(f.location, AuthLocation::Basic);
+                    let field =
+                        syn::Ident::new(&f.name.to_case(Case::Snake), proc_macro2::Span::call_site());
+                    let env_var = qualified_env_var(service_name, &f.name);
+                    let expect = format!("Environment variable {} is not set.", env_var);
+                    if basic {
+                        quote! {
                                 #field: {
                                     let value = std::env::var(#env_var).expect(#expect);
                                     STANDARD_NO_PAD.encode(value)
                                 }
                             }
-                        } else {
-                            quote! {
+                    } else {
+                        quote! {
                                 #field: std::env::var(#env_var).expect(#expect)
                             }
-                        }
-                    })
-                    .collect::<Vec<_>>();
-                let variant_name = syn::Ident::new(
-                    &strat.name.to_case(Case::Pascal),
-                    proc_macro2::Span::call_site(),
-                );
-                return quote! {
+                    }
+                })
+                .collect::<Vec<_>>();
+            let variant_name = syn::Ident::new(
+                &strat.name.to_case(Case::Pascal),
+                proc_macro2::Span::call_site(),
+            );
+            quote! {
                     pub fn from_env() -> Self {
                         Self::#variant_name {
                             #(#fields),*
                         }
                     }
                 }
-            }
-            AuthStrategy::NoAuth => {
-                return quote! {
+        }
+        AuthStrategy::NoAuth => {
+            quote! {
                     pub fn from_env() -> Self {
                         Self::NoAuth
                     }
                 }
+        }
+        AuthStrategy::OAuth2(_) => {
+            let access = qualified_env_var(service_name, "access_token");
+            let refresh = qualified_env_var(service_name, "refresh_token");
+            quote! {
+                pub fn from_env() -> Self {
+                    let access = std::env::var(#access).unwrap();
+                    let refresh = std::env::var(#refresh).unwrap();
+                    let mw = shared_oauth2_flow().bearer_middleware(access, refresh);
+                    Self::OAuth2 {
+                        middleware: std::sync::Arc::new(mw),
+                    }
+                }
             }
-            _ => {}
         }
     }
-    TokenStream::new()
 }
 
 pub fn impl_Authentication(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {

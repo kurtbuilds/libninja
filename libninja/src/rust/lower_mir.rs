@@ -163,6 +163,7 @@ impl RecordExt for Record {
     fn imports(&self, path: &str) -> Option<Import> {
         let names = self.fields()
             .flat_map(|f| f.ty.inner_model())
+            .filter(|&name| name != self.name())
             .map(|name| name.to_rust_struct().0)
             .collect::<BTreeSet<_>>();
         if !names.is_empty() {
