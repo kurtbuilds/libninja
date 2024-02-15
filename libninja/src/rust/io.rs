@@ -1,7 +1,7 @@
 use std::path::Path;
 use proc_macro2::TokenStream;
 use ln_core::fs;
-use crate::rust::format::format_code;
+use mir_rust::format_code;
 use mir_rust::ToRustCode;
 
 pub fn write_rust_file_to_path(path: &Path, file: mir::File<TokenStream>) -> anyhow::Result<()> {
@@ -14,7 +14,7 @@ pub fn write_rust_code_to_path(path: &Path, code: TokenStream) -> anyhow::Result
 }
 
 pub fn write_rust_to_path(path: &Path, code: TokenStream, template: &str) -> anyhow::Result<()> {
-    let code = format_code(code)?;
+    let code = format_code(code);
     let mut f = fs::open(path)?;
     let mut s = template.to_string();
     if !s.is_empty() && !s.ends_with('\n') {

@@ -15,7 +15,7 @@ use tracing::debug;
 
 use ::mir::{File, Import, Visibility};
 use codegen::ToRustType;
-use format::format_code;
+use mir_rust::format_code;
 use hir::{AuthStrategy, HirSpec, Location, Oauth2Auth, Parameter, qualified_env_var};
 use ln_core::{copy_builtin_files, copy_builtin_templates, create_context, get_template_file, prepare_templates};
 use ln_core::fs;
@@ -206,12 +206,12 @@ fn write_file_with_template(mut file: File<TokenStream>, template: Option<String
         #doc
         #(#imports)*
     };
-    let mut code = format_code(pre)?;
+    let mut code = format_code(pre);
     code.push('\n');
     code += template.trim();
     code.push('\n');
     let after = file.to_rust_code();
-    code += &format_code(after)?;
+    code += &format_code(after);
     fs::write_file(path, &code)
 }
 
@@ -480,6 +480,6 @@ fn write_serde_module_if_needed(extras: &Extras, dest: &Path) -> Result<()> {
         #date_as_int
         #int_as_str
     };
-    let code = format_code(code).unwrap();
+    let code = format_code(code);
     fs::write_file(&src_path, &code)
 }

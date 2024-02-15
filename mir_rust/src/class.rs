@@ -3,30 +3,48 @@ use quote::quote;
 
 use mir::{Class, Field};
 
-use crate::{FluentBool, ToRustCode, ToRustIdent};
+use crate::{FluentBool, ToRustCode};
 
 impl ToRustCode for Class<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
-        let vis = self.public.to_value(|| quote!(pub));
-        let fields = self.instance_fields.into_iter().map(|f| f.to_rust_code());
-        let class_methods = self.class_methods.into_iter().map(|m| m.to_rust_code());
+        let Class {
+            name,
+            doc,
+            code,
+            instance_fields,
+            static_fields,
+            constructors,
+            class_methods,
+            static_methods,
+            public,
+            lifetimes,
+            decorators,
+            superclasses
+        } = self;
+        assert!(superclasses.is_empty(), "superclasses not supported in Rust");
+        assert!(static_fields.is_empty(), "static fields not supported in Rust");
+        assert!(constructors.is_empty(), "constructors not supported in Rust");
+        assert!(code.is_none(), "code in class body not supported in Rust");
+        assert!(static_methods.is_empty(), "static methods not supported in Rust");
 
-        let doc = self.doc.to_rust_code();
-        let lifetimes = if self.lifetimes.is_empty() {
+        let vis = public.to_value(|| quote!(pub));
+        let fields = instance_fields.into_iter().map(|f| f.to_rust_code());
+        let class_methods = class_methods.into_iter().map(|m| m.to_rust_code());
+
+        let doc = doc.to_rust_code();
+        let lifetimes = if lifetimes.is_empty() {
             quote! {}
         } else {
-            let lifetimes = self.lifetimes.iter().map(|l| {
+            let lifetimes = lifetimes.iter().map(|l| {
                 let name = syn::Lifetime::new(l, Span::call_site());
                 quote! { # name }
             });
             quote! { < # ( # lifetimes), * > }
         };
-        let decorator = self.decorators;
-        let name = self.name;
         quote! {
             #doc
             #(
-                #decorator
+                #decorators
             )*
             #vis struct #name #lifetimes {
                 #(#fields,)*
@@ -40,7 +58,7 @@ impl ToRustCode for Class<TokenStream> {
 
 impl ToRustCode for Field<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
-        let name = self.name.to_rust_ident();
+        let name = self.name;
         let ty = if self.optional {
             let ty = self.ty;
             quote! { Option<#ty> }

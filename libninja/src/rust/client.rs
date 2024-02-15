@@ -108,14 +108,14 @@ pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> 
 
     let mut instance_fields = vec![
         Field {
-            name: "client".to_string(),
+            name: Ident::new("client"),
             ty: quote!(Cow<'static, httpclient::Client>),
             ..Field::default()
         }
     ];
     if spec.has_security() {
         instance_fields.push(Field {
-            name: "authentication".to_string(),
+            name: Ident::new("authentication"),
             ty: quote!(#auth_struct_name),
             ..Field::default()
         });

@@ -192,7 +192,7 @@ impl<T> Default for Function<T>
 {
     fn default() -> Self {
         Self {
-            name: Ident::new(""),
+            name: Ident("".to_string()),
             args: vec![],
             ret: T::default(),
             body: T::default(),

@@ -177,7 +177,7 @@ pub fn build_struct_fields(
                 tok = quote! { Option<#tok> }
             }
             Field {
-                name: input.name.clone(),
+                name: input.name.to_rust_ident(),
                 ty: tok,
                 vis: Visibility::Public,
                 ..Field::default()

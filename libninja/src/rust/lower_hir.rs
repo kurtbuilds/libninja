@@ -134,7 +134,7 @@ impl StructExt for Struct {
                 _ => {}
             }
             Field {
-                name: name.clone(),
+                name: name.to_rust_ident(),
                 ty,
                 vis: Visibility::Public,
                 decorators,
@@ -336,7 +336,7 @@ mod tests {
     use hir::HirField;
     use mir::Ty;
 
-    use crate::rust::format::format_code;
+    use mir_rust::format_code;
 
     use super::*;
 
@@ -352,7 +352,7 @@ mod tests {
             docs: None,
         };
         let code = create_newtype_struct(&schema, &HirSpec::default());
-        let code = format_code(code).unwrap();
+        let code = format_code(code);
         assert_eq!(&code, "
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NewType(pub String);

@@ -9,7 +9,7 @@ use mir::{File, Import, Ty};
 use crate::PackageConfig;
 use crate::rust::codegen::{ToRustCode, ToRustType};
 use crate::rust::codegen::ToRustIdent;
-use crate::rust::format::format_code;
+use mir_rust::format_code;
 
 pub trait ToRustExample {
     fn to_rust_example(&self, spec: &HirSpec) -> anyhow::Result<TokenStream>;
@@ -67,7 +67,7 @@ pub fn generate_example(operation: &Operation, opt: &PackageConfig, spec: &HirSp
         ..File::default()
     };
     let code = example.to_rust_code();
-    format_code(code)
+    Ok(format_code(code))
 }
 
 pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value: bool) -> anyhow::Result<TokenStream> {

@@ -177,3 +177,19 @@ mod tests {
         assert_eq!(sanitize_filename(s), "sd_address_contractor1099");
     }
 }
+
+pub fn format_code(code: TokenStream) -> String {
+    let code = code.to_string();
+    let syntax_tree = match syn::parse_file(&code) {
+        Ok(syntax_tree) => syntax_tree,
+        Err(e) => {
+            eprintln!("{}", code);
+            panic!("Failed to parse generated code: {}", e);
+        }
+    };
+    let mut code = prettyplease::unparse(&syntax_tree);
+    if code.ends_with('\n') {
+        code.pop();
+    }
+    code
+}
