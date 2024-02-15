@@ -1,10 +1,10 @@
 use openapiv3::{OpenAPI, Schema};
 use pretty_assertions::assert_eq;
 
-/// Tests that the `allOf` keyword is handled correctly.
-use ln_core::{ConfigFlags};
 use hir::{HirSpec, Record};
-use ln_core::extractor::{extract_api_operations, extract_records};
+/// Tests that the `allOf` keyword is handled correctly.
+use ln_core::ConfigFlags;
+use ln_core::extractor::extract_records;
 
 const TRANSACTION: &str = include_str!("transaction.yaml");
 const TRANSACTION_RS: &str = include_str!("transaction.rs");
@@ -15,8 +15,7 @@ const RESTRICTION_BACS_RS: &str = include_str!("restriction_bacs.rs");
 
 fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
     let schema = serde_yaml::from_str::<Schema>(schema).unwrap();
-    let mut record = ln_core::extractor::create_record(name, &schema, spec);
-    record
+    ln_core::extractor::create_record(name, &schema, spec)
 }
 
 fn formatted_code(record: Record, spec: &HirSpec) -> String {

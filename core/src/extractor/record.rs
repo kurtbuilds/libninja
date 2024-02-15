@@ -131,7 +131,7 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
                 let props = item.properties();
                 for (name, schema) in props {
                     let mut field = create_field(schema, spec);
-                    if !item.required().iter().any(|s| s == name) {
+                    if !field.ty.is_iterable() && !item.required().iter().any(|s| s == name) {
                         field.optional = true;
                     }
                     fields.insert(name.to_string(), field);

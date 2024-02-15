@@ -35,7 +35,7 @@ impl ToRustCode for Function<TokenStream> {
             annotations,
             ret,
             public,
-            generic,
+            ..
         } = self;
         let annotations = annotations
             .into_iter()

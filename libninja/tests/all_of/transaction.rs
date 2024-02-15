@@ -4,20 +4,20 @@ pub struct Transaction {
     #[serde(flatten)]
     pub transaction_base: TransactionBase,
     ///The date that the transaction was authorized. Dates are returned in an [ISO 8601](https://wikipedia.org/wiki/ISO_8601) format ( `YYYY-MM-DD` ).
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub authorized_date: Option<chrono::NaiveDate>,
     /**Date and time when a transaction was authorized in [ISO 8601](https://wikipedia.org/wiki/ISO_8601) format ( `YYYY-MM-DDTHH:mm:ssZ` ).
 
 This field is returned for select financial institutions and comes as provided by the institution. It may contain default time values (such as 00:00:00).*/
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub authorized_datetime: Option<chrono::DateTime<chrono::Utc>>,
     ///The counterparties present in the transaction. Counterparties, such as the financial institutions, are extracted by Plaid from the raw description.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub counterparties: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub counterparties: Vec<String>,
     /**Date and time when a transaction was posted in [ISO 8601](https://wikipedia.org/wiki/ISO_8601) format ( `YYYY-MM-DDTHH:mm:ssZ` ).
 
 This field is returned for select financial institutions and comes as provided by the institution. It may contain default time values (such as 00:00:00).*/
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub datetime: Option<chrono::DateTime<chrono::Utc>>,
     /**The channel used to make a payment.
 `online:` transactions that took place online.
@@ -28,10 +28,10 @@ This field is returned for select financial institutions and comes as provided b
 
 This field replaces the `transaction_type` field.*/
     pub payment_channel: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub personal_finance_category: Option<String>,
     ///A link to the icon associated with the primary personal finance category. The logo will always be 100x100 pixels.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub personal_finance_category_icon_url: Option<String>,
     pub transaction_code: String,
 }

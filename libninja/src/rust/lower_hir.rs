@@ -23,7 +23,6 @@ impl FieldExt for HirField {
         let mut decorators = Vec::new();
         let rust_ident = name.to_rust_ident();
         if rust_ident.0 != name {
-            let name = &name;
             if self.flatten {
                 decorators.push(quote! {
                     #[serde(flatten)]
@@ -39,6 +38,7 @@ impl FieldExt for HirField {
                 });
             }
         }
+        dbg!(self.optional);
         if self.optional {
             decorators.push(quote! {
                 #[serde(default, skip_serializing_if = "Option::is_none")]

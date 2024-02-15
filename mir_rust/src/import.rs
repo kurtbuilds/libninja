@@ -12,7 +12,7 @@ impl ToRustCode for Import {
                 alias,
                 imports,
                 vis,
-                feature,
+                ..
             } = import;
             if path.ends_with('*') {
                 let path = syn::parse_str::<Path>(&path[..path.len() - 3]).unwrap();
