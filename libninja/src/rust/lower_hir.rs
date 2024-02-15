@@ -38,7 +38,6 @@ impl FieldExt for HirField {
                 });
             }
         }
-        dbg!(self.optional);
         if self.optional {
             decorators.push(quote! {
                 #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -262,7 +261,7 @@ pub fn create_sumtype_struct(schema: &Struct, config: &ConfigFlags, spec: &HirSp
         #dummy
         #[derive(Debug, Clone, Serialize, Deserialize #default)]
         pub struct #name {
-            #(#fields)*
+            #(#fields,)*
         }
         impl std::fmt::Display for #name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {

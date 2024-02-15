@@ -1,17 +1,32 @@
+use convert_case::{Case, Casing};
+use proc_macro2::TokenStream;
+use quote::quote;
+use regex::{Captures, Regex};
+
+use mir::{Doc, Ident, Literal, ParamKey, Visibility};
+
 mod file;
 mod class;
 mod import;
-
-use mir::{Function, Visibility, FnArg2, Doc, Field, Literal, ParamKey, Ident};
-use proc_macro2::{TokenStream};
-use quote::quote;
-use regex::{Captures, Regex};
-use convert_case::{Casing, Case};
-pub use class::codegen_function;
+mod function;
 
 /// Use this for codegen structs: Function, Class, etc.
 pub trait ToRustCode {
     fn to_rust_code(self) -> TokenStream;
+}
+
+pub trait FluentBool {
+    fn to_value<T: Default>(self, f: impl FnOnce() -> T) -> T;
+}
+
+impl FluentBool for bool {
+    fn to_value<T: Default>(self, f: impl FnOnce() -> T) -> T {
+        if self {
+            f()
+        } else {
+            Default::default()
+        }
+    }
 }
 
 impl ToRustCode for Visibility {
@@ -24,42 +39,6 @@ impl ToRustCode for Visibility {
     }
 }
 
-impl ToRustCode for Function<TokenStream> {
-    fn to_rust_code(self) -> TokenStream {
-        let Function {
-            name,
-            args,
-            body,
-            doc,
-            async_,
-            annotations,
-            ret,
-            public,
-            ..
-        } = self;
-        let annotations = annotations
-            .into_iter()
-            .map(|a| syn::parse_str::<syn::Expr>(&a).unwrap());
-        let doc = doc.to_rust_code();
-        let vis = public.then(|| quote!(pub)).unwrap_or_default();
-        let async_ = async_.then(|| quote!(async)).unwrap_or_default();
-        let args = args.into_iter().map(|a| a.to_rust_code());
-        let ret = ret.is_empty().then(|| quote!(-> #ret)).unwrap_or_default();
-        quote! {
-            #(#[ #annotations ])*
-            #doc
-            #vis #async_ fn #name(#(#args),*) #ret {
-                #body
-            }
-        }
-    }
-}
-
-impl ToRustCode for FnArg2<TokenStream> {
-    fn to_rust_code(self) -> TokenStream {
-        todo!()
-    }
-}
 
 impl ToRustCode for Option<Doc> {
     fn to_rust_code(self) -> TokenStream {
@@ -68,28 +47,7 @@ impl ToRustCode for Option<Doc> {
             Some(Doc(doc)) => {
                 let doc = doc.trim();
                 quote!(#[doc = #doc])
-            },
-        }
-    }
-}
-impl ToRustCode for Field<TokenStream> {
-    fn to_rust_code(self) -> TokenStream {
-        let name = self.name.to_rust_ident();
-        let ty = if self.optional {
-            let ty = self.ty;
-            quote! { Option<#ty> }
-        } else {
-            self.ty
-        };
-        let vis = self.vis.to_rust_code();
-        let doc = self.doc.to_rust_code();
-        let decorators = self.decorators;
-        quote! {
-            #doc
-            #(
-                #decorators
-            )*
-            #vis #name: #ty,
+            }
         }
     }
 }

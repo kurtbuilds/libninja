@@ -1,14 +1,15 @@
 use std::fs::File;
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::Result;
-use hir::{HirSpec, Language};
-use libninja::{generate_library, rust};
-use ln_core::extractor::{extract_api_operations, extract_inputs, extract_spec};
-use ln_core::{PackageConfig, OutputConfig};
 use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
-use std::path::PathBuf;
+
+use hir::{HirSpec, Language};
+use libninja::{generate_library, rust};
+use ln_core::{OutputConfig, PackageConfig};
+use ln_core::extractor::{extract_api_operations, extract_inputs, extract_spec};
 
 const BASIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/basic.yaml");
 const RECURLY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/recurly.yaml");

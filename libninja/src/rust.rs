@@ -23,7 +23,6 @@ use mir::{DateSerialization, IntegerSerialization};
 use mir::Ident;
 use mir_rust::{sanitize_filename, ToRustCode};
 use mir_rust::ToRustIdent;
-use mir_rust::codegen_function;
 
 use crate::{add_operation_models, extract_spec, OutputConfig, PackageConfig};
 use crate::rust::client::{build_Client_authenticate, server_url};
@@ -397,10 +396,8 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
         let mut import = Import::new(&fname, struct_names);
         import.vis = Visibility::Public;
         imports.push(import);
-        let builder_methods = build_request_struct_builder_methods(&operation);
-        let builder_methods = builder_methods
-            .into_iter()
-            .map(|s| codegen_function(s, quote! { mut self , }));
+        let builder_methods = build_request_struct_builder_methods(&operation)
+            .into_iter().map(|s| s.to_rust_code());
 
         let assign_inputs = assign_inputs_to_request(&operation.parameters);
 

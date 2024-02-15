@@ -1,26 +1,15 @@
-use mir::{Class, Function};
-use proc_macro2::{TokenStream, Span};
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use crate::{ToRustCode, ToRustIdent};
+
+use mir::{Class, Field};
+
+use crate::{FluentBool, ToRustCode, ToRustIdent};
 
 impl ToRustCode for Class<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
-        let vis = self.public.then(|| quote!(pub)).unwrap_or_default();
-        let fields = self.instance_fields.iter().map(|f| {
-            let name = &f.name.to_rust_ident();
-            let ty = &f.ty;
-            let public = f.vis.to_rust_code();
-            quote! { #public #name: #ty }
-        });
-        let instance_methods = self.instance_methods.into_iter().map(|m|
-            codegen_function(m, quote! { self , })
-        );
-        let mut_self_instance_methods = self.mut_self_instance_methods.into_iter().map(|m| {
-            codegen_function(m, quote! { mut self , })
-        });
-        let class_methods = self.class_methods.into_iter().map(|m| {
-            codegen_function(m, TokenStream::new())
-        });
+        let vis = self.public.to_value(|| quote!(pub));
+        let fields = self.instance_fields.into_iter().map(|f| f.to_rust_code());
+        let class_methods = self.class_methods.into_iter().map(|m| m.to_rust_code());
 
         let doc = self.doc.to_rust_code();
         let lifetimes = if self.lifetimes.is_empty() {
@@ -42,26 +31,31 @@ impl ToRustCode for Class<TokenStream> {
             #vis struct #name #lifetimes {
                 #(#fields,)*
             }
-            impl #lifetimes #name #lifetimes{
-                #(#instance_methods)*
-                #(#mut_self_instance_methods)*
+            impl #lifetimes #name #lifetimes {
                 #(#class_methods)*
             }
         }
     }
 }
 
-pub fn codegen_function(func: Function<TokenStream>, self_arg: TokenStream) -> TokenStream {
-    let name = func.name;
-    let args = func.args.into_iter().map(|a| a.to_rust_code());
-    let ret = func.ret;
-    let async_ = func.async_.then(|| quote!(async)).unwrap_or_default();
-    let vis = func.public.then(|| quote!(pub)).unwrap_or_default();
-    let body = &func.body;
-    quote! {
-        #vis #async_ fn #name(#self_arg #(#args),*) -> #ret {
-            #body
+impl ToRustCode for Field<TokenStream> {
+    fn to_rust_code(self) -> TokenStream {
+        let name = self.name.to_rust_ident();
+        let ty = if self.optional {
+            let ty = self.ty;
+            quote! { Option<#ty> }
+        } else {
+            self.ty
+        };
+        let vis = self.vis.to_rust_code();
+        let doc = self.doc.to_rust_code();
+        let decorators = self.decorators;
+        quote! {
+            #doc
+            #(
+                #decorators
+            )*
+            #vis #name: #ty
         }
     }
 }
-

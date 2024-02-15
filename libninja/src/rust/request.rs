@@ -217,11 +217,12 @@ pub fn build_request_struct_builder_methods(
             doc: Some(Doc(format!("Set the value of the {} field.", name.0))),
             name,
             args: vec![
+                FnArg2::SelfArg { mutable: true, reference: false },
                 FnArg2::Basic {
                     name: a.name.to_rust_ident(),
                     ty: arg_type,
                     default: None,
-                }
+                },
             ],
             ret: quote! {Self},
             body,
@@ -250,9 +251,6 @@ pub fn build_request_struct(
     //     },
     // );
 
-    // let mut instance_methods = vec![build_send_function(operation, spec)];
-    // let mut_self_instance_methods = build_request_struct_builder_methods(operation);
-
     let fn_name = operation.name.to_rust_ident().0;
     let response = operation.ret.to_rust_type().to_string().replace(" ", "");
     let client = opt.client_name().to_rust_struct().to_string().replace(" ", "");
@@ -263,10 +261,6 @@ On request success, this will return a [`{response}`]."#, )));
         name: operation.request_struct_name().to_rust_struct(),
         doc,
         instance_fields,
-        instance_methods: Vec::new(),
-        mut_self_instance_methods: Vec::new(),
-        // We need this lifetime because we hold a ref to the client.
-        // lifetimes: vec!["'a".to_string()],
         lifetimes: vec![],
         public: true,
         decorators: vec![quote! {#[derive(Debug, Clone, Serialize, Deserialize)]}],

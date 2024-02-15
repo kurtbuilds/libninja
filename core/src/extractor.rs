@@ -35,7 +35,13 @@ pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
 }
 
 pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
-    param.nullable || !parent.required().iter().any(|s| s == name)
+    if param.nullable {
+        return true;
+    }
+    let Some(req) = parent.get_required() else {
+        return false;
+    };
+    !req.iter().any(|s| s == name)
 }
 
 pub fn extract_request_schema<'a>(

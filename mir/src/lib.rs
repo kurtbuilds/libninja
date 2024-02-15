@@ -79,13 +79,11 @@ pub struct Class<T> {
     pub code: Option<String>,
     pub instance_fields: Vec<Field<T>>,
     pub static_fields: Vec<Field<T>>,
-    pub instance_methods: Vec<Function<T>>,
     pub constructors: Vec<Function<T>>,
     pub class_methods: Vec<Function<T>>,
     pub static_methods: Vec<Function<T>>,
     pub public: bool,
 
-    pub mut_self_instance_methods: Vec<Function<T>>,
     pub lifetimes: Vec<String>,
     pub decorators: Vec<T>,
     pub superclasses: Vec<T>,
@@ -158,12 +156,10 @@ impl<T> Default for Class<T> {
             doc: None,
             instance_fields: vec![],
             static_fields: vec![],
-            instance_methods: vec![],
             constructors: vec![],
             class_methods: vec![],
             static_methods: vec![],
             public: false,
-            mut_self_instance_methods: vec![],
             lifetimes: vec![],
             decorators: vec![],
             superclasses: vec![],
@@ -178,12 +174,10 @@ impl Debug for Class<String> {
         doc: {doc:?}, \
         instance_fields: todo!, \
         static_fields: todo!, \
-        instance_methods: todo!, \
         constructors: todo!, \
         class_methods: todo!, \
         static_methods: todo!, \
         public: {public}, \
-        mut_self_instance_methods: todo!, \
         lifetimes: todo!, \
         superclasses: todo! }}",
                name = self.name,
