@@ -7,7 +7,8 @@ use indexmap::IndexMap;
 use openapiv3::{ObjectType, OpenAPI, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference, StringType, Type, RefOrMap};
 use tracing::warn;
 
-use hir::{Doc, HirField, Record, StrEnum, Struct, NewType, HirSpec};
+use hir::{HirField, Record, StrEnum, Struct, NewType, HirSpec};
+use mir::Doc;
 
 use crate::extractor;
 use crate::child_schemas::ChildSchemas;
@@ -40,7 +41,7 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
     for schema_ref in all_of {
         length += schema_ref.as_ref_str().map(|_s| 1).unwrap_or_default();
         length += schema_ref.as_item()
-            .and_then(|s| s.properties())
+            .map(|s| s.properties())
             .map(|s| s.iter().len())
             .unwrap_or_default();
     }
@@ -127,19 +128,13 @@ fn create_record_from_all_of(name: &str, all_of: &[ReferenceOr<Schema>], schema_
                 fields.insert(name, field);
             }
             ReferenceOr::Item(item) => {
-                match item.properties() {
-                    Some(props) => {
-                        for (name, schema) in props {
-                            let mut field = create_field(schema, spec);
-                            if !item.required(name) {
-                                field.optional = true;
-                            }
-                            fields.insert(name.to_string(), field);
-                        }
+                let props = item.properties();
+                for (name, schema) in props {
+                    let mut field = create_field(schema, spec);
+                    if !item.required().iter().any(|s| s == name) {
+                        field.optional = true;
                     }
-                    None => {
-                        warn!("Could not extract {} properties {:?}", name, item);
-                    }
+                    fields.insert(name.to_string(), field);
                 }
             }
         }

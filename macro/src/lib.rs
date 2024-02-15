@@ -28,11 +28,10 @@ pub fn function(item: TokenStream) -> TokenStream {
     let args = parse_args(arg_toks.stream()).into_iter().map(|arg| {
         let Arg { name, arg_type, default } = arg;
         quote! {
-            ::mir::FnArg {
+            ::mir::FnArg2::Basic {
                 name: #name.into(),
                 ty: #arg_type,
                 default: #default,
-                treatment: None,
             }
         }
     }).collect::<Vec<_>>();
@@ -75,11 +74,10 @@ pub fn rfunction(item: TokenStream) -> TokenStream {
     let args = rfunction::parse_args2(arg_toks.stream()).into_iter().map(|arg| {
         let Arg { name, arg_type, default } = arg;
         quote! {
-            ::mir::FnArg {
+            ::mir::FnArg2::Basic {
                 name: #name.into(),
                 ty: #arg_type,
                 default: #default,
-                treatment: None,
             }
         }
     }).collect::<Vec<_>>();

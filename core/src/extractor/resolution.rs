@@ -1,7 +1,7 @@
 use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
 use tracing::warn;
 
-use hir::Ty;
+use mir::Ty;
 
 use openapiv3 as oa;
 
@@ -34,11 +34,11 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         SchemaKind::Type(oa::Type::String(s)) => {
             match s.format.as_str() {
                 "decimal" => Ty::Currency {
-                    serialization: hir::DecimalSerialization::String,
+                    serialization: mir::DecimalSerialization::String,
                 },
-                "integer" => Ty::Integer { serialization: hir::IntegerSerialization::String },
+                "integer" => Ty::Integer { serialization: mir::IntegerSerialization::String },
                 "date" => Ty::Date {
-                    serialization: hir::DateSerialization::Iso8601,
+                    serialization: mir::DateSerialization::Iso8601,
                 },
                 "date-time" => Ty::DateTime,
                 _ => Ty::String,
@@ -49,13 +49,13 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
             let null_as_zero = schema.data.extensions.get("x-null-as-zero")
                 .and_then(|v| v.as_bool()).unwrap_or(false);
             if null_as_zero {
-                return Ty::Integer { serialization: hir::IntegerSerialization::NullAsZero };
+                return Ty::Integer { serialization: mir::IntegerSerialization::NullAsZero };
             }
             match schema.data.extensions.get("x-format").and_then(|s| s.as_str()) {
                 Some("date") => Ty::Date {
-                    serialization: hir::DateSerialization::Integer,
+                    serialization: mir::DateSerialization::Integer,
                 },
-                _ => Ty::Integer { serialization: hir::IntegerSerialization::Simple },
+                _ => Ty::Integer { serialization: mir::IntegerSerialization::Simple },
             }
         }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,

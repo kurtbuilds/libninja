@@ -4,14 +4,15 @@ use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
 use openapiv3::{APIKeyLocation, OpenAPI, ReferenceOr, Schema, SecurityScheme};
 use openapiv3 as oa;
+use tracing_ez::{debug, span, warn};
 
-use ::hir::{AuthLocation, AuthParam, AuthStrategy, DocFormat, HirSpec, Language, Location, Operation, Record, Ty, Parameter, Doc};
+use hir::{AuthLocation, AuthParam, AuthStrategy, HirSpec, Language, Location, Operation, Parameter, Record};
+use hir::{Oauth2Auth, TokenAuth};
+use mir::{Doc, DocFormat, NewType};
+use mir::Ty;
 pub use record::*;
 pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 pub use resolution::*;
-use mir::NewType;
-use tracing_ez::{warn, debug, span};
-use hir::{Oauth2Auth, TokenAuth};
 
 mod resolution;
 mod record;
@@ -34,7 +35,7 @@ pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
 }
 
 pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
-    param.nullable || !parent.required(name)
+    param.nullable || !parent.required().iter().any(|s| s == name)
 }
 
 pub fn extract_request_schema<'a>(
@@ -111,7 +112,10 @@ pub fn extract_inputs<'a>(
             location: Location::Body,
             example: schema.example.clone(),
         });
-    } else if let Ok(props) = schema.properties_iter(spec) {
+        return Ok(inputs);
+    }
+    let mut props = schema.properties_iter(spec).peekable();
+    if props.peek().is_some() {
         let body_args = props.map(|(name, param)| {
             let ty = schema_ref_to_ty(param, spec);
             let param: &Schema = param.resolve(spec);

@@ -13,27 +13,29 @@ use syn::Item;
 use text_io::read;
 use tracing::debug;
 
-use codegen::ToRustIdent;
+use ::mir::{File, Import, Visibility};
 use codegen::ToRustType;
 use format::format_code;
+use hir::{AuthStrategy, HirSpec, Location, Oauth2Auth, Parameter, qualified_env_var};
 use ln_core::{copy_builtin_files, copy_builtin_templates, create_context, get_template_file, prepare_templates};
-use ::mir::{Visibility, Import, File};
 use ln_core::fs;
-use hir::{HirSpec, IntegerSerialization, DateSerialization, Location, Parameter, AuthStrategy, Oauth2Auth, qualified_env_var};
+use mir::{DateSerialization, IntegerSerialization};
 use mir::Ident;
+use mir_rust::{sanitize_filename, ToRustCode};
+use mir_rust::ToRustIdent;
+use mir_rust::codegen_function;
 
-use crate::{add_operation_models, extract_spec, PackageConfig, OutputConfig};
+use crate::{add_operation_models, extract_spec, OutputConfig, PackageConfig};
 use crate::rust::client::{build_Client_authenticate, server_url};
 pub use crate::rust::codegen::generate_example;
-use crate::rust::codegen::{codegen_function, sanitize_filename, ToRustCode};
 use crate::rust::io::write_rust_file_to_path;
-use crate::rust::lower_mir::{generate_model_rs, generate_single_model_file};
+use crate::rust::lower_hir::{generate_model_rs, generate_single_model_file};
 use crate::rust::request::{assign_inputs_to_request, build_request_struct, build_request_struct_builder_methods, build_url, generate_request_model_rs};
 
 pub mod client;
 pub mod codegen;
 pub mod format;
-pub mod lower_mir;
+pub mod lower_hir;
 pub mod request;
 mod io;
 mod serde;
@@ -57,7 +59,7 @@ impl Extras {
 }
 
 pub fn calculate_extras(spec: &HirSpec) -> Extras {
-    use hir::Ty;
+    use mir::Ty;
     let mut null_as_zero = false;
     let mut date_serialization = false;
     let mut currency = false;
@@ -399,7 +401,6 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
         let builder_methods = builder_methods
             .into_iter()
             .map(|s| codegen_function(s, quote! { mut self , }));
-
 
         let assign_inputs = assign_inputs_to_request(&operation.parameters);
 

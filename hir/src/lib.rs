@@ -1,108 +1,19 @@
 use std::collections::BTreeMap;
 /// The API model.
 /// Higher level compared to code level models in ln-model.
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 use std::iter::{empty, Iterator, once};
 use std::string::{String, ToString};
 
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use openapiv3 as oa;
+use mir::{Doc, ParamKey};
 
-pub use doc::*;
 pub use lang::*;
+use mir::Ty;
 
-mod doc;
 mod lang;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DateSerialization {
-    Iso8601,
-    Integer,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DecimalSerialization {
-    String,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum IntegerSerialization {
-    Simple,
-    String,
-    NullAsZero,
-}
-
-#[derive(Debug, Clone)]
-pub enum Ty {
-    String,
-    Integer {
-        serialization: IntegerSerialization,
-    },
-    Float,
-    Boolean,
-    Array(Box<Ty>),
-    // OpenAPI name for the model. Hasn't been converted to a language type (e.g. cased, sanitized)
-    Model(String),
-    Unit,
-    Date { serialization: DateSerialization },
-    DateTime,
-    Currency { serialization: DecimalSerialization },
-    Any,
-}
-
-impl Default for Ty {
-    fn default() -> Self {
-        Ty::Any
-    }
-}
-
-impl Ty {
-    pub fn integer() -> Self {
-        Ty::Integer {
-            serialization: IntegerSerialization::Simple,
-        }
-    }
-
-    pub fn inner_model(&self) -> Option<&String> {
-        match self {
-            Ty::Model(name) => Some(name),
-            Ty::Array(ty) => ty.inner_model(),
-            _ => None,
-        }
-    }
-
-    pub fn is_iterable(&self) -> bool {
-        self.inner_iterable().is_some()
-    }
-
-    pub fn inner_iterable(&self) -> Option<&Ty> {
-        match self {
-            Ty::Array(ty) => Some(ty.as_ref()),
-            _ => None,
-        }
-    }
-
-    pub fn is_primitive(&self) -> bool {
-        match self {
-            Ty::String => true,
-            Ty::Integer { .. } => true,
-            Ty::Float => true,
-            Ty::Boolean => true,
-            Ty::Array(_) => false,
-            Ty::Model(_) => false,
-            Ty::Any => false,
-            Ty::Unit => true,
-            Ty::Date { .. } => true,
-            Ty::Currency { .. } => true,
-            Ty::DateTime => true,
-        }
-    }
-
-    pub fn model(s: &str) -> Self {
-        Ty::Model(s.to_string())
-    }
-}
 
 /// Parameter is an input to an OpenAPI operation.
 #[derive(Debug, Clone)]
@@ -157,37 +68,11 @@ impl From<&oa::Parameter> for Location {
     }
 }
 
-/// Specifically represents a parameter in Location::Query. We need special treatment for repeated keys.
-pub enum ParamKey {
-    Key(String),
-    RepeatedKey(String),
-}
-
-impl std::fmt::Display for ParamKey {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ParamKey::Key(s) => write!(f, "\"{}\"", s),
-            ParamKey::RepeatedKey(s) => write!(f, "\"{}[]\"", s),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct AuthParam {
     pub name: String,
     pub location: AuthLocation,
 }
-
-// impl AuthParam {
-//     pub fn env_var_for_service(&self, service_name: &str) -> String {
-//         let service = service_name.to_case(Case::ScreamingSnake);
-//         if self.env_var.starts_with(&service) {
-//             self.env_var.clone()
-//         } else {
-//             format!("{}_{}", service, self.env_var)
-//         }
-//     }
-// }
 
 #[derive(Debug, Clone)]
 pub enum AuthLocation {
@@ -564,4 +449,3 @@ impl From<&Parameter> for HirField {
         }
     }
 }
-

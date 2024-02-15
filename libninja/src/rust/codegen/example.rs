@@ -1,12 +1,13 @@
+use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use hir::{HirSpec, Language, Operation, Parameter};
+use hir::{HirField, HirSpec, Language, NewType, Operation, Parameter, Record, StrEnum, Struct};
 use ln_macro::rfunction;
-use mir::{File, Import};
+use mir::{File, Import, Ty};
 
 use crate::PackageConfig;
-use crate::rust::codegen::{to_rust_example_value, ToRustCode};
+use crate::rust::codegen::{ToRustCode, ToRustType};
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::format::format_code;
 
@@ -67,4 +68,80 @@ pub fn generate_example(operation: &Operation, opt: &PackageConfig, spec: &HirSp
     };
     let code = example.to_rust_code();
     format_code(code)
+}
+
+pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value: bool) -> anyhow::Result<TokenStream> {
+    let s = match ty {
+        Ty::String => {
+            let s = format!("your {}", name.to_case(Case::Lower));
+            if use_ref_value {
+                quote!(#s)
+            } else {
+                quote!(#s.to_owned())
+            }
+        }
+        Ty::Integer { .. } => quote!(1),
+        Ty::Float => quote!(1.0),
+        Ty::Boolean => quote!(true),
+        Ty::Array(inner) => {
+            let use_ref_value = if !inner.is_reference_type() {
+                false
+            } else {
+                use_ref_value
+            };
+            let inner = to_rust_example_value(inner, name, spec, use_ref_value)?;
+            if use_ref_value {
+                quote!(&[#inner])
+            } else {
+                quote!(vec![#inner])
+            }
+        }
+        Ty::Model(model) => {
+            let record = spec.get_record(model)?;
+            let force_ref = model.ends_with("Required");
+            match record {
+                Record::Struct(Struct { name: _name, fields, nullable, docs: _docs }) => {
+                    let fields = fields.iter().map(|(name, field)| {
+                        let not_ref = !force_ref || field.optional;
+                        let mut value = to_rust_example_value(&field.ty, name, spec, !not_ref)?;
+                        let name = name.to_rust_ident();
+                        if field.optional {
+                            value = quote!(Some(#value));
+                        }
+                        Ok(quote!(#name: #value))
+                    }).collect::<Result<Vec<_>, anyhow::Error>>()?;
+                    let model = model.to_rust_struct();
+                    quote!(#model{#(#fields),*})
+                }
+                Record::NewType(NewType { name, fields, docs: _docs }) => {
+                    let fields = fields.iter().map(|f| {
+                        to_rust_example_value(&f.ty, name, spec, false)
+                    }).collect::<Result<Vec<_>, _>>()?;
+                    let name = name.to_rust_struct();
+                    quote!(#name(#(#fields),*))
+                }
+                Record::Enum(StrEnum { name, variants, docs: _docs }) => {
+                    let variant = variants.first().unwrap();
+                    let variant = variant.to_rust_struct();
+                    let model = model.to_rust_struct();
+                    quote!(#model::#variant)
+                }
+                Record::TypeAlias(name, HirField { ty, optional, .. }) => {
+                    let not_ref = !force_ref || !optional;
+                    let ty = to_rust_example_value(ty, name, spec, not_ref)?;
+                    if *optional {
+                        quote!(Some(#ty))
+                    } else {
+                        quote!(#ty)
+                    }
+                }
+            }
+        }
+        Ty::Unit => quote!(()),
+        Ty::Any => quote!(serde_json::json!({})),
+        Ty::Date { .. } => quote!(chrono::Utc::now().date_naive()),
+        Ty::DateTime { .. } => quote!(chrono::Utc::now()),
+        Ty::Currency { .. } => quote!(rust_decimal_macros::dec!(100.01))
+    };
+    Ok(s)
 }

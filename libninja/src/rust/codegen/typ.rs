@@ -1,8 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use hir::{HirSpec, Ty};
+use hir::HirSpec;
+use mir::Ty;
 use crate::rust::codegen::ToRustIdent;
-use crate::rust::lower_mir::HirFieldExt;
+use crate::rust::lower_hir::HirFieldExt;
 
 /// Use this to generate Rust code types.
 pub trait ToRustType {

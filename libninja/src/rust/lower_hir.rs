@@ -4,14 +4,15 @@ use convert_case::Casing;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-use hir::{DateSerialization, DecimalSerialization, HirField, HirSpec, IntegerSerialization, NewType, Record, StrEnum, Struct, Ty, TypeAlias};
+use hir::{HirField, HirSpec, NewType, Record, StrEnum, Struct};
 use ln_core::ConfigFlags;
 use mir::{Field, File, Ident, Import, import, Visibility};
+use mir::{DateSerialization, DecimalSerialization, IntegerSerialization, Ty};
 
 use crate::rust::codegen;
-use crate::rust::codegen::{sanitize_filename, ToRustCode};
-use crate::rust::codegen::ToRustIdent;
+use mir_rust::{sanitize_filename, ToRustIdent};
 use crate::rust::codegen::ToRustType;
+use mir_rust::ToRustCode;
 
 pub trait FieldExt {
     fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream>;
@@ -136,7 +137,7 @@ impl StructExt for Struct {
             Field {
                 name: name.clone(),
                 ty,
-                visibility: Visibility::Public,
+                vis: Visibility::Public,
                 decorators,
                 optional,
                 doc: field.doc.clone(),
@@ -333,7 +334,8 @@ pub fn create_struct(record: &Record, config: &ConfigFlags, spec: &HirSpec) -> T
 
 #[cfg(test)]
 mod tests {
-    use hir::{HirField, Ty};
+    use hir::HirField;
+    use mir::Ty;
 
     use crate::rust::format::format_code;
 

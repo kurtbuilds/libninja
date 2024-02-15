@@ -1,19 +1,19 @@
-use std::sync::OnceLock;
 use std::default::Default;
+use std::sync::OnceLock;
 
 use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use regex::Captures;
 
-use hir::{Doc, HirSpec, Operation};
-use hir::{doc, Location, Parameter, Ty, Language};
-use ln_core::extractor::spec_defines_auth;
+use hir::{HirSpec, Operation};
+use hir::{Language, Location, Parameter};
 use ln_core::PackageConfig;
-use mir::{Class, Field, FnArg, Function, Ident, Visibility};
+use mir::{Class, Field, FnArg2, Function, Ident, Visibility};
+use mir::Doc;
+use mir::Ty;
+use mir_rust::{ToRustCode, ToRustIdent};
 
-use crate::rust::codegen::ToRustCode;
-use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
 
 pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
@@ -179,7 +179,7 @@ pub fn build_struct_fields(
             Field {
                 name: input.name.clone(),
                 ty: tok,
-                visibility: Visibility::Public,
+                vis: Visibility::Public,
                 ..Field::default()
             }
         })
@@ -214,14 +214,13 @@ pub fn build_request_struct_builder_methods(
         }
         let name: Ident = a.name.to_rust_ident();
         Function {
-            doc: doc(format!("Set the value of the {} field.", name.0)),
+            doc: Some(Doc(format!("Set the value of the {} field.", name.0))),
             name,
             args: vec![
-                FnArg {
-                    name: a.name.to_rust_ident().into(),
+                FnArg2::Basic {
+                    name: a.name.to_rust_ident(),
                     ty: arg_type,
                     default: None,
-                    treatment: None,
                 }
             ],
             ret: quote! {Self},

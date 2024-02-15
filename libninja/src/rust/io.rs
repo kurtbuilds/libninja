@@ -1,8 +1,8 @@
 use std::path::Path;
 use proc_macro2::TokenStream;
 use ln_core::fs;
-use crate::rust::codegen::ToRustCode;
 use crate::rust::format::format_code;
+use mir_rust::ToRustCode;
 
 pub fn write_rust_file_to_path(path: &Path, file: mir::File<TokenStream>) -> anyhow::Result<()> {
     let code = file.to_rust_code();

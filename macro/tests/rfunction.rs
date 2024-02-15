@@ -13,8 +13,8 @@ fn test_quote_body() {
     assert_eq!(s.body.to_string(), "println ! (\"Hello, World!\")");
     assert_eq!(s.ret.to_string(), "i32");
     assert_eq!(s.args.len(), 2);
-    assert_eq!(s.args[0].ty.to_string(), "i32");
-    assert_eq!(s.args[1].ty.to_string(), "i32");
+    assert_eq!(s.args[0].ty().unwrap().to_string(), "i32");
+    assert_eq!(s.args[1].ty().unwrap().to_string(), "i32");
 }
 
 #[test]

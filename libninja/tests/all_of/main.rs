@@ -21,7 +21,7 @@ fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
 
 fn formatted_code(record: Record, spec: &HirSpec) -> String {
     let config = ConfigFlags::default();
-    let code = libninja::rust::lower_mir::create_struct(&record, &config, spec);
+    let code = libninja::rust::lower_hir::create_struct(&record, &config, spec);
     libninja::rust::format::format_code(code).unwrap()
 }
 

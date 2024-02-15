@@ -17,10 +17,10 @@ fn test_function_args() {
     assert_eq!(s.async_, false);
     assert_eq!(s.public, false);
     assert_eq!(s.args.len(), 2);
-    assert!(matches!(&s.args[0].name, ArgIdent::Ident(t) if t == "s"));
-    assert_eq!(s.args[0].ty, "str");
-    assert!(matches!(&s.args[1].name, ArgIdent::Ident(t) if t == "n"));
-    assert_eq!(s.args[1].ty, "int");
+    assert_eq!(s.args[0].name().unwrap(), "s");
+    assert_eq!(s.args[0].ty().unwrap(), "str");
+    assert_eq!(s.args[1].name().unwrap(), "n");
+    assert_eq!(s.args[1].ty().unwrap(), "int");
     assert_eq!(s.ret, "".to_string());
 }
 
@@ -42,7 +42,7 @@ fn test_interpolation_in_arg_position() {
     assert_eq!(s.async_, false);
     assert_eq!(s.public, false);
     assert_eq!(s.args.len(), 2);
-    assert_eq!(s.args[1].ty, "int");
+    assert_eq!(s.args[1].ty().unwrap(), "int");
     assert_eq!(s.ret, "int".to_string());
 }
 

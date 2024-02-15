@@ -1,18 +1,17 @@
-/// Models that represent code
-/// Things like, Parameters, Functions, Fields, Class, etc.
-///
-
 use core::default::Default;
 use core::fmt::{Debug, Formatter};
 use core::option::Option;
 use core::option::Option::None;
-use quote::TokenStreamExt;
+use quote::{TokenStreamExt};
 
-pub use function::{ArgIdent, FnArg, FnArgTreatment, Function, build_struct, build_dict};
-use hir::Doc;
+pub use function::{ArgIdent, build_dict, build_struct, FnArg2, Function};
+pub use doc::{Doc, DocFormat};
+pub use ty::*;
 
+mod doc;
 mod function;
 mod r#macro;
+mod ty;
 
 /// Localized string
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
@@ -21,6 +20,12 @@ pub struct Ident(pub String);
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl PartialEq<str> for Ident {
+    fn eq(&self, other: &str) -> bool {
+        self.0 == *other
     }
 }
 
@@ -43,7 +48,7 @@ pub struct Field<T> {
     pub name: String,
     pub ty: T,
     pub default: Option<T>,
-    pub visibility: Visibility,
+    pub vis: Visibility,
     pub doc: Option<Doc>,
     pub optional: bool,
     pub decorators: Vec<T>,
@@ -287,18 +292,6 @@ pub fn f_string(s: &str) -> Literal<FString> {
     Literal(FString(s.to_string()))
 }
 
-// impl From<String> for Literal<String> {
-//     fn from(s: String) -> Self {
-//         Self(s, false)
-//     }
-// }
-//
-// impl From<Ident> for Literal<String> {
-//     fn from(s: Ident) -> Self {
-//         Self(s.0, false)
-//     }
-// }
-
 impl quote::ToTokens for Ident {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         tokens.append(proc_macro2::Ident::new(&self.0, proc_macro2::Span::call_site()))
@@ -312,3 +305,19 @@ impl From<Ident> for proc_macro2::TokenStream {
         tok
     }
 }
+
+/// Specifically represents a parameter in Location::Query. We need special treatment for repeated keys.
+pub enum ParamKey {
+    Key(String),
+    RepeatedKey(String),
+}
+
+impl std::fmt::Display for ParamKey {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParamKey::Key(s) => write!(f, "\"{}\"", s),
+            ParamKey::RepeatedKey(s) => write!(f, "\"{}[]\"", s),
+        }
+    }
+}
+

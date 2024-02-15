@@ -3,13 +3,12 @@ use openapiv3::OpenAPI;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-use hir::{AuthLocation, AuthStrategy, DocFormat, Location, Parameter, ServerStrategy, Doc, HirSpec, Language, Operation, qualified_env_var};
-use mir::{ArgIdent, Function, Ident};
-use mir::{Class, Field, FnArg, Visibility};
+use hir::{AuthLocation, AuthStrategy, Location, Parameter, ServerStrategy, HirSpec, Language, Operation, qualified_env_var};
+use mir::{Function, Ident, DocFormat, Doc, FnArg2};
+use mir::{Class, Field, Visibility};
 use ln_core::PackageConfig;
+use mir_rust::{ToRustIdent, ToRustCode};
 
-use crate::rust::codegen::ToRustCode;
-use crate::rust::codegen::ToRustIdent;
 use crate::rust::codegen::ToRustType;
 
 
@@ -69,11 +68,10 @@ fn build_Client_with_auth(spec: &HirSpec, opt: &PackageConfig) -> Function<Token
         public: true,
         ret: quote!(Self),
         body,
-        args: vec![FnArg {
-            name: ArgIdent::Ident("authentication".to_string()),
+        args: vec![FnArg2::Basic {
+            name: Ident("authentication".to_string()),
             ty: quote!(#auth_struct),
             default: None,
-            treatment: None,
         }],
         ..Function::default()
     }
@@ -92,16 +90,14 @@ fn build_Client_new_with(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenS
         public: true,
         ret: quote!(Self),
         body,
-        args: vec![FnArg {
-            name: ArgIdent::Ident("client".to_string()),
+        args: vec![FnArg2::Basic {
+            name: Ident("client".to_string()),
             ty: quote!(httpclient::Client),
             default: None,
-            treatment: None,
-        }, FnArg {
-            name: ArgIdent::Ident("authentication".to_string()),
+        }, FnArg2::Basic {
+            name: Ident("authentication".to_string()),
             ty: quote!(#auth_struct),
             default: None,
-            treatment: None,
         }],
         ..Function::default()
     }

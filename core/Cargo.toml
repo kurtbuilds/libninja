@@ -11,7 +11,7 @@ name = "ln_core"
 anyhow = "1.0.71"
 clap = { version = "4.3.11", features = ["derive"] }
 convert_case = "0.6.0"
-openapiv3-extended = "4"
+openapiv3-extended = "6"
 serde = { version = "1.0.166", features = ["derive"] }
 quote = "1.0.29"
 serde_json = "1.0.100"

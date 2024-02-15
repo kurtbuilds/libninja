@@ -1,7 +1,7 @@
 use openapiv3::{OpenAPI, Schema};
 
 use hir::{HirSpec, Record};
-use libninja::rust::lower_mir::StructExt;
+use libninja::rust::lower_hir::StructExt;
 
 const LINK_TOKEN_CREATE: &str = include_str!("link_token_create.yaml");
 

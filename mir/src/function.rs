@@ -52,65 +52,120 @@ impl From<Ident> for ArgIdent {
 }
 
 
-// IR form. Therefore it's localized
-pub struct FnArg<T> {
-    pub name: ArgIdent,
-    pub ty: T,
-    // T is a String (for Rust, TokenStream)
-    pub default: Option<String>,
-    pub treatment: Option<FnArgTreatment>,
+// // IR form. Therefore it's localized
+// pub struct FnArg<T> {
+//     pub name: ArgIdent,
+//     pub ty: T,
+//     // T is a String (for Rust, TokenStream)
+//     pub default: Option<String>,
+//     pub treatment: Option<FnArgTreatment>,
+// }
+
+pub enum FnArg2<T> {
+    /// fn foo(a: i32)
+    Basic {
+        name: Ident,
+        ty: T,
+        default: Option<T>,
+    },
+    /// For typescript
+    /// function foo({foo, bar}: FooProps)
+    Unpack {
+        names: Vec<Ident>,
+        ty: T,
+    },
+    /// For rust
+    /// fn foo(&self)
+    SelfArg { mutable: bool, reference: bool },
+    /// For python
+    /// def foo(**kwargs)
+    Kwargs {
+        name: Ident,
+        ty: T,
+    },
+    /// For python
+    /// def foo(*args)
+    Variadic {
+        name: Ident,
+        ty: T,
+    },
 }
 
-impl<T> FnArg<T> {
-    pub fn new(name: String, ty: T) -> Self {
-        FnArg {
-            name: ArgIdent::Ident(name),
-            ty,
-            default: None,
-            treatment: None,
-        }
+impl<T> FnArg2<T> {
+    pub fn name(&self) -> Option<&Ident> {
+        let name = match self {
+            FnArg2::Basic { name, .. } => name,
+            FnArg2::Unpack { .. } => return None,
+            FnArg2::SelfArg { .. } => return None,
+            FnArg2::Kwargs { name, .. } => name,
+            FnArg2::Variadic { name, .. } => name,
+        };
+        Some(name)
     }
 
-    pub fn from_ident(name: Ident, ty: T) -> Self {
-        FnArg {
-            name: ArgIdent::Ident(name.0),
-            ty,
-            default: None,
-            treatment: None,
-        }
+    pub fn ty(&self) -> Option<&T> {
+        let ty = match self {
+            FnArg2::Basic { ty, .. } => ty,
+            FnArg2::Unpack { ty, .. } => ty,
+            FnArg2::SelfArg { .. } => return None,
+            FnArg2::Kwargs { ty, .. } => ty,
+            FnArg2::Variadic { ty, .. } => ty,
+        };
+        Some(ty)
     }
 }
 
-impl FnArg<String> {
-    /// Used by python for dividing required vs optional args
-    pub fn empty_variadic() -> Self {
-        FnArg {
-            name: ArgIdent::Ident("".to_string()),
-            ty: "".to_string(),
-            default: None,
-            treatment: Some(FnArgTreatment::Variadic),
-        }
-    }
-}
+// impl<T> FnArg<T> {
+//     pub fn new(name: String, ty: T) -> Self {
+//         FnArg {
+//             name: ArgIdent::Ident(name),
+//             ty,
+//             default: None,
+//             treatment: None,
+//         }
+//     }
+//
+//     pub fn from_ident(name: Ident, ty: T) -> Self {
+//         FnArg {
+//             name: ArgIdent::Ident(name.0),
+//             ty,
+//             default: None,
+//             treatment: None,
+//         }
+//     }
+// }
 
-pub enum FnArgTreatment {
-    /// python: **kwargs
-    Kwargs,
-    /// python: *args
-    /// golang: ...opt
-    Variadic,
-}
+// impl FnArg<String> {
+//     /// Used by python for dividing required vs optional args
+//     pub fn empty_variadic() -> Self {
+//         FnArg {
+//             name: ArgIdent::Ident("".to_string()),
+//             ty: "".to_string(),
+//             default: None,
+//             treatment: Some(FnArgTreatment::Variadic),
+//         }
+//     }
+// }
+
+// pub enum FnArgTreatment {
+//     /// python: **kwargs
+//     Kwargs,
+//     /// python: *args
+//     /// golang: ...opt
+//     Variadic,
+// }
 
 pub struct Function<T> {
-    /// This *is* localized to the programming language.
     pub name: Ident,
-    pub args: Vec<FnArg<T>>,
+    pub args: Vec<FnArg2<T>>,
     /// This *is* localized to the programming language.
     pub ret: T,
     pub body: T,
     pub doc: Option<Doc>,
     pub async_: bool,
     pub public: bool,
+    /// #[...] in Rust
+    /// @... in Python
     pub annotations: Vec<String>,
     pub generic: Vec<String>,
 }

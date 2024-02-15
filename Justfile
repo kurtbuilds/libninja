@@ -98,6 +98,8 @@ generate:
 test *ARGS:
     checkexec commercial -- just dummy_commercial
     cd core && cargo test -- "$@"
+    cd mir && cargo test
+    cd mir_rust && cargo test
     cd libninja && cargo test -- "$@"
 alias t := test
 

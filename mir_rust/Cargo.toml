@@ -1,0 +1,18 @@
+[package]
+name = "libninja_mir_rust"
+version = "0.1.0"
+edition = "2021"
+description = "Library to transform libninja MIR into Rust code"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "mir_rust"
+path = "src/lib.rs"
+
+[dependencies]
+libninja_mir = { path = "../mir" }
+proc-macro2 = "1.0.78"
+quote = "1.0.9"
+syn = "2.0.48"
+convert_case = "0.6.0"
+regex = "1.10.3"
