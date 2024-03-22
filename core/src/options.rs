@@ -1,15 +1,14 @@
-use std::path::PathBuf;
 use convert_case::{Case, Casing};
-use mir::{literal, Literal};
 use hir::Language;
-
+use mir::{literal, Literal};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Default)]
 pub struct ConfigFlags {
     /// Only for Rust. Adds ormlite::TableMeta flags to the code.
     pub ormlite: bool,
     /// Only for Rust (for now). Adds fake::Dummy flags to the code.
-    pub fake: bool
+    pub fake: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -79,4 +78,6 @@ pub struct OutputConfig {
     pub github_repo: Option<String>,
 
     pub version: Option<String>,
+
+    pub derive: Vec<String>,
 }
