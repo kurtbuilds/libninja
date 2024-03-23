@@ -61,7 +61,7 @@ pub struct Generate {
     /// Path to the OpenAPI spec file.
     spec_filepath: String,
 
-    /// List of additional namespaced attributes to derive on generated structs.
+    /// List of additional namespaced traits to derive on generated structs.
     #[clap(long)]
     derive: Vec<String>,
 }
