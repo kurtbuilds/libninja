@@ -65,21 +65,6 @@ impl PackageConfig {
         let path = self.dest.join("template").join(path);
         std::fs::read_to_string(path).ok()
     }
-
-    pub fn get_derive_tokenstream(&self) -> TokenStream {
-        let extras: TokenStream = self
-            .derives
-            .iter()
-            .map(|d| {
-                if let Ok(d) = d.trim().parse::<TokenStream>() {
-                    quote! { , #d }
-                } else {
-                    return TokenStream::new();
-                }
-            })
-            .collect();
-        return extras;
-    }
 }
 
 pub struct OutputConfig {
