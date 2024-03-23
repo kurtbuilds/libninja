@@ -1,3 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["libninja", "macro", "core", "mir", "hir", "mir_rust", "commercial"]
+members = [
+    "libninja",
+    "macro",
+    "core",
+    "mir",
+    "hir",
+    "mir_rust",
+]
+exclude = [
+    "commercial",
+]
