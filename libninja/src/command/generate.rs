@@ -62,7 +62,7 @@ pub struct Generate {
     spec_filepath: String,
 
     /// List of additional namespaced attributes to derive on generated structs.
-    #[clap(long, requires_if("rust", "language"))] // <- what do we need to add here?
+    #[clap(long)]
     derive: Vec<String>,
 }
 

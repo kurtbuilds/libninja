@@ -1,8 +1,8 @@
-use openapiv3::OpenAPI;
 use hir::Language;
 use libninja::rust;
-use ln_core::{extract_spec, PackageConfig};
 use ln_core::extractor::add_operation_models;
+use ln_core::{extract_spec, PackageConfig};
+use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
 
 #[test]
@@ -20,6 +20,7 @@ fn test_example_generation_with_refs() {
         package_version: "1.0".to_string(),
         config: Default::default(),
         dest: Default::default(),
+        derives: vec![],
     };
     let example = rust::generate_example(op, &opt, &spec).unwrap();
     assert_eq!(example, include_str!("files/plaid_processor_expected.rs"));
@@ -40,6 +41,7 @@ fn test_example_generation_with_refs2() {
         package_version: "1.0".to_string(),
         config: Default::default(),
         dest: Default::default(),
+        derives: vec![],
     };
     let example = rust::generate_example(op, &opt, &spec).unwrap();
     assert_eq!(example, include_str!("files/plaid_watchlist_expected.rs"));

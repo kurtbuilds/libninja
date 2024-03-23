@@ -1,0 +1,321 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'libninja'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "libninja",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'libninja'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=libninja",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "libninja",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "gen",
+                "--lang",
+                "rust",
+                "--derive",
+                "oasgen::OaSchema",
+                "test",
+                "-o",
+                "./testabc",
+                "../deepl-openapi/openapi.yaml"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'libninja'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=libninja",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "libninja",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'basic'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=basic",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "basic",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'syn-api'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=syn-api",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "syn-api",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'test_example_gen'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=test_example_gen",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "test_example_gen",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'all_of'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=all_of",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "all_of",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'regression'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=regression",
+                    "--package=libninja"
+                ],
+                "filter": {
+                    "name": "regression",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'ln_core'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=libninja_core"
+                ],
+                "filter": {
+                    "name": "ln_core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'hir'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=libninja_hir"
+                ],
+                "filter": {
+                    "name": "hir",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'mir'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=libninja_mir"
+                ],
+                "filter": {
+                    "name": "mir",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'rfunction'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=rfunction",
+                    "--package=libninja_macro"
+                ],
+                "filter": {
+                    "name": "rfunction",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'function'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=function",
+                    "--package=libninja_macro"
+                ],
+                "filter": {
+                    "name": "function",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'test_only_need_single_braces'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=test_only_need_single_braces",
+                    "--package=libninja_macro"
+                ],
+                "filter": {
+                    "name": "test_only_need_single_braces",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'body'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=body",
+                    "--package=libninja_macro"
+                ],
+                "filter": {
+                    "name": "body",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'mir_rust'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=libninja_mir_rust"
+                ],
+                "filter": {
+                    "name": "mir_rust",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

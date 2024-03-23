@@ -1,6 +1,8 @@
 use convert_case::{Case, Casing};
 use hir::Language;
 use mir::{literal, Literal};
+use proc_macro2::TokenStream;
+use quote::quote;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Default)]
@@ -25,6 +27,8 @@ pub struct PackageConfig {
     pub config: ConfigFlags,
 
     pub dest: PathBuf,
+
+    pub derives: Vec<String>,
 }
 
 impl PackageConfig {
@@ -60,6 +64,21 @@ impl PackageConfig {
     pub fn get_file_template(&self, path: &str) -> Option<String> {
         let path = self.dest.join("template").join(path);
         std::fs::read_to_string(path).ok()
+    }
+
+    pub fn get_derive_tokenstream(&self) -> TokenStream {
+        let extras: TokenStream = self
+            .derives
+            .iter()
+            .map(|d| {
+                if let Ok(d) = d.trim().parse::<TokenStream>() {
+                    quote! { , #d }
+                } else {
+                    return TokenStream::new();
+                }
+            })
+            .collect();
+        return extras;
     }
 }
 

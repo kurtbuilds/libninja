@@ -30,10 +30,34 @@ Use the command line help to see required arguments & options when generating li
 
 The open source version builds client libraries for Rust. Libninja also supports other languages with a commercial license. Reach out at the email in author Github profile.
 
+# Advanced usage
 
-# Usage
+## Deriving traits for generated structs
 
-## Customizing generation
+You can derive traits for the generated structs by passing them using `--derive` flags:
+
+```bash
+libninja gen --lang rust --repo libninjacom/plaid-rs --derive oasgen::OaSchema -o . Plaid ~/path/to/plaid/openapi.yaml 
+```
+
+Make sure to add the referenced crate(s) (and any necessary features) to your `Cargo.toml`:
+
+```bash
+cargo add oasgen --features chrono
+```
+
+Then, the traits will be added to the `derive` attribute on the generated `model` and `request` structs:
+```rust
+use serde::{Serialize, Deserialize};
+use super::Glossary;
+#[derive(Debug, Clone, Serialize, Deserialize, Default, oasgen::OaSchema)]
+pub struct ListGlossariesResponse {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub glossaries: Option<Vec<Glossary>>,
+}
+```
+
+## Customizing generation further
 
 There are two ways to customize codegen, first by modifying the OpenAPI spec, and second, using a file template system.
 
@@ -53,6 +77,6 @@ Alternatively, if the string `libninja: static` is found in the file template, i
 
 # Development
 
-If you run into errors about a missing `commericial` package, run the command `just dummy_commericial` to create a dummy
+If you run into errors about a missing `commericial` package, run the command `just dummy_commercial` to create a dummy
 package.
 

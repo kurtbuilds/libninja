@@ -16,6 +16,8 @@ use mir_rust::{ToRustCode, ToRustIdent};
 
 use crate::rust::codegen::ToRustType;
 
+use super::lower_hir::derives_to_tokens;
+
 pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
     let params_except_path: Vec<&Parameter> = inputs.iter().filter(|&input| input.location != Location::Path).collect();
     if params_except_path.iter().all(|&input| input.location == Location::Query) {
@@ -254,16 +256,18 @@ pub fn build_request_struct(
     let fn_name = operation.name.to_rust_ident().0;
     let response = operation.ret.to_rust_type().to_string().replace(" ", "");
     let client = opt.client_name().to_rust_struct().to_string().replace(" ", "");
+    let derives = derives_to_tokens(&opt.derives);
     let doc = Some(Doc(format!(r#"You should use this struct via [`{client}::{fn_name}`].
 
 On request success, this will return a [`{response}`]."#, )));
+        
     let mut result = vec![Class {
         name: operation.request_struct_name().to_rust_struct(),
         doc,
         instance_fields,
         lifetimes: vec![],
         public: true,
-        decorators: vec![quote! {#[derive(Debug, Clone, Serialize, Deserialize)]}],
+        decorators: vec![quote! {#[derive(Debug, Clone, Serialize, Deserialize #derives)]}],
         ..Class::default()
     }];
 
