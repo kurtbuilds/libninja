@@ -34,7 +34,7 @@ The open source version builds client libraries for Rust. Libninja also supports
 
 ## Deriving traits for generated structs
 
-You can derive traits for the generated structs by passing them using `--derive` flags:
+You can derive traits for the generated structs by passing them using one (or many) `--derive` arguments:
 
 ```bash
 libninja gen --lang rust --repo libninjacom/plaid-rs --derive oasgen::OaSchema -o . Plaid ~/path/to/plaid/openapi.yaml 
