@@ -8,7 +8,7 @@ fn test_function() {
     let s: Function<String> = function!(async main() {});
     assert_eq!(s.name.0, "main");
     assert_eq!(s.async_, true);
-    assert_eq!(s.vis, Visibility::Public);
+    assert_eq!(s.vis, Visibility::Private);
 }
 
 #[test]

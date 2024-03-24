@@ -36,7 +36,7 @@ pub fn function(item: TokenStream) -> TokenStream {
         let Arg { name, arg_type, default } = arg;
         quote! {
             ::mir::FnArg2::Basic {
-                name: #name.into(),
+                name: ::mir::Ident::new(#name),
                 ty: #arg_type,
                 default: #default,
             }
@@ -83,7 +83,7 @@ pub fn rfunction(item: TokenStream) -> TokenStream {
         let Arg { name, arg_type, default } = arg;
         quote! {
             ::mir::FnArg2::Basic {
-                name: #name.into(),
+                name: ::mir::Ident::new(#name),
                 ty: #arg_type,
                 default: #default,
             }

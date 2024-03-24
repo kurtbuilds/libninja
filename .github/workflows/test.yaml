@@ -34,5 +34,4 @@ jobs:
         tar xvzf checkexec-v0.2.0-x86_64-unknown-linux-musl.tar.gz checkexec
         chmod +x checkexec
         sudo mv checkexec /usr/local/bin
-    - run: just dummy_commercial
-    - run: cargo test
+    - run: just test
