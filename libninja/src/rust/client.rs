@@ -1,16 +1,17 @@
 use convert_case::{Case, Casing};
-use openapiv3::OpenAPI;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-use hir::{AuthLocation, AuthStrategy, Location, Parameter, ServerStrategy, HirSpec, Language, Operation, qualified_env_var};
-use mir::{Function, Ident, DocFormat, Doc, FnArg2};
-use mir::{Class, Field, Visibility};
+use hir::{
+    AuthLocation, AuthStrategy, HirSpec, Language, Operation, qualified_env_var
+    , ServerStrategy,
+};
 use ln_core::PackageConfig;
-use mir_rust::{ToRustIdent, ToRustCode};
+use mir::{Class, Field, Visibility};
+use mir::{FnArg2, Function, Ident};
+use mir_rust::{ToRustCode, ToRustIdent};
 
 use crate::rust::codegen::ToRustType;
-
 
 pub fn server_url(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
     match spec.server_strategy() {
@@ -48,7 +49,7 @@ fn build_Client_from_env(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenS
 
     Function {
         name: Ident::new("from_env"),
-        public: true,
+        vis: Visibility::Public,
         ret: quote!(Self),
         body,
         ..Function::default()
@@ -65,7 +66,7 @@ fn build_Client_with_auth(spec: &HirSpec, opt: &PackageConfig) -> Function<Token
     };
     Function {
         name: Ident::new("with_auth"),
-        public: true,
+        vis: Visibility::Public,
         ret: quote!(Self),
         body,
         args: vec![FnArg2::Basic {
@@ -87,18 +88,21 @@ fn build_Client_new_with(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenS
     };
     Function {
         name: Ident::new("new_with"),
-        public: true,
+        vis: Visibility::Public,
         ret: quote!(Self),
         body,
-        args: vec![FnArg2::Basic {
-            name: Ident("client".to_string()),
-            ty: quote!(httpclient::Client),
-            default: None,
-        }, FnArg2::Basic {
-            name: Ident("authentication".to_string()),
-            ty: quote!(#auth_struct),
-            default: None,
-        }],
+        args: vec![
+            FnArg2::Basic {
+                name: Ident("client".to_string()),
+                ty: quote!(httpclient::Client),
+                default: None,
+            },
+            FnArg2::Basic {
+                name: Ident("authentication".to_string()),
+                ty: quote!(#auth_struct),
+                default: None,
+            },
+        ],
         ..Function::default()
     }
 }
@@ -106,13 +110,11 @@ fn build_Client_new_with(spec: &HirSpec, opt: &PackageConfig) -> Function<TokenS
 pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
 
-    let mut instance_fields = vec![
-        Field {
-            name: Ident::new("client"),
-            ty: quote!(Cow<'static, httpclient::Client>),
-            ..Field::default()
-        }
-    ];
+    let mut instance_fields = vec![Field {
+        name: Ident::new("client"),
+        ty: quote!(Cow<'static, httpclient::Client>),
+        ..Field::default()
+    }];
     if spec.has_security() {
         instance_fields.push(Field {
             name: Ident::new("authentication"),
@@ -121,15 +123,13 @@ pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> 
         });
     }
 
-    let mut class_methods = vec![
-        build_Client_from_env(spec, opt)
-    ];
+    let mut class_methods = vec![build_Client_from_env(spec, opt)];
     if spec.has_security() {
         class_methods.push(build_Client_with_auth(spec, opt));
     } else {
         class_methods.push(Function {
             name: Ident::new("new"),
-            public: true,
+            vis: Visibility::Public,
             ret: quote!(Self),
             body: quote! {
                 Self {
@@ -144,7 +144,7 @@ pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> 
         name: opt.client_name().to_rust_struct(),
         instance_fields,
         class_methods,
-        public: true,
+        vis: Visibility::Public,
         ..Class::default()
     }
 }
@@ -218,11 +218,7 @@ pub fn impl_ServiceClient_paths(spec: &HirSpec) -> Vec<TokenStream> {
     result
 }
 
-pub fn authenticate_variant(
-    req: &AuthStrategy,
-    opt: &PackageConfig,
-) -> TokenStream {
-
+pub fn authenticate_variant(req: &AuthStrategy, opt: &PackageConfig) -> TokenStream {
     let auth_struct = opt.authenticator_name().to_rust_struct();
 
     match req {
@@ -281,7 +277,8 @@ pub fn authenticate_variant(
 }
 
 pub fn build_Client_authenticate(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
-    let authenticate_variant = spec.security
+    let authenticate_variant = spec
+        .security
         .iter()
         .map(|req| authenticate_variant(req, opt))
         .collect::<Vec<_>>();
@@ -301,9 +298,9 @@ pub fn impl_Client(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
     let path_fns = impl_ServiceClient_paths(spec);
 
     let security = spec.has_security();
-    let authenticate = security.then(|| {
-        build_Client_authenticate(spec, opt)
-    }).unwrap_or_default();
+    let authenticate = security
+        .then(|| build_Client_authenticate(spec, opt))
+        .unwrap_or_default();
 
     quote! {
         impl #client_struct_name {
@@ -316,26 +313,24 @@ pub fn impl_Client(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
 pub fn struct_Authentication(mir_spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
 
-    let variants = mir_spec.security.iter().map(|strategy| {
-        match strategy {
-            AuthStrategy::Token(strategy) => {
-                let variant_name = strategy.name.to_rust_struct();
-                let args = strategy.fields.iter().map(|f| f.name.to_rust_ident());
-                quote! {
-                    #variant_name {
-                        #(#args: String),*
-                    }
+    let variants = mir_spec.security.iter().map(|strategy| match strategy {
+        AuthStrategy::Token(strategy) => {
+            let variant_name = strategy.name.to_rust_struct();
+            let args = strategy.fields.iter().map(|f| f.name.to_rust_ident());
+            quote! {
+                #variant_name {
+                    #(#args: String),*
                 }
             }
-            AuthStrategy::OAuth2(_) => {
-                quote! {
-                    OAuth2 { middleware: Arc<httpclient_oauth2::OAuth2> }
-                }
+        }
+        AuthStrategy::OAuth2(_) => {
+            quote! {
+                OAuth2 { middleware: Arc<httpclient_oauth2::OAuth2> }
             }
-            AuthStrategy::NoAuth => {
-                quote! {
-                    NoAuth
-                }
+        }
+        AuthStrategy::NoAuth => {
+            quote! {
+                NoAuth
             }
         }
     });
@@ -352,25 +347,28 @@ fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStr
     };
     match strat {
         AuthStrategy::Token(strat) => {
-            let fields = strat.fields
+            let fields = strat
+                .fields
                 .iter()
                 .map(|f| {
                     let basic = matches!(f.location, AuthLocation::Basic);
-                    let field =
-                        syn::Ident::new(&f.name.to_case(Case::Snake), proc_macro2::Span::call_site());
+                    let field = syn::Ident::new(
+                        &f.name.to_case(Case::Snake),
+                        proc_macro2::Span::call_site(),
+                    );
                     let env_var = qualified_env_var(service_name, &f.name);
                     let expect = format!("Environment variable {} is not set.", env_var);
                     if basic {
                         quote! {
-                                #field: {
-                                    let value = std::env::var(#env_var).expect(#expect);
-                                    STANDARD_NO_PAD.encode(value)
-                                }
+                            #field: {
+                                let value = std::env::var(#env_var).expect(#expect);
+                                STANDARD_NO_PAD.encode(value)
                             }
+                        }
                     } else {
                         quote! {
-                                #field: std::env::var(#env_var).expect(#expect)
-                            }
+                            #field: std::env::var(#env_var).expect(#expect)
+                        }
                     }
                 })
                 .collect::<Vec<_>>();
@@ -379,19 +377,19 @@ fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStr
                 proc_macro2::Span::call_site(),
             );
             quote! {
-                    pub fn from_env() -> Self {
-                        Self::#variant_name {
-                            #(#fields),*
-                        }
+                pub fn from_env() -> Self {
+                    Self::#variant_name {
+                        #(#fields),*
                     }
                 }
+            }
         }
         AuthStrategy::NoAuth => {
             quote! {
-                    pub fn from_env() -> Self {
-                        Self::NoAuth
-                    }
+                pub fn from_env() -> Self {
+                    Self::NoAuth
                 }
+            }
         }
         AuthStrategy::OAuth2(_) => {
             let access = qualified_env_var(service_name, "access_token");
@@ -413,15 +411,17 @@ fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStr
 pub fn impl_Authentication(spec: &HirSpec, opt: &PackageConfig) -> TokenStream {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
     let from_env = build_Authentication_from_env(spec, &opt.service_name);
-    let oauth2 = spec.oauth2_auth().map(|oauth| {
-        quote! {
-            pub fn oauth2(access: String, refresh: String) -> Self {
-                let mw = shared_oauth2_flow().bearer_middleware(access, refresh);
-                Self::OAuth2 { middleware: Arc::new(mw) }
+    let oauth2 = spec
+        .oauth2_auth()
+        .map(|oauth| {
+            quote! {
+                pub fn oauth2(access: String, refresh: String) -> Self {
+                    let mw = shared_oauth2_flow().bearer_middleware(access, refresh);
+                    Self::OAuth2 { middleware: Arc::new(mw) }
+                }
             }
-        }
-
-    }).unwrap_or_default();
+        })
+        .unwrap_or_default();
 
     quote! {
         impl #auth_struct_name {

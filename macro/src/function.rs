@@ -1,19 +1,23 @@
 use proc_macro::{Delimiter, Ident, TokenStream, TokenTree};
-use proc_macro2::{Ident as Ident2, TokenStream as TokenStream2};
 use std::iter::Peekable;
-use crate::body::{pull_interpolation};
+
+use proc_macro2::{Ident as Ident2, TokenStream as TokenStream2};
 use quote::quote;
+
+use mir::Visibility;
+
+use crate::body::pull_interpolation;
 
 pub struct Tags {
     pub asyn: bool,
-    pub public: bool,
+    pub vis: Visibility,
     pub fn_name: TokenStream2,
 }
 
 /// Capture $(async)? $(pub)? fn_name
-pub fn parse_intro(toks: &mut impl Iterator<Item=TokenTree>) -> Tags {
+pub fn parse_intro(toks: &mut impl Iterator<Item = TokenTree>) -> Tags {
     let mut asyn = false;
-    let mut public = false;
+    let mut vis = Visibility::Private;
     let mut captured = vec![];
     let fn_name = loop {
         let next = toks
@@ -24,7 +28,7 @@ pub fn parse_intro(toks: &mut impl Iterator<Item=TokenTree>) -> Tags {
                 asyn = true;
             }
             TokenTree::Ident(ident) if ident.to_string() == "pub" => {
-                public = true;
+                vis = Visibility::Public;
             }
             TokenTree::Ident(ident) => {
                 break ident.to_string();
@@ -45,13 +49,9 @@ pub fn parse_intro(toks: &mut impl Iterator<Item=TokenTree>) -> Tags {
             .into_iter()
             .map(|name| Ident2::new(&name, proc_macro2::Span::call_site()));
 
-        quote!( ::mir::Ident(format!("{}", #( #captured ),*)) )
+        quote!(::mir::Ident(format!("{}", #( #captured ),*)))
     };
-    Tags {
-        asyn,
-        public,
-        fn_name,
-    }
+    Tags { asyn, vis, fn_name }
 }
 
 pub struct Arg {
@@ -77,13 +77,11 @@ pub fn parse_args(arg_toks: TokenStream) -> Vec<Arg> {
         }
 
         let arg_type = match arg_toks.next() {
-            // Matches a ident arg_type, e.g.
+            // Matches the ident arg_type, e.g.
             // str
             // Dict[str, str]
             // requests.PreparedRequest
-            Some(TokenTree::Ident(ident)) => {
-                parse_type(ident, &mut arg_toks)
-            }
+            Some(TokenTree::Ident(ident)) => parse_type(ident, &mut arg_toks),
             // Matches a arg_type binding, e.g.
             // let arg_type = "int";
             // function!(add(a: #arg_type, b: #arg_type) {})
@@ -139,12 +137,14 @@ pub fn parse_args(arg_toks: TokenStream) -> Vec<Arg> {
     args
 }
 
-
 /// Matches a ident arg_type, e.g.
 /// str
 /// Dict[str, str]
 /// requests.PreparedRequest
-pub fn parse_type(ident: Ident, toks: &mut Peekable<impl Iterator<Item=TokenTree>>) -> TokenStream2 {
+pub fn parse_type(
+    ident: Ident,
+    toks: &mut Peekable<impl Iterator<Item = TokenTree>>,
+) -> TokenStream2 {
     let mut ident = ident.to_string();
     // Matches path-ed types, e.g. requests.PreparedRequest
     while matches!(toks.peek(), Some(TokenTree::Punct(punct)) if punct.as_char() == '.') {
@@ -156,7 +156,8 @@ pub fn parse_type(ident: Ident, toks: &mut Peekable<impl Iterator<Item=TokenTree
     }
     // Matches python generics, e.g. Dict[str, Any]
     if matches!(toks.peek(), Some(TokenTree::Group(group))
-                    if matches!(group.delimiter(), Delimiter::Bracket)) {
+                    if matches!(group.delimiter(), Delimiter::Bracket))
+    {
         ident += &toks.next().unwrap().to_string();
     }
     quote! {
@@ -164,29 +165,27 @@ pub fn parse_type(ident: Ident, toks: &mut Peekable<impl Iterator<Item=TokenTree
     }
 }
 
-pub fn parse_return(toks: &mut Peekable<impl Iterator<Item=TokenTree>>) -> TokenStream2 {
+pub fn parse_return(toks: &mut Peekable<impl Iterator<Item = TokenTree>>) -> TokenStream2 {
     loop {
         match toks.peek() {
             Some(TokenTree::Punct(punct)) if punct.as_char() == '-' => {
                 toks.next();
                 match toks.next() {
-                    Some(TokenTree::Punct(punct)) if punct.as_char() == '>' => {
-                        match toks.next() {
-                            Some(TokenTree::Ident(ident)) => {
-                                break parse_type(ident, toks);
-                            }
-                            Some(TokenTree::Punct(punct)) if punct.as_char() == '#' => {
-                                let mut captured = vec![];
-                                let placeholder = pull_interpolation(toks, &mut captured, false);
-
-                                let captured = captured
-                                    .into_iter()
-                                    .map(|name| Ident2::new(&name, proc_macro2::Span::call_site()));
-                                break quote!(format!(#placeholder, #( #captured ),*));
-                            }
-                            next => panic!("Expected the return type. Got: {:?}", next),
+                    Some(TokenTree::Punct(punct)) if punct.as_char() == '>' => match toks.next() {
+                        Some(TokenTree::Ident(ident)) => {
+                            break parse_type(ident, toks);
                         }
-                    }
+                        Some(TokenTree::Punct(punct)) if punct.as_char() == '#' => {
+                            let mut captured = vec![];
+                            let placeholder = pull_interpolation(toks, &mut captured, false);
+
+                            let captured = captured
+                                .into_iter()
+                                .map(|name| Ident2::new(&name, proc_macro2::Span::call_site()));
+                            break quote!(format!(#placeholder, #( #captured ),*));
+                        }
+                        next => panic!("Expected the return type. Got: {:?}", next),
+                    },
                     next => panic!("Expected ->. Got: {:?}", next),
                 }
             }
@@ -197,6 +196,3 @@ pub fn parse_return(toks: &mut Peekable<impl Iterator<Item=TokenTree>>) -> Token
         }
     }
 }
-
-
-

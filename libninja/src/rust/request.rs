@@ -19,8 +19,14 @@ use crate::rust::codegen::ToRustType;
 use super::lower_hir::derives_to_tokens;
 
 pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
-    let params_except_path: Vec<&Parameter> = inputs.iter().filter(|&input| input.location != Location::Path).collect();
-    if params_except_path.iter().all(|&input| input.location == Location::Query) {
+    let params_except_path: Vec<&Parameter> = inputs
+        .iter()
+        .filter(|&input| input.location != Location::Path)
+        .collect();
+    if params_except_path
+        .iter()
+        .all(|&input| input.location == Location::Query)
+    {
         return quote! {
             r = r.set_query(self.params);
         };
@@ -100,9 +106,7 @@ pub fn build_url(operation: &Operation) -> TokenStream {
         }
     } else {
         static FIX_PLACEHOLDERS: OnceLock<regex::Regex> = OnceLock::new();
-        let fix = FIX_PLACEHOLDERS.get_or_init(||
-            regex::Regex::new("\\{([_\\w]+)\\}").unwrap()
-        );
+        let fix = FIX_PLACEHOLDERS.get_or_init(|| regex::Regex::new("\\{([_\\w]+)\\}").unwrap());
         let inputs = inputs.into_iter().map(|input| {
             let name = input.name.to_rust_ident();
             quote! { #name = self.params.#name }
@@ -118,55 +122,7 @@ pub fn build_url(operation: &Operation) -> TokenStream {
     }
 }
 
-// pub fn authorize_request(spec: &HirSpec) -> TokenStream {
-//     if spec_defines_auth(spec) {
-//         quote! {
-//            r = self.http_client.authenticate(r);
-//         }
-//     } else {
-//         quote! {}
-//     }
-// }
-
-// pub fn build_send_function(operation: &Operation, spec: &HirSpec) -> Function<TokenStream> {
-//     let assign_inputs = assign_inputs_to_request(&operation.parameters);
-//     let auth = authorize_request(spec);
-//     let response = operation.ret.to_rust_type();
-//     let method = syn::Ident::new(&operation.method, proc_macro2::Span::call_site());
-//     let url = build_url(operation);
-//
-//     let ret = if matches!(operation.ret , Ty::Unit) {
-//         quote!(Ok(()))
-//     } else {
-//         quote!(res
-//             .json()
-//             .await
-//             .map_err(|e| anyhow::anyhow!("{:?}", e))
-//         )
-//     };
-//     Function {
-//         name: "send".into(),
-//         ret: quote! {
-//             ::httpclient::InMemoryResult<#response>
-//         },
-//         body: quote! {
-//             let mut r = self.http_client.client.#method(#url);
-//             #assign_inputs
-//             #auth
-//             let res = r
-//                 .await?;
-//             res.json().map_err(Into::into)
-//         },
-//         async_: true,
-//         public: true,
-//         ..Function::default()
-//     }
-// }
-
-pub fn build_struct_fields(
-    inputs: &[Parameter],
-    use_references: bool,
-) -> Vec<Field<TokenStream>> {
+pub fn build_struct_fields(inputs: &[Parameter], use_references: bool) -> Vec<Field<TokenStream>> {
     inputs
         .iter()
         .map(|input| {
@@ -189,9 +145,7 @@ pub fn build_struct_fields(
 }
 
 /// Build the various "builder" methods for optional parameters for a request struct
-pub fn build_request_struct_builder_methods(
-    operation: &Operation,
-) -> Vec<Function<TokenStream>> {
+pub fn build_request_struct_builder_methods(operation: &Operation) -> Vec<Function<TokenStream>> {
     operation.parameters.iter().filter(|a| a.optional).map(|a| {
         let name = a.name.to_rust_ident();
         let mut arg_type = a.ty.to_reference_type(TokenStream::new());
@@ -228,7 +182,7 @@ pub fn build_request_struct_builder_methods(
             ],
             ret: quote! {Self},
             body,
-            public: true,
+            vis: Visibility::Public,
             ..Function::default()
         }
     }).collect()
@@ -240,33 +194,27 @@ pub fn build_request_struct(
     opt: &PackageConfig,
 ) -> Vec<Class<TokenStream>> {
     let mut instance_fields = build_struct_fields(&operation.parameters, false);
-    // instance_fields.insert(
-    //     0,
-    //     Field {
-    //         name: "http_client".to_string(),
-    //         ty: {
-    //             let c = opt.client_name().to_rust_struct();
-    //             quote! { &'a #c }
-    //         },
-    //         visibility: Visibility::Crate,
-    //         ..Field::default()
-    //     },
-    // );
 
     let fn_name = operation.name.to_rust_ident().0;
     let response = operation.ret.to_rust_type().to_string().replace(" ", "");
-    let client = opt.client_name().to_rust_struct().to_string().replace(" ", "");
+    let client = opt
+        .client_name()
+        .to_rust_struct()
+        .to_string()
+        .replace(" ", "");
     let derives = derives_to_tokens(&opt.derives);
-    let doc = Some(Doc(format!(r#"You should use this struct via [`{client}::{fn_name}`].
+    let doc = Some(Doc(format!(
+        r#"You should use this struct via [`{client}::{fn_name}`].
 
-On request success, this will return a [`{response}`]."#, )));
-        
+On request success, this will return a [`{response}`]."#,
+    )));
+
     let mut result = vec![Class {
         name: operation.request_struct_name().to_rust_struct(),
         doc,
         instance_fields,
         lifetimes: vec![],
-        public: true,
+        vis: Visibility::Public,
         decorators: vec![quote! {#[derive(Debug, Clone, Serialize, Deserialize #derives)]}],
         ..Class::default()
     }];
@@ -292,12 +240,11 @@ On request success, this will return a [`{response}`]."#, )));
                     .collect::<Vec<_>>();
                 build_struct_fields(&required, true)
             },
-            public: true,
+            vis: Visibility::Public,
             lifetimes,
             ..Class::default()
         });
     }
-
     result
 }
 

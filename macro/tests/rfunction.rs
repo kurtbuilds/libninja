@@ -1,17 +1,20 @@
-use ln_macro::rfunction;
+use proc_macro2::TokenStream;
 use quote::quote;
+
+use ln_macro::rfunction;
+use mir::Function;
 
 #[test]
 fn test_quote_body() {
-    // let s: Function<TokenStream> = rfunction!(add(a: i32, b: i32) -> i32 {
-    //     println!("Hello, World!")
-    // });
-    // assert_eq!(s.name.0, "add");
-    // assert_eq!(s.body.to_string(), "println ! (\"Hello, World!\")");
-    // assert_eq!(s.ret.to_string(), "i32");
-    // assert_eq!(s.args.len(), 2);
-    // assert_eq!(s.args[0].ty().unwrap().to_string(), "i32");
-    // assert_eq!(s.args[1].ty().unwrap().to_string(), "i32");
+    let s: Function<TokenStream> = rfunction!(add(a: i32, b: i32) -> i32 {
+        println!("Hello, World!")
+    });
+    assert_eq!(s.name.0, "add");
+    assert_eq!(s.body.to_string(), "println ! (\"Hello, World!\")");
+    assert_eq!(s.ret.to_string(), "i32");
+    assert_eq!(s.args.len(), 2);
+    assert_eq!(s.args[0].ty().unwrap().to_string(), "i32");
+    assert_eq!(s.args[1].ty().unwrap().to_string(), "i32");
 }
 
 #[test]

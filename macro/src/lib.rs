@@ -3,13 +3,20 @@ mod function;
 mod body;
 
 use proc_macro::{Delimiter, TokenStream, TokenTree};
-
 use proc_macro2::{TokenStream as TokenStream2};
 use quote::quote;
 use body::body_callable;
 use function::{Arg, Tags};
+use mir::Visibility;
 use crate::function::{parse_intro, parse_args, parse_return} ;
 
+fn vis_to_token(vis: Visibility) -> TokenStream2 {
+    match vis {
+        Visibility::Public => quote!(::mir::Visibility::Public),
+        Visibility::Private => quote!(::mir::Visibility::Private),
+        Visibility::Crate => quote!(::mir::Visibility::Crate),
+    }
+}
 
 /// Define a function where the body is a string. The fn interface definition is reminiscent of Python,
 /// but because it creates a mir::Function, it will compile down into whatever language we target.
@@ -19,7 +26,7 @@ use crate::function::{parse_intro, parse_args, parse_return} ;
 pub fn function(item: TokenStream) -> TokenStream {
     let mut toks = item.into_iter().peekable();
 
-    let Tags { asyn, public, fn_name } = parse_intro(&mut toks);
+    let Tags { asyn, vis, fn_name } = parse_intro(&mut toks);
     // 2. Argument groups
     let arg_toks = match toks.next() {
         Some(TokenTree::Group(group)) if group.delimiter() == Delimiter::Parenthesis => group,
@@ -46,11 +53,12 @@ pub fn function(item: TokenStream) -> TokenStream {
         other => panic!("Expected a function body. Got: {:?}", other),
     };
 
+    let vis = vis_to_token(vis);
     quote! {
         ::mir::Function {
             name: #fn_name,
             async_: #asyn,
-            public: #public,
+            vis: #vis,
             args: vec![#(#args),*],
             ret: #ret,
             body: #body,
@@ -65,7 +73,7 @@ pub fn function(item: TokenStream) -> TokenStream {
 pub fn rfunction(item: TokenStream) -> TokenStream {
     let mut toks = item.into_iter().peekable();
 
-    let Tags { asyn, public, fn_name } = function::parse_intro(&mut toks);
+    let Tags { asyn, vis, fn_name } = parse_intro(&mut toks);
     // 2. Argument groups
     let arg_toks = match toks.next() {
         Some(TokenTree::Group(group)) if group.delimiter() == Delimiter::Parenthesis => group,
@@ -95,11 +103,12 @@ pub fn rfunction(item: TokenStream) -> TokenStream {
         other => panic!("Expected function body. Got: {:?}", other),
     };
 
+    let vis = vis_to_token(vis);
     quote! {
         ::mir::Function {
             name: #fn_name,
             async_: #asyn,
-            public: #public,
+            vis: #vis,
             args: vec![#(#args),*],
             ret: #ret,
             body: #body,

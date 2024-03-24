@@ -1,4 +1,3 @@
-use std::marker::PhantomData;
 use crate::{Doc, Function, Ident, Visibility};
 
 #[derive(Debug, Default)]

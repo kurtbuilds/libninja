@@ -10,16 +10,16 @@ pub use r#enum::*;
 pub use ty::*;
 pub use visibility::*;
 
-mod doc;
-mod function;
-mod r#macro;
-mod ty;
 mod class;
-mod import;
-mod visibility;
-mod ident;
+mod doc;
 mod r#enum;
 mod file;
+mod function;
+mod ident;
+mod import;
+mod r#macro;
+mod ty;
+mod visibility;
 
 pub struct Interface<T> {
     pub name: String,
@@ -38,8 +38,10 @@ pub struct NewType<T> {
 
 pub struct Literal<T>(pub T);
 
+#[allow(unused)]
 pub struct Grave(String);
 
+#[allow(unused)]
 pub struct FString(String);
 
 pub fn literal(s: impl Into<String>) -> Literal<String> {
@@ -68,4 +70,3 @@ impl std::fmt::Display for ParamKey {
         }
     }
 }
-
