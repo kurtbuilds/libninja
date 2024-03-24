@@ -1,11 +1,11 @@
-use std::path::{Path, PathBuf};
-use std::process::Output;
+use crate::{generate_library, read_spec, Language, OutputConfig, PackageConfig};
 use anyhow::Result;
 use clap::{Args, ValueEnum};
 use convert_case::{Case, Casing};
+use ln_core::ConfigFlags;
+use std::path::{Path, PathBuf};
+use std::process::Output;
 use tracing::debug;
-use crate::{OutputConfig, Language, PackageConfig, read_spec, generate_library};
-use ln_core::{ConfigFlags};
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
 pub enum Config {
@@ -60,24 +60,34 @@ pub struct Generate {
 
     /// Path to the OpenAPI spec file.
     spec_filepath: String,
+
+    /// List of additional namespaced traits to derive on generated structs.
+    #[clap(long)]
+    derive: Vec<String>,
 }
 
 impl Generate {
     pub fn run(self) -> Result<()> {
-        let package_name = self.package_name.unwrap_or_else(|| self.name.to_lowercase());
+        let package_name = self
+            .package_name
+            .unwrap_or_else(|| self.name.to_lowercase());
 
         let path = PathBuf::from(self.spec_filepath);
         let output_dir = self.output_dir.unwrap_or_else(|| ".".to_string());
         let spec = read_spec(&path)?;
-        generate_library(spec, OutputConfig {
-            dest_path: PathBuf::from(output_dir),
-            config: build_config(&self.config),
-            language: self.language,
-            build_examples: self.examples.unwrap_or(true),
-            package_name,
-            service_name: self.name.to_case(Case::Pascal),
-            github_repo: self.repo,
-            version: self.version,
-        })
+        generate_library(
+            spec,
+            OutputConfig {
+                dest_path: PathBuf::from(output_dir),
+                config: build_config(&self.config),
+                language: self.language,
+                build_examples: self.examples.unwrap_or(true),
+                package_name,
+                service_name: self.name.to_case(Case::Pascal),
+                github_repo: self.repo,
+                version: self.version,
+                derive: self.derive,
+            },
+        )
     }
 }

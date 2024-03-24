@@ -15,30 +15,36 @@ use tracing::debug;
 
 use ::mir::{File, Import, Visibility};
 use codegen::ToRustType;
-use mir_rust::format_code;
-use hir::{AuthStrategy, HirSpec, Location, Oauth2Auth, Parameter, qualified_env_var};
-use ln_core::{copy_builtin_files, copy_builtin_templates, create_context, get_template_file, prepare_templates};
+use hir::{qualified_env_var, AuthStrategy, HirSpec, Location, Oauth2Auth, Parameter};
 use ln_core::fs;
-use mir::{DateSerialization, IntegerSerialization};
+use ln_core::{
+    copy_builtin_files, copy_builtin_templates, create_context, get_template_file,
+    prepare_templates,
+};
 use mir::Ident;
-use mir_rust::{sanitize_filename, ToRustCode};
+use mir::{DateSerialization, IntegerSerialization};
+use mir_rust::format_code;
 use mir_rust::ToRustIdent;
+use mir_rust::{sanitize_filename, ToRustCode};
 
-use crate::{add_operation_models, extract_spec, OutputConfig, PackageConfig};
 use crate::rust::client::{build_Client_authenticate, server_url};
 pub use crate::rust::codegen::generate_example;
 use crate::rust::io::write_rust_file_to_path;
 use crate::rust::lower_hir::{generate_model_rs, generate_single_model_file};
-use crate::rust::request::{assign_inputs_to_request, build_request_struct, build_request_struct_builder_methods, build_url, generate_request_model_rs};
+use crate::rust::request::{
+    assign_inputs_to_request, build_request_struct, build_request_struct_builder_methods,
+    build_url, generate_request_model_rs,
+};
+use crate::{add_operation_models, extract_spec, OutputConfig, PackageConfig};
 
+mod cargo_toml;
 pub mod client;
 pub mod codegen;
 pub mod format;
+mod io;
 pub mod lower_hir;
 pub mod request;
-mod io;
 mod serde;
-mod cargo_toml;
 
 #[derive(Debug)]
 pub struct Extras {
@@ -67,13 +73,19 @@ pub fn calculate_extras(spec: &HirSpec) -> Extras {
     for (_, record) in &spec.schemas {
         for field in record.fields() {
             match &field.ty {
-                Ty::Integer { serialization: IntegerSerialization::NullAsZero } => {
+                Ty::Integer {
+                    serialization: IntegerSerialization::NullAsZero,
+                } => {
                     null_as_zero = true;
                 }
-                Ty::Integer { serialization: IntegerSerialization::String } => {
+                Ty::Integer {
+                    serialization: IntegerSerialization::String,
+                } => {
                     option_i64_str = true;
                 }
-                Ty::Date { serialization: DateSerialization::Integer } => {
+                Ty::Date {
+                    serialization: DateSerialization::Integer,
+                } => {
                     integer_date_serialization = true;
                     date_serialization = true;
                 }
@@ -100,7 +112,6 @@ pub fn calculate_extras(spec: &HirSpec) -> Extras {
     }
 }
 
-
 pub fn copy_from_target_templates(dest: &Path) -> Result<()> {
     let template_path = dest.join("template");
     if !template_path.exists() {
@@ -109,7 +120,11 @@ pub fn copy_from_target_templates(dest: &Path) -> Result<()> {
     for path in ignore::Walk::new(&template_path) {
         let path: ignore::DirEntry = path?;
         let rel_path = path.path().strip_prefix(&template_path)?;
-        if path.file_type().expect(&format!("Failed to read file: {}", path.path().display())).is_file() {
+        if path
+            .file_type()
+            .expect(&format!("Failed to read file: {}", path.path().display()))
+            .is_file()
+        {
             let dest = dest.join(rel_path);
             if dest.exists() {
                 continue;
@@ -137,12 +152,13 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
     // Then pass it back in.
     // But you only need it if you're generating the README and/or Cargo.toml
     let mut context = HashMap::<String, String>::new();
-    if !opts.dest_path.join("README.md").exists() ||
-        !opts.dest_path.join("Cargo.toml").exists() {
+    if !opts.dest_path.join("README.md").exists() || !opts.dest_path.join("Cargo.toml").exists() {
         if let Some(github_repo) = &opts.github_repo {
             context.insert("github_repo".to_string(), github_repo.to_string());
         } else {
-            println!("Because this is a first-time generation, please provide additional information.");
+            println!(
+                "Because this is a first-time generation, please provide additional information."
+            );
             print!("Please provide a Github repo name (e.g. libninja/plaid-rs): ");
             let github_repo: String = read!("{}\n");
             context.insert("github_repo".to_string(), github_repo);
@@ -157,6 +173,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
         package_version: version,
         config: opts.config,
         dest: opts.dest_path,
+        derives: opts.derive,
     };
     write_model_module(&spec, &opts)?;
     write_request_module(&spec, &opts)?;
@@ -171,7 +188,10 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
 
     let tera = prepare_templates();
     let mut template_context = create_context(&opts, &spec);
-    template_context.insert("client_docs_url", &format!("https://docs.rs/{}", opts.package_name));
+    template_context.insert(
+        "client_docs_url",
+        &format!("https://docs.rs/{}", opts.package_name),
+    );
     if let Some(github_repo) = context.get("github_repo") {
         template_context.insert("github_repo", github_repo);
     }
@@ -181,7 +201,11 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
     Ok(())
 }
 
-fn write_file_with_template(mut file: File<TokenStream>, template: Option<String>, path: &Path) -> Result<()> {
+fn write_file_with_template(
+    mut file: File<TokenStream>,
+    template: Option<String>,
+    path: &Path,
+) -> Result<()> {
     let Some(template) = template else {
         return write_rust_file_to_path(path, file);
     };
@@ -196,8 +220,7 @@ fn write_file_with_template(mut file: File<TokenStream>, template: Option<String
         debug!("Writing file from template/ as-is: {}", path.display());
         return fs::write_file(path, &template);
     }
-    let doc = std::mem::take(&mut file.doc)
-        .to_rust_code();
+    let doc = std::mem::take(&mut file.doc).to_rust_code();
     let imports = std::mem::take(&mut file.imports)
         .into_iter()
         .filter(|i| !template.contains(&i.path))
@@ -223,10 +246,14 @@ fn write_model_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     write_rust_file_to_path(&src_path.join("model.rs"), model_rs)?;
     fs::create_dir_all(src_path.join("model"))?;
     for (name, record) in &spec.schemas {
-        let file = generate_single_model_file(name, record, spec, config);
+        let file = generate_single_model_file(name, record, spec, opts);
         let name = sanitize_filename(name);
         let dest = src_path.join("model").join(&name).with_extension("rs");
-        write_file_with_template(file, opts.get_file_template(&format!("src/model/{}.rs", name)), &dest)?;
+        write_file_with_template(
+            file,
+            opts.get_file_template(&format!("src/model/{}.rs", name)),
+            &dest,
+        )?;
     }
     Ok(())
 }
@@ -314,15 +341,20 @@ fn write_lib_rs(spec: &HirSpec, extras: &Extras, opts: &PackageConfig) -> Result
     });
     let template_has_from_env = lib_rs_template.contains("from_env");
     if template_has_from_env {
-        struct_Client.class_methods.retain(|m| m.name.0 != "from_env");
+        struct_Client
+            .class_methods
+            .retain(|m| m.name.0 != "from_env");
     }
     let struct_Client = struct_Client.to_rust_code();
 
-    let serde = extras.needs_serde().then(|| {
-        quote! {
-            mod serde;
-        }
-    }).unwrap_or_default();
+    let serde = extras
+        .needs_serde()
+        .then(|| {
+            quote! {
+                mod serde;
+            }
+        })
+        .unwrap_or_default();
 
     let fluent_request = quote! {
         #[derive(Clone)]
@@ -331,31 +363,41 @@ fn write_lib_rs(spec: &HirSpec, extras: &Extras, opts: &PackageConfig) -> Result
             pub params: T,
         }
     };
-    let base64_import = extras.basic_auth.then(|| {
-        quote! {
-            use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD};
-        }
-    }).unwrap_or_default();
+    let base64_import = extras
+        .basic_auth
+        .then(|| {
+            quote! {
+                use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD};
+            }
+        })
+        .unwrap_or_default();
 
-    let security = spec.has_security().then(|| {
-        let struct_ServiceAuthentication = client::struct_Authentication(spec, &opts);
-        let impl_ServiceAuthentication = (!template_has_from_env).then(|| {
-            client::impl_Authentication(spec, &opts)
-        }).unwrap_or_default();
+    let security = spec
+        .has_security()
+        .then(|| {
+            let struct_ServiceAuthentication = client::struct_Authentication(spec, &opts);
+            let impl_ServiceAuthentication = (!template_has_from_env)
+                .then(|| client::impl_Authentication(spec, &opts))
+                .unwrap_or_default();
 
-        quote! {
-            #struct_ServiceAuthentication
-            #impl_ServiceAuthentication
-        }
-    }).unwrap_or_default();
+            quote! {
+                #struct_ServiceAuthentication
+                #impl_ServiceAuthentication
+            }
+        })
+        .unwrap_or_default();
     let static_shared_http_client = static_shared_http_client(spec, opts);
-    let oauth = spec.security.iter().filter_map(|s| match s {
-        AuthStrategy::OAuth2(auth) => Some(auth),
-        _ => None,
-    }).next();
-    let shared_oauth2_flow = oauth.map(|auth| {
-        shared_oauth2_flow(auth, spec, opts)
-    }).unwrap_or_default();
+    let oauth = spec
+        .security
+        .iter()
+        .filter_map(|s| match s {
+            AuthStrategy::OAuth2(auth) => Some(auth),
+            _ => None,
+        })
+        .next();
+    let shared_oauth2_flow = oauth
+        .map(|auth| shared_oauth2_flow(auth, spec, opts))
+        .unwrap_or_default();
 
     let code = quote! {
         #base64_import
@@ -378,10 +420,14 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     fs::create_dir_all(src_path.join("request"))?;
     let mut modules = vec![];
 
-    let authenticate = spec.has_security()
-        .then(|| quote! {
+    let authenticate = spec
+        .has_security()
+        .then(|| {
+            quote! {
                 r = self.client.authenticate(r);
-            }).unwrap_or_default();
+            }
+        })
+        .unwrap_or_default();
 
     for operation in &spec.operations {
         let fname = operation.file_name();
@@ -389,15 +435,22 @@ fn write_request_module(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
         let struct_name = request_structs[0].name.clone();
         let response = operation.ret.to_rust_type();
         let method = syn::Ident::new(&operation.method, proc_macro2::Span::call_site());
-        let struct_names = request_structs.iter().map(|s| s.name.to_string()).collect::<Vec<_>>();
-        let request_structs = request_structs.into_iter().map(|s| s.to_rust_code()).collect::<Vec<_>>();
+        let struct_names = request_structs
+            .iter()
+            .map(|s| s.name.to_string())
+            .collect::<Vec<_>>();
+        let request_structs = request_structs
+            .into_iter()
+            .map(|s| s.to_rust_code())
+            .collect::<Vec<_>>();
         let url = build_url(&operation);
         modules.push(fname.clone());
         let mut import = Import::new(&fname, struct_names);
         import.vis = Visibility::Public;
         imports.push(import);
         let builder_methods = build_request_struct_builder_methods(&operation)
-            .into_iter().map(|s| s.to_rust_code());
+            .into_iter()
+            .map(|s| s.to_rust_code());
 
         let assign_inputs = assign_inputs_to_request(&operation.parameters);
 
@@ -431,17 +484,25 @@ use crate::model::*;
 use crate::FluentRequest;
 use serde::{Serialize, Deserialize};
 use httpclient::InMemoryResponseExt;";
-        io::write_rust_to_path(&src_path.join(format!("request/{}.rs", fname)), file, template)?;
+        io::write_rust_to_path(
+            &src_path.join(format!("request/{}.rs", fname)),
+            file,
+            template,
+        )?;
     }
     let file = File {
         imports,
         ..File::default()
-    }.to_rust_code();
-    let modules = modules.iter().map(|m| format!("pub mod {};", m)).collect::<Vec<_>>().join("\n");
+    }
+    .to_rust_code();
+    let modules = modules
+        .iter()
+        .map(|m| format!("pub mod {};", m))
+        .collect::<Vec<_>>()
+        .join("\n");
     io::write_rust_to_path(&src_path.join("request.rs"), file, &modules)?;
     Ok(())
 }
-
 
 fn write_examples(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     let example_path = opts.dest.join("examples");
@@ -450,7 +511,12 @@ fn write_examples(spec: &HirSpec, opts: &PackageConfig) -> Result<()> {
     for operation in &spec.operations {
         let mut source = generate_example(operation, &opts, spec)?;
         source.insert_str(0, "#![allow(unused_imports)]\n");
-        fs::write_file(&example_path.join(operation.file_name()).with_extension("rs"), &source)?;
+        fs::write_file(
+            &example_path
+                .join(operation.file_name())
+                .with_extension("rs"),
+            &source,
+        )?;
     }
     Ok(())
 }
@@ -462,15 +528,18 @@ fn write_serde_module_if_needed(extras: &Extras, dest: &Path) -> Result<()> {
         return Ok(());
     }
 
-    let null_as_zero = extras.null_as_zero
+    let null_as_zero = extras
+        .null_as_zero
         .then(serde::option_i64_null_as_zero_module)
         .unwrap_or_default();
 
-    let date_as_int = extras.integer_date_serialization
+    let date_as_int = extras
+        .integer_date_serialization
         .then(serde::option_chrono_naive_date_as_int_module)
         .unwrap_or_default();
 
-    let int_as_str = extras.option_i64_str
+    let int_as_str = extras
+        .option_i64_str
         .then(serde::option_i64_str_module)
         .unwrap_or_default();
 

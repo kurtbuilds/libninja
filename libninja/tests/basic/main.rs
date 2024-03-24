@@ -8,8 +8,8 @@ use pretty_assertions::assert_eq;
 
 use hir::{HirSpec, Language};
 use libninja::{generate_library, rust};
-use ln_core::{OutputConfig, PackageConfig};
 use ln_core::extractor::{extract_api_operations, extract_inputs, extract_spec};
+use ln_core::{OutputConfig, PackageConfig};
 
 const BASIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/basic.yaml");
 const RECURLY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/recurly.yaml");
@@ -39,10 +39,12 @@ fn test_generate_example() -> Result<()> {
         package_version: "0.1.0".to_string(),
         config: Default::default(),
         dest: PathBuf::from_str("..").unwrap(),
+        derives: vec![],
     };
     let mut result = HirSpec::default();
     extract_api_operations(&spec, &mut result).unwrap();
-    let operation = result.operations
+    let operation = result
+        .operations
         .iter()
         .find(|o| o.name == "linkTokenCreate")
         .unwrap();
@@ -68,6 +70,7 @@ pub fn test_build_full_library_recurly() -> Result<()> {
         config: Default::default(),
         github_repo: Some("libninjacom/recurly".to_string()),
         version: None,
+        derive: vec![],
     };
     generate_library(spec, opts)
 }
