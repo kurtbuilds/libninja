@@ -8,6 +8,7 @@ impl ToRustCode for File<TokenStream> {
         let File {
             imports,
             classes,
+            enums,
             doc,
             functions,
             code,
@@ -17,12 +18,14 @@ impl ToRustCode for File<TokenStream> {
         let doc = doc.to_rust_code();
         let functions = functions.into_iter().map(|f| f.to_rust_code());
         let classes = classes.into_iter().map(|c| c.to_rust_code());
+        let enums = enums.into_iter().map(|c| c.to_rust_code());
         let code = code.unwrap_or_default();
         quote! {
             #doc
             #(#imports)*
             #(#functions)*
             #(#classes)*
+            #(#enums)*
             #code
         }
     }

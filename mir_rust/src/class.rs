@@ -1,9 +1,8 @@
+use mir::{Class, Field};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 
-use mir::{Class, Field};
-
-use crate::{FluentBool, ToRustCode};
+use crate::ToRustCode;
 
 impl ToRustCode for Class<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
@@ -16,7 +15,7 @@ impl ToRustCode for Class<TokenStream> {
             constructors,
             class_methods,
             static_methods,
-            public,
+            vis,
             lifetimes,
             decorators,
             superclasses
@@ -27,7 +26,7 @@ impl ToRustCode for Class<TokenStream> {
         assert!(code.is_none(), "code in class body not supported in Rust");
         assert!(static_methods.is_empty(), "static methods not supported in Rust");
 
-        let vis = public.to_value(|| quote!(pub));
+        let vis = vis.to_rust_code();
         let fields = instance_fields.into_iter().map(|f| f.to_rust_code());
         let class_methods = class_methods.into_iter().map(|m| m.to_rust_code());
 

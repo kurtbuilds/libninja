@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-use crate::{Doc, Ident};
+use crate::{Doc, Ident, Visibility};
 
 /// Localized
 pub enum ArgIdent {
@@ -163,7 +163,7 @@ pub struct Function<T> {
     pub body: T,
     pub doc: Option<Doc>,
     pub async_: bool,
-    pub public: bool,
+    pub vis: Visibility,
     /// #[...] in Rust
     /// @... in Python
     pub annotations: Vec<String>,
@@ -175,14 +175,12 @@ impl<T> Debug for Function<T>
         T: Debug,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Function {{ name: {name:?}, args: debug print not impl, ret: {ret:?}, body: {body:?}, doc: {doc:?}, async_: {async_}, public: {public}, annotations: debug print not impl }}",
-               name = self.name,
-               ret = self.ret,
-               body = self.body,
-               doc = self.doc,
-               async_ = self.async_,
-               public = self.public
-        )
+        f.debug_struct("Function")
+            .field("name", &self.name)
+            .field("ret", &self.ret)
+            .field("args", &"..")
+            .field("body", &"..")
+            .finish()
     }
 }
 
@@ -198,7 +196,7 @@ impl<T> Default for Function<T>
             body: T::default(),
             doc: None,
             async_: false,
-            public: false,
+            vis: Default::default(),
             annotations: vec![],
             generic: vec![],
         }

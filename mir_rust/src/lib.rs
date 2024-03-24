@@ -9,6 +9,7 @@ mod file;
 mod class;
 mod import;
 mod function;
+mod r#enum;
 
 /// Use this for codegen structs: Function, Class, etc.
 pub trait ToRustCode {
@@ -163,6 +164,9 @@ fn assert_valid_ident(s: &str, original: &str) {
     }
     if s.contains('.') {
         panic!("Dot in identifier: {}", original)
+    }
+    if s.is_empty() {
+        panic!("Empty identifier: {}", original)
     }
 }
 

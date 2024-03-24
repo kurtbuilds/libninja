@@ -13,15 +13,14 @@ impl ToRustCode for Function<TokenStream> {
             async_,
             annotations,
             ret,
-            public,
+            vis,
             ..
         } = self;
         let annotations = annotations
             .into_iter()
             .map(|a| syn::parse_str::<syn::Expr>(&a).unwrap());
         let doc = doc.to_rust_code();
-
-        let vis = public.to_value(|| quote!(pub));
+        let vis = vis.to_rust_code();
         let async_ = async_.to_value(|| quote!(async));
         let args = args.into_iter().map(|a| a.to_rust_code());
         let ret = (!ret.is_empty()).to_value(|| quote!( -> #ret));

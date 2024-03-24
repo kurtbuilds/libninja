@@ -15,7 +15,7 @@ pub struct Class<T> {
     /// Use `class_methods` in Rust.
     pub class_methods: Vec<Function<T>>,
     pub static_methods: Vec<Function<T>>,
-    pub public: bool,
+    pub vis: Visibility,
 
     pub lifetimes: Vec<String>,
     pub decorators: Vec<T>,
@@ -36,20 +36,18 @@ pub struct Field<T> {
 
 impl Debug for Class<String> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let public = self.public;
-        write!(f, "Class {{ name: {name:?}, \
-        doc: {doc:?}, \
-        instance_fields: todo!, \
-        static_fields: todo!, \
-        constructors: todo!, \
-        class_methods: todo!, \
-        static_methods: todo!, \
-        public: {public}, \
-        lifetimes: todo!, \
-        superclasses: todo! }}",
-               name = self.name,
-               doc = self.doc,
-        )
+        f.debug_struct("Class")
+            .field("name", &self.name)
+            .field("doc", &self.doc)
+            .field("instance_fields", &self.instance_fields)
+            .field("static_fields", &self.static_fields)
+            .field("constructors", &self.constructors)
+            .field("class_methods", &self.class_methods)
+            .field("static_methods", &self.static_methods)
+            .field("vis", &self.vis)
+            .field("lifetimes", &self.lifetimes)
+            .field("superclasses", &self.superclasses)
+            .finish()
     }
 }
 
@@ -64,7 +62,7 @@ impl<T> Default for Class<T> {
             constructors: vec![],
             class_methods: vec![],
             static_methods: vec![],
-            public: false,
+            vis: Visibility::Private,
             lifetimes: vec![],
             decorators: vec![],
             superclasses: vec![],
