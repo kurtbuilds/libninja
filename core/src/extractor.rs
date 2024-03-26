@@ -2,20 +2,23 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
-use openapiv3::{APIKeyLocation, OpenAPI, ReferenceOr, Schema, SecurityScheme};
 use openapiv3 as oa;
+use openapiv3::{APIKeyLocation, OpenAPI, ReferenceOr, Schema, SecurityScheme};
 use tracing_ez::{debug, span, warn};
 
-use hir::{AuthLocation, AuthParam, AuthStrategy, HirSpec, Language, Location, Operation, Parameter, Record};
+use hir::{
+    AuthLocation, AuthParam, AuthStrategy, HirSpec, Language, Location, Operation, Parameter,
+    Record,
+};
 use hir::{Oauth2Auth, TokenAuth};
 use mir::{Doc, DocFormat, NewType};
 use mir::Ty;
 pub use record::*;
-pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 pub use resolution::*;
+pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 
-mod resolution;
 mod record;
+mod resolution;
 
 /// You might need to call add_operation_models after this
 pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
@@ -57,7 +60,18 @@ pub fn extract_request_schema<'a>(
         .content
         .get("application/json")
         .ok_or_else(|| anyhow!("No json body"))?;
-    Ok(content.schema.as_ref().expect(&format!("Expecting a ref for {}", operation.operation_id.as_ref().map(|s| s.as_str()).unwrap_or_default())).resolve(spec))
+    Ok(content
+        .schema
+        .as_ref()
+        .expect(&format!(
+            "Expecting a ref for {}",
+            operation
+                .operation_id
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or_default()
+        ))
+        .resolve(spec))
 }
 
 pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<Parameter> {
@@ -91,7 +105,11 @@ pub fn extract_inputs<'a>(
         .map(|param| extract_param(param, spec))
         .collect::<Result<Vec<_>, _>>()?;
 
-    let args = item.parameters.iter().map(|param| extract_param(param, spec)).collect::<Result<Vec<_>, _>>()?;
+    let args = item
+        .parameters
+        .iter()
+        .map(|param| extract_param(param, spec))
+        .collect::<Result<Vec<_>, _>>()?;
     for param in args {
         if !inputs.iter().any(|p| p.name == param.name) {
             inputs.push(param);
@@ -188,7 +206,8 @@ pub fn extract_operation_doc(operation: &oa::Operation, format: DocFormat) -> Op
     }
     if let Some(description) = operation.description.as_ref() {
         if !description.is_empty() {
-            if !doc_pieces.is_empty() && description == &doc_pieces[0] {} else {
+            if !doc_pieces.is_empty() && description == &doc_pieces[0] {
+            } else {
                 doc_pieces.push(description.clone());
             }
         }
@@ -242,8 +261,7 @@ pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {
 pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()> {
     for (path, method, operation, item) in spec.operations() {
         let name = match &operation.operation_id {
-            Some(name) => name
-                .replace(".", "_"),
+            Some(name) => name.replace(".", "_"),
             None => make_name_from_method_and_url(method, path),
         };
         let doc = extract_operation_doc(operation, DocFormat::Markdown);
@@ -255,20 +273,20 @@ pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()
             None => Ty::Unit,
             Some(ReferenceOr::Item(s)) => {
                 if matches!(s.kind, oa::SchemaKind::Type(oa::Type::Object(_))) {
-                    needs_response_model = Some(s);
-                    Ty::model(&format!("{}Response", name))
+                    eprintln!("{} needs a response model", name);
+                    let model_name = format!("{}Response", name.to_case(Case::Pascal));
+                    needs_response_model = Some((s, model_name.clone()));
+                    Ty::Model(model_name)
                 } else {
                     schema_to_ty(s, spec)
                 }
             }
-            Some(x @ ReferenceOr::Reference { .. }) => {
-                schema_ref_to_ty(x, spec)
-            }
+            Some(x @ ReferenceOr::Reference { .. }) => schema_ref_to_ty(x, spec),
         };
 
-        if let Some(s) = needs_response_model {
-            let response_name = format!("{}Response", name);
-            result.schemas.insert(response_name.clone(), create_record(&response_name, s, spec));
+        if let Some((schema, model_name)) = needs_response_model {
+            let record = create_record(&model_name, schema, spec);
+            result.schemas.insert(model_name.clone(), record);
         }
         result.operations.push(Operation {
             name,
@@ -282,7 +300,6 @@ pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()
     Ok(())
 }
 
-
 fn extract_servers(spec: &OpenAPI) -> Result<BTreeMap<String, String>> {
     let mut servers = BTreeMap::new();
     if spec.servers.len() == 1 {
@@ -291,12 +308,7 @@ fn extract_servers(spec: &OpenAPI) -> Result<BTreeMap<String, String>> {
         return Ok(servers);
     }
     'outer: for server in &spec.servers {
-        for keyword in [
-            "beta",
-            "production",
-            "development",
-            "sandbox",
-        ] {
+        for keyword in ["beta", "production", "development", "sandbox"] {
             if matches!(&server.description, Some(desc) if desc.to_lowercase().contains(keyword)) {
                 servers.insert(keyword.to_string(), server.url.clone());
                 continue 'outer;
@@ -348,17 +360,25 @@ fn remove_unused(spec: &mut HirSpec) {
 
 fn sanitize_spec(spec: &mut HirSpec) {
     // skip alias structs
-    let optional_short_circuit: HashMap<String, String> = spec.schemas.iter()
+    let optional_short_circuit: HashMap<String, String> = spec
+        .schemas
+        .iter()
         .filter(|(_, r)| r.optional())
         .filter_map(|(_, r)| {
-            let Record::TypeAlias(alias, field) = r else { return None; };
-            let Ty::Model(resolved) = &field.ty else { return None; };
+            let Record::TypeAlias(alias, field) = r else {
+                return None;
+            };
+            let Ty::Model(resolved) = &field.ty else {
+                return None;
+            };
             Some((alias.clone(), resolved.clone()))
         })
         .collect();
     for record in spec.schemas.values_mut() {
         for field in record.fields_mut() {
-            let Ty::Model(name) = &field.ty else { continue; };
+            let Ty::Model(name) = &field.ty else {
+                continue;
+            };
             let Some(rename_to) = optional_short_circuit.get(name) else {
                 continue;
             };
@@ -375,7 +395,6 @@ fn sanitize_spec(spec: &mut HirSpec) {
     remove_unused(spec);
 }
 
-
 pub fn spec_defines_auth(spec: &HirSpec) -> bool {
     !spec.security.is_empty()
 }
@@ -386,11 +405,17 @@ fn extract_key_location(loc: &APIKeyLocation, name: &str) -> AuthLocation {
             if ["bearer_auth", "bearer"].contains(&&*name.to_case(Case::Snake)) {
                 AuthLocation::Bearer
             } else {
-                AuthLocation::Header { key: name.to_string() }
+                AuthLocation::Header {
+                    key: name.to_string(),
+                }
             }
         }
-        APIKeyLocation::Query => AuthLocation::Query { key: name.to_string() },
-        APIKeyLocation::Cookie => AuthLocation::Cookie { key: name.to_string() },
+        APIKeyLocation::Query => AuthLocation::Query {
+            key: name.to_string(),
+        },
+        APIKeyLocation::Cookie => AuthLocation::Cookie {
+            key: name.to_string(),
+        },
     }
 }
 
@@ -403,9 +428,13 @@ pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
             continue;
         }
         let (scheme_name, _scopes) = requirement.iter().next().unwrap();
-        let scheme = schemes.get(scheme_name).expect(&format!("Security scheme {} not found.", scheme_name));
+        let scheme = schemes
+            .get(scheme_name)
+            .expect(&format!("Security scheme {} not found.", scheme_name));
         debug!("Found security scheme for {}: {:?}", scheme_name, scheme);
-        let scheme = scheme.as_item().expect("TODO support refs in securitySchemes");
+        let scheme = scheme
+            .as_item()
+            .expect("TODO support refs in securitySchemes");
         match scheme {
             SecurityScheme::APIKey { location, name, .. } => {
                 let location = extract_key_location(&location, &name);
@@ -422,12 +451,23 @@ pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
                     strats.push(AuthStrategy::OAuth2(Oauth2Auth {
                         auth_url: flow.authorization_url.clone(),
                         exchange_url: flow.token_url.clone(),
-                        refresh_url: flow.refresh_url.clone().unwrap_or_else(|| flow.token_url.clone()),
-                        scopes: flow.scopes.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+                        refresh_url: flow
+                            .refresh_url
+                            .clone()
+                            .unwrap_or_else(|| flow.token_url.clone()),
+                        scopes: flow
+                            .scopes
+                            .iter()
+                            .map(|(k, v)| (k.clone(), v.clone()))
+                            .collect(),
                     }))
                 }
             }
-            SecurityScheme::HTTP { scheme, bearer_format, description } => {
+            SecurityScheme::HTTP {
+                scheme,
+                bearer_format,
+                description,
+            } => {
                 strats.push(AuthStrategy::Token(TokenAuth {
                     name: scheme_name.to_string(),
                     fields: vec![AuthParam {
@@ -458,10 +498,9 @@ pub fn extract_newtype(name: &str, schema: &oa::Schema, spec: &OpenAPI) -> NewTy
 fn get_name(schema_ref: oa::SchemaReference) -> String {
     match schema_ref {
         oa::SchemaReference::Schema { schema } => schema,
-        oa::SchemaReference::Property { property, .. } => property
+        oa::SchemaReference::Property { property, .. } => property,
     }
 }
-
 
 /// Add the models for operations that have structs for their required params.
 /// E.g. linkTokenCreate has >3 required params, so it has a struct.
@@ -469,13 +508,15 @@ pub fn add_operation_models(lang: Language, mut spec: HirSpec) -> Result<HirSpec
     let mut new_schemas = vec![];
     for op in &spec.operations {
         if op.use_required_struct(lang) {
-            new_schemas.push((op.required_struct_name(), Record::Struct(op.required_struct(lang))));
+            new_schemas.push((
+                op.required_struct_name(),
+                Record::Struct(op.required_struct(lang)),
+            ));
         }
     }
     spec.schemas.extend(new_schemas);
     Ok(spec)
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -27,3 +27,4 @@ tracing-ez = "0.3.0"
 
 [dev-dependencies]
 serde_yaml = "0.9.25"
+http = "1.1.0"
