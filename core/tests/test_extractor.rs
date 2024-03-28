@@ -20,6 +20,9 @@ fn test_post_translate() {
     let Record::Struct(s) = hir.schemas.get(name).unwrap() else {
         panic!("Expected struct");
     };
-    dbg!(&s.fields);
-    assert_eq!(1, 0);
+    let z = &s.fields["translations"];
+    let Ty::Array(ty) = &z.ty else {
+        panic!("Expected array");
+    };
+    assert!(matches!(ty.as_ref(), Ty::Model(m) if m == "TranslationsItem"));
 }
