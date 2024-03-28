@@ -81,9 +81,6 @@ go:
     checkexec ${CARGO_TARGET_DIR:-target}/debug/ocg $(fd . ocg/template) -- cargo clean --package ocg
     cargo run -- gen --name PetStore --output-dir gen/petstore-go --generator go spec/petstore.yaml --github libninjacom/petstore-go --version 0.1.0
 
-create:
-    bash ocg/script/create.sh
-
 generate:
     #!/bin/bash -euxo pipefail
     if [ -n "${LIBRARY:-}" ]; then
@@ -105,7 +102,7 @@ integration *ARGS:
 alias int := integration
 
 # Test the library we just generated
-test-lib:
+test_lib:
     #!/bin/bash -euxo pipefail
     REPO_DIR=$DIR/$(basename $REPO)
     cd $REPO_DIR
@@ -124,9 +121,6 @@ clean-gen:
 
 delete *ARG:
     gh repo delete $REPO {{ARG}}
-
-push:
-    bash ocg/script/push.sh
 
 commercial:
     rm -rf commercial
