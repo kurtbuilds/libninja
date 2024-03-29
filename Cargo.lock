@@ -724,6 +724,7 @@ dependencies = [
 name = "libninja_mir"
 version = "0.1.0"
 dependencies = [
+ "openapiv3-extended",
  "proc-macro2",
  "quote",
 ]

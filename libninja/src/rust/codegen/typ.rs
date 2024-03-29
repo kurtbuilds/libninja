@@ -1,7 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+
 use hir::HirSpec;
 use mir::Ty;
+
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::lower_hir::HirFieldExt;
 
@@ -25,11 +27,9 @@ impl ToRustType for Ty {
                 let inner = inner.to_rust_type();
                 quote!(Vec<#inner>)
             }
-            Ty::Model(inner, ..) => {
-                inner.to_rust_struct().into()
-            }
+            Ty::Model(inner, ..) => inner.to_rust_struct().into(),
             Ty::Unit => quote!(()),
-            Ty::Any => quote!(serde_json::Value),
+            Ty::Any(_) => quote!(serde_json::Value),
             Ty::Date { .. } => quote!(chrono::NaiveDate),
             Ty::DateTime { .. } => quote!(chrono::DateTime<chrono::Utc>),
             Ty::Currency { .. } => quote!(rust_decimal::Decimal),
@@ -50,11 +50,9 @@ impl ToRustType for Ty {
                     self.to_rust_type()
                 }
             }
-            Ty::Model(inner, ..) => {
-                inner.to_rust_struct().into()
-            }
+            Ty::Model(inner, ..) => inner.to_rust_struct().into(),
             Ty::Unit => quote!(()),
-            Ty::Any => quote!(serde_json::Value),
+            Ty::Any(_) => quote!(serde_json::Value),
             Ty::Date { .. } => quote!(chrono::NaiveDate),
             Ty::DateTime { .. } => quote!(chrono::DateTime<chrono::Utc>),
             Ty::Currency { .. } => quote!(rust_decimal::Decimal),
@@ -82,7 +80,7 @@ impl ToRustType for Ty {
                 model.fields().all(|f| f.implements_default(spec))
             }
             Ty::Unit => true,
-            Ty::Any => true,
+            Ty::Any(_) => true,
             Ty::Date { .. } => true,
             Ty::DateTime => true,
             Ty::Currency { .. } => true,
@@ -95,15 +93,13 @@ impl ToRustType for Ty {
             Ty::Integer { .. } => true,
             Ty::Float => true,
             Ty::Boolean => true,
-            Ty::Array(inner) => {
-                inner.implements_dummy(spec)
-            }
+            Ty::Array(inner) => inner.implements_dummy(spec),
             Ty::Model(name) => {
                 let model = spec.get_record(name.as_str()).expect("Model not found");
                 model.fields().all(|f| f.ty.implements_dummy(spec))
             }
             Ty::Unit => true,
-            Ty::Any => false,
+            Ty::Any(_) => false,
             Ty::Date { .. } => true,
             Ty::DateTime => true,
             Ty::Currency { .. } => true,

@@ -1,7 +1,7 @@
 use openapiv3 as oa;
 
 use hir::{HirSpec, Record};
-use ln_core::extractor::extract_api_operations;
+use ln_core::extractor::{deanonymize_array_items, extract_api_operations};
 use mir::Ty;
 
 #[test]
@@ -11,6 +11,7 @@ fn test_post_translate() {
     let openapi: oa::OpenAPI = serde_yaml::from_str(s).unwrap();
 
     extract_api_operations(&openapi, &mut hir).unwrap();
+    deanonymize_array_items(&mut hir, &openapi);
     let Some(op) = hir.operations.iter().find(|o| o.name == "translateText") else {
         panic!("Operation not found");
     };
@@ -24,5 +25,9 @@ fn test_post_translate() {
     let Ty::Array(ty) = &z.ty else {
         panic!("Expected array");
     };
-    assert!(matches!(ty.as_ref(), Ty::Model(m) if m == "TranslationsItem"));
+    assert!(
+        matches!(ty.as_ref(), Ty::Model(m) if m == "Translation"),
+        "{:?}",
+        ty
+    );
 }

@@ -17,6 +17,8 @@ pub use record::*;
 pub use resolution::*;
 pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 
+use crate::util::{is_plural, singular};
+
 mod record;
 mod resolution;
 
@@ -33,8 +35,66 @@ pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
     result.servers = servers;
     result.security = security;
     result.api_docs_url = api_docs_url;
+
+    deanonymize_array_items(&mut result, spec);
     sanitize_spec(&mut result);
     Ok(result)
+}
+
+pub fn create_unique_name(
+    current_schemas: &HashSet<String>,
+    name: &str,
+    field: &str,
+) -> Option<String> {
+    if is_plural(field) {
+        let singular_field = singular(field).to_case(Case::Pascal);
+        if !current_schemas.contains(&singular_field) {
+            return Some(singular_field);
+        }
+        let singular_field = format!("{}{}", name.to_case(Case::Pascal), singular_field);
+        if !current_schemas.contains(&singular_field) {
+            return Some(singular_field);
+        }
+    }
+    let singular_field = format!("{}Item", field.to_case(Case::Pascal));
+    if !current_schemas.contains(&singular_field) {
+        return Some(singular_field);
+    }
+    let singular_field = format!("{}{}", name.to_case(Case::Pascal), singular_field);
+    if !current_schemas.contains(&singular_field) {
+        return Some(singular_field);
+    }
+    None
+}
+
+pub fn deanonymize_array_items(spec: &mut HirSpec, openapi: &OpenAPI) {
+    let current_schemas = spec
+        .schemas
+        .iter()
+        .map(|(name, _)| name.clone())
+        .collect::<HashSet<_>>();
+    let mut new_schemas = vec![];
+    for (name, schema) in spec.schemas.iter_mut() {
+        let Record::Struct(s) = schema else {
+            continue;
+        };
+        for (field, schema) in s.fields.iter_mut() {
+            println!("{} {}", name, field);
+            let Ty::Array(item) = &mut schema.ty else {
+                continue;
+            };
+            let Ty::Any(Some(inner)) = item.as_mut() else {
+                continue;
+            };
+            let Some(name) = create_unique_name(&current_schemas, name, field) else {
+                continue;
+            };
+            let record = create_record(&name, inner, openapi);
+            *item = Box::new(Ty::model(&name));
+            new_schemas.push((name, record));
+        }
+    }
+    spec.schemas.extend(new_schemas);
 }
 
 pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
@@ -125,7 +185,7 @@ pub fn extract_inputs<'a>(
         let ty = if let Some(items) = items {
             schema_ref_to_ty(&items, spec)
         } else {
-            Ty::Any
+            Ty::default()
         };
         let ty = Ty::Array(Box::new(ty));
         inputs.push(Parameter {
@@ -162,7 +222,7 @@ pub fn extract_inputs<'a>(
     } else {
         inputs.push(Parameter {
             name: "body".to_string(),
-            ty: Ty::Any,
+            ty: Ty::default(),
             optional: false,
             doc: None,
             location: Location::Body,

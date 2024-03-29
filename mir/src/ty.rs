@@ -1,3 +1,5 @@
+use openapiv3 as oa;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DateSerialization {
     Iso8601,
@@ -19,9 +21,7 @@ pub enum IntegerSerialization {
 #[derive(Debug, Clone)]
 pub enum Ty {
     String,
-    Integer {
-        serialization: IntegerSerialization,
-    },
+    Integer { serialization: IntegerSerialization },
     Float,
     Boolean,
     Array(Box<Ty>),
@@ -31,12 +31,12 @@ pub enum Ty {
     Date { serialization: DateSerialization },
     DateTime,
     Currency { serialization: DecimalSerialization },
-    Any,
+    Any(Option<oa::Schema>),
 }
 
 impl Default for Ty {
     fn default() -> Self {
-        Ty::Any
+        Ty::Any(None)
     }
 }
 
@@ -74,7 +74,7 @@ impl Ty {
             Ty::Boolean => true,
             Ty::Array(_) => false,
             Ty::Model(_) => false,
-            Ty::Any => false,
+            Ty::Any(_) => false,
             Ty::Unit => true,
             Ty::Date { .. } => true,
             Ty::Currency { .. } => true,

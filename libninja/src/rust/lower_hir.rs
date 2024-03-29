@@ -1,19 +1,18 @@
 use std::collections::BTreeSet;
 
-use cargo_toml::Package;
 use convert_case::Casing;
-use proc_macro2::{extra, TokenStream};
+use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
 use hir::{HirField, HirSpec, NewType, Record, StrEnum, Struct};
 use ln_core::{ConfigFlags, PackageConfig};
-use mir::{import, Field, File, Ident, Import, Visibility};
+use mir::{Field, File, Ident, import, Import, Visibility};
 use mir::{DateSerialization, DecimalSerialization, IntegerSerialization, Ty};
+use mir_rust::{sanitize_filename, ToRustIdent};
+use mir_rust::ToRustCode;
 
 use crate::rust::codegen;
 use crate::rust::codegen::ToRustType;
-use mir_rust::ToRustCode;
-use mir_rust::{sanitize_filename, ToRustIdent};
 
 pub trait FieldExt {
     fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream>;
@@ -47,7 +46,7 @@ impl FieldExt for HirField {
             decorators.push(quote! {
                 #[serde(default, skip_serializing_if = "Vec::is_empty")]
             });
-        } else if matches!(self.ty, Ty::Any) {
+        } else if matches!(self.ty, Ty::Any(_)) {
             decorators.push(quote! {
                 #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
             });
@@ -388,11 +387,8 @@ pub fn derives_to_tokens(derives: &Vec<String>) -> TokenStream {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use hir::HirField;
     use mir::Ty;
-
     use mir_rust::format_code;
 
     use super::*;

@@ -109,7 +109,7 @@ test_lib:
     just bootstrap
     just check
     just test
-alias tt := test-lib
+alias tt := test_lib
 
 clean-gen:
     #!/bin/bash -euxo pipefail
