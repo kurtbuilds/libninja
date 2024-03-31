@@ -3,99 +3,88 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
 use openapiv3 as oa;
-use openapiv3::{APIKeyLocation, OpenAPI, ReferenceOr, Schema, SecurityScheme};
+use openapiv3::{APIKeyLocation, OpenAPI, ReferenceOr, RefOr, Schema, SecurityScheme};
 use tracing_ez::{debug, span, warn};
 
 use hir::{
-    AuthLocation, AuthParam, AuthStrategy, HirSpec, Language, Location, Operation, Parameter,
-    Record,
+    AuthLocation, AuthParam, AuthStrategy, HirSpec, Language, Location, Oauth2Auth, Operation,
+    Parameter, Record, TokenAuth,
 };
-use hir::{Oauth2Auth, TokenAuth};
 use mir::{Doc, DocFormat, NewType};
 use mir::Ty;
 pub use record::*;
-pub use resolution::*;
-pub use resolution::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
+pub use ty::*;
+pub use ty::{schema_ref_to_ty, schema_ref_to_ty_already_resolved, schema_to_ty};
 
+use crate::extractor::operation::extract_operation;
+use crate::sanitize::sanitize;
 use crate::util::{is_plural, singular};
 
+mod operation;
 mod record;
-mod resolution;
+mod ty;
 
 /// You might need to call add_operation_models after this
-pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
-    let mut result = HirSpec::default();
-    extract_api_operations(spec, &mut result)?;
-    extract_records(spec, &mut result)?;
+pub fn extract_without_treeshake(spec: &OpenAPI) -> Result<HirSpec> {
+    let mut hir = HirSpec::default();
+
+    for (name, schema) in &spec.components.schemas {
+        let RefOr::Item(schema) = schema else {
+            panic!("Expected schema");
+        };
+        let name = sanitize(name);
+        extract_schema(&name, schema, spec, &mut hir);
+    }
+
+    for (path, method, operation, item) in spec.operations() {
+        extract_operation(spec, path, method, operation, item, &mut hir);
+    }
+
     let servers = extract_servers(spec)?;
     let security = extract_security_strategies(spec);
 
     let api_docs_url = extract_api_docs_link(spec);
 
-    result.servers = servers;
-    result.security = security;
-    result.api_docs_url = api_docs_url;
-
-    deanonymize_array_items(&mut result, spec);
-    sanitize_spec(&mut result);
-    Ok(result)
+    hir.servers = servers;
+    hir.security = security;
+    hir.api_docs_url = api_docs_url;
+    Ok(hir)
 }
 
-pub fn create_unique_name(
-    current_schemas: &HashSet<String>,
-    name: &str,
-    field: &str,
-) -> Option<String> {
-    if is_plural(field) {
-        let singular_field = singular(field).to_case(Case::Pascal);
-        if !current_schemas.contains(&singular_field) {
-            return Some(singular_field);
-        }
-        let singular_field = format!("{}{}", name.to_case(Case::Pascal), singular_field);
-        if !current_schemas.contains(&singular_field) {
-            return Some(singular_field);
-        }
-    }
-    let singular_field = format!("{}Item", field.to_case(Case::Pascal));
-    if !current_schemas.contains(&singular_field) {
-        return Some(singular_field);
-    }
-    let singular_field = format!("{}{}", name.to_case(Case::Pascal), singular_field);
-    if !current_schemas.contains(&singular_field) {
-        return Some(singular_field);
-    }
-    None
+pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
+    let mut hir = extract_without_treeshake(spec)?;
+    treeshake(&mut hir);
+    Ok(hir)
 }
 
-pub fn deanonymize_array_items(spec: &mut HirSpec, openapi: &OpenAPI) {
-    let current_schemas = spec
-        .schemas
-        .iter()
-        .map(|(name, _)| name.clone())
-        .collect::<HashSet<_>>();
-    let mut new_schemas = vec![];
-    for (name, schema) in spec.schemas.iter_mut() {
-        let Record::Struct(s) = schema else {
-            continue;
-        };
-        for (field, schema) in s.fields.iter_mut() {
-            println!("{} {}", name, field);
-            let Ty::Array(item) = &mut schema.ty else {
-                continue;
-            };
-            let Ty::Any(Some(inner)) = item.as_mut() else {
-                continue;
-            };
-            let Some(name) = create_unique_name(&current_schemas, name, field) else {
-                continue;
-            };
-            let record = create_record(&name, inner, openapi);
-            *item = Box::new(Ty::model(&name));
-            new_schemas.push((name, record));
-        }
-    }
-    spec.schemas.extend(new_schemas);
-}
+// pub fn deanonymize_array_items(spec: &mut HirSpec, openapi: &OpenAPI) {
+//     let current_schemas = spec
+//         .schemas
+//         .iter()
+//         .map(|(name, _)| name.clone())
+//         .collect::<HashSet<_>>();
+//     let mut new_schemas = vec![];
+//     for (name, schema) in spec.schemas.iter_mut() {
+//         let Record::Struct(s) = schema else {
+//             continue;
+//         };
+//         for (field, schema) in s.fields.iter_mut() {
+//             let Ty::Array(item) = &mut schema.ty else {
+//                 continue;
+//             };
+//             let Ty::Any(Some(inner)) = item.as_mut() else {
+//                 continue;
+//             };
+//             let Some(name) = create_unique_name(&current_schemas, name, field) else {
+//                 continue;
+//             };
+//             let record = create_record(&name, inner, openapi);
+//             *item = Box::new(Ty::model(&name));
+//             new_schemas.push((name, record));
+//         }
+//     }
+//     spec.schemas.extend(new_schemas);
+// }
 
 pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
     if param.nullable {
@@ -107,257 +96,11 @@ pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
     !req.iter().any(|s| s == name)
 }
 
-pub fn extract_request_schema<'a>(
-    operation: &'a oa::Operation,
-    spec: &'a OpenAPI,
-) -> Result<&'a Schema> {
-    let body = operation
-        .request_body
-        .as_ref()
-        .ok_or_else(|| anyhow!("No request body for operation {:?}", operation))?;
-    let body = body.resolve(spec)?;
-    let content = body
-        .content
-        .get("application/json")
-        .ok_or_else(|| anyhow!("No json body"))?;
-    Ok(content
-        .schema
-        .as_ref()
-        .expect(&format!(
-            "Expecting a ref for {}",
-            operation
-                .operation_id
-                .as_ref()
-                .map(|s| s.as_str())
-                .unwrap_or_default()
-        ))
-        .resolve(spec))
-}
-
-pub fn extract_param(param: &ReferenceOr<oa::Parameter>, spec: &OpenAPI) -> Result<Parameter> {
-    span!("extract_param", param = ?param);
-
-    let param = param.resolve(spec)?;
-    let data = &param.data;
-    let param_schema_ref = data
-        .schema()
-        .ok_or_else(|| anyhow!("No schema for parameter: {:?}", param))?;
-    let ty = schema_ref_to_ty(param_schema_ref, spec);
-    let schema = param_schema_ref.resolve(spec);
-    Ok(Parameter {
-        doc: None,
-        name: data.name.to_string(),
-        optional: !data.required,
-        location: param.into(),
-        ty,
-        example: schema.example.clone(),
-    })
-}
-
-pub fn extract_inputs<'a>(
-    operation: &'a oa::Operation,
-    item: &'a oa::PathItem,
-    spec: &'a OpenAPI,
-) -> Result<Vec<Parameter>> {
-    let mut inputs = operation
-        .parameters
-        .iter()
-        .map(|param| extract_param(param, spec))
-        .collect::<Result<Vec<_>, _>>()?;
-
-    let args = item
-        .parameters
-        .iter()
-        .map(|param| extract_param(param, spec))
-        .collect::<Result<Vec<_>, _>>()?;
-    for param in args {
-        if !inputs.iter().any(|p| p.name == param.name) {
-            inputs.push(param);
-        }
-    }
-
-    let schema = match extract_request_schema(operation, spec) {
-        Err(_) => return Ok(inputs),
-        Ok(schema) => schema,
-    };
-
-    if let oa::SchemaKind::Type(oa::Type::Array(oa::ArrayType { items, .. })) = &schema.kind {
-        let ty = if let Some(items) = items {
-            schema_ref_to_ty(&items, spec)
-        } else {
-            Ty::default()
-        };
-        let ty = Ty::Array(Box::new(ty));
-        inputs.push(Parameter {
-            name: "body".to_string(),
-            ty,
-            optional: false,
-            doc: None,
-            location: Location::Body,
-            example: schema.example.clone(),
-        });
-        return Ok(inputs);
-    }
-    let mut props = schema.properties_iter(spec).peekable();
-    if props.peek().is_some() {
-        let body_args = props.map(|(name, param)| {
-            let ty = schema_ref_to_ty(param, spec);
-            let param: &Schema = param.resolve(spec);
-            let optional = is_optional(name, param, schema);
-            let name = name.to_string();
-            Parameter {
-                name,
-                ty,
-                optional,
-                doc: None,
-                location: Location::Body,
-                example: schema.example.clone(),
-            }
-        });
-        for param in body_args {
-            if !inputs.iter().any(|p| p.name == param.name) {
-                inputs.push(param);
-            }
-        }
-    } else {
-        inputs.push(Parameter {
-            name: "body".to_string(),
-            ty: Ty::default(),
-            optional: false,
-            doc: None,
-            location: Location::Body,
-            example: schema.example.clone(),
-        });
-    }
-    Ok(inputs)
-}
-
-pub fn extract_response_success<'a>(
-    operation: &'a oa::Operation,
-    spec: &'a OpenAPI,
-) -> Option<&'a ReferenceOr<Schema>> {
-    use openapiv3::StatusCode;
-
-    let response = operation
-        .responses
-        .responses
-        .get(&StatusCode::Code(200))
-        .or_else(|| operation.responses.responses.get(&StatusCode::Code(201)))
-        .or_else(|| operation.responses.responses.get(&StatusCode::Code(202)))
-        .or_else(|| operation.responses.responses.get(&StatusCode::Code(204)))
-        .or_else(|| operation.responses.responses.get(&StatusCode::Code(302)));
-    response?;
-    let response = response
-        .unwrap_or_else(|| panic!("No success response for operation {:?}", operation))
-        .resolve(spec)
-        .unwrap();
-    response
-        .content
-        .get("application/json")
-        .and_then(|media| media.schema.as_ref())
-}
-
-pub fn extract_operation_doc(operation: &oa::Operation, format: DocFormat) -> Option<Doc> {
-    let mut doc_pieces = vec![];
-    if let Some(summary) = operation.summary.as_ref() {
-        if !summary.is_empty() {
-            doc_pieces.push(summary.clone());
-        }
-    }
-    if let Some(description) = operation.description.as_ref() {
-        if !description.is_empty() {
-            if !doc_pieces.is_empty() && description == &doc_pieces[0] {
-            } else {
-                doc_pieces.push(description.clone());
-            }
-        }
-    }
-    if let Some(external_docs) = operation.external_docs.as_ref() {
-        doc_pieces.push(match format {
-            DocFormat::Markdown => format!("See endpoint docs at <{}>.", external_docs.url),
-            DocFormat::Rst => format!(
-                "See endpoint docs at `{url} <{url}>`_.",
-                url = external_docs.url
-            ),
-        })
-    }
-    if doc_pieces.is_empty() {
-        None
-    } else {
-        Some(Doc(doc_pieces.join("\n\n")))
-    }
-}
-
 pub fn extract_schema_docs(schema: &Schema) -> Option<Doc> {
     schema
         .description
         .as_ref()
         .map(|d| Doc(d.trim().to_string()))
-}
-
-pub fn make_name_from_method_and_url(method: &str, url: &str) -> String {
-    let names = url
-        .split('/')
-        .filter(|s| !s.starts_with('{'))
-        .collect::<Vec<_>>();
-    let last_group = url
-        .split('/')
-        .filter(|s| s.starts_with('{'))
-        .last()
-        .map(|s| {
-            let mut param = &s[1..s.len() - 1];
-            if let Some(name) = names.last() {
-                if param.starts_with(name) {
-                    param = &param[name.len() + 1..];
-                }
-            }
-            format!("_by_{}", param)
-        })
-        .unwrap_or_default();
-    let name = names.join("_");
-    format!("{method}{name}{last_group}")
-}
-
-pub fn extract_api_operations(spec: &OpenAPI, result: &mut HirSpec) -> Result<()> {
-    for (path, method, operation, item) in spec.operations() {
-        let name = match &operation.operation_id {
-            Some(name) => name.replace(".", "_"),
-            None => make_name_from_method_and_url(method, path),
-        };
-        let doc = extract_operation_doc(operation, DocFormat::Markdown);
-        let mut parameters = extract_inputs(operation, item, spec)?;
-        parameters.sort_by(|a, b| a.name.cmp(&b.name));
-        let response_success = extract_response_success(operation, spec);
-        let mut needs_response_model = None;
-        let ret = match response_success {
-            None => Ty::Unit,
-            Some(ReferenceOr::Item(s)) => {
-                if matches!(s.kind, oa::SchemaKind::Type(oa::Type::Object(_))) {
-                    eprintln!("{} needs a response model", name);
-                    let model_name = format!("{}Response", name.to_case(Case::Pascal));
-                    needs_response_model = Some((s, model_name.clone()));
-                    Ty::Model(model_name)
-                } else {
-                    schema_to_ty(s, spec)
-                }
-            }
-            Some(x @ ReferenceOr::Reference { .. }) => schema_ref_to_ty(x, spec),
-        };
-
-        if let Some((schema, model_name)) = needs_response_model {
-            let record = create_record(&model_name, schema, spec);
-            result.schemas.insert(model_name.clone(), record);
-        }
-        result.operations.push(Operation {
-            name,
-            doc,
-            parameters,
-            ret,
-            path: path.to_string(),
-            method: method.to_string(),
-        });
-    }
-    Ok(())
 }
 
 fn extract_servers(spec: &OpenAPI) -> Result<BTreeMap<String, String>> {
@@ -418,7 +161,8 @@ fn remove_unused(spec: &mut HirSpec) {
     }
 }
 
-fn sanitize_spec(spec: &mut HirSpec) {
+/// effectively performs tree shaking on the spec, strip out models that are unused
+fn treeshake(spec: &mut HirSpec) {
     // skip alias structs
     let optional_short_circuit: HashMap<String, String> = spec
         .schemas
@@ -576,25 +320,4 @@ pub fn add_operation_models(lang: Language, mut spec: HirSpec) -> Result<HirSpec
     }
     spec.schemas.extend(new_schemas);
     Ok(spec)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_make_operation_name() {
-        let method = "get";
-        let url = "/diffs/{id}";
-        let op_name = make_name_from_method_and_url(method, url);
-        assert_eq!(op_name, "get_diffs_by_id");
-    }
-
-    #[test]
-    fn test_make_operation_name2() {
-        let method = "get";
-        let url = "/user/{user_id}/account/{account_id}";
-        let op_name = make_name_from_method_and_url(method, url);
-        assert_eq!(op_name, "get_user_account_by_id");
-    }
 }

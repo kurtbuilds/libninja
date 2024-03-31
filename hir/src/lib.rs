@@ -8,9 +8,9 @@ use std::string::{String, ToString};
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use openapiv3 as oa;
-use mir::{Doc, ParamKey};
 
 pub use lang::*;
+use mir::{Doc, ParamKey};
 use mir::Ty;
 
 mod lang;
@@ -172,7 +172,7 @@ impl Record {
         }
     }
 
-    pub fn fields(&self) -> Box<dyn Iterator<Item=&HirField> + '_> {
+    pub fn fields(&self) -> Box<dyn Iterator<Item = &HirField> + '_> {
         match self {
             Record::Struct(s) => Box::new(s.fields.values()),
             Record::Enum(_) => Box::new(empty()),
@@ -181,7 +181,7 @@ impl Record {
         }
     }
 
-    pub fn fields_mut(&mut self) -> Box<dyn Iterator<Item=&mut HirField> + '_> {
+    pub fn fields_mut(&mut self) -> Box<dyn Iterator<Item = &mut HirField> + '_> {
         match self {
             Record::Struct(s) => Box::new(s.fields.iter_mut().map(|(_, f)| f)),
             Record::Enum(_) => Box::new(empty()),
@@ -203,6 +203,13 @@ impl Record {
             Record::Enum(_) => false,
             Record::NewType(_) => false,
             Record::TypeAlias(_, f) => f.optional,
+        }
+    }
+
+    pub fn as_struct(&self) -> Option<&Struct> {
+        match self {
+            Record::Struct(s) => Some(s),
+            _ => None,
         }
     }
 }
@@ -230,9 +237,15 @@ pub enum ServerStrategy {
 impl ServerStrategy {
     pub fn env_var_for_strategy(&self, service_name: &str) -> Option<String> {
         match self {
-            ServerStrategy::BaseUrl => Some(format!("{}_BASE_URL", service_name.to_case(Case::ScreamingSnake))),
+            ServerStrategy::BaseUrl => Some(format!(
+                "{}_BASE_URL",
+                service_name.to_case(Case::ScreamingSnake)
+            )),
             ServerStrategy::Single(_) => None,
-            ServerStrategy::Env => Some(format!("{}_ENV", service_name.to_case(Case::ScreamingSnake))),
+            ServerStrategy::Env => Some(format!(
+                "{}_ENV",
+                service_name.to_case(Case::ScreamingSnake)
+            )),
         }
     }
 }
@@ -243,11 +256,16 @@ pub fn qualified_env_var(service: &str, var_name: &str) -> String {
 
 impl HirSpec {
     pub fn get_record(&self, name: &str) -> Result<&Record> {
-        self.schemas.get(name).ok_or_else(|| anyhow::anyhow!("No record named {}", name))
+        self.schemas
+            .get(name)
+            .ok_or_else(|| anyhow::anyhow!("No record named {}", name))
     }
 
     pub fn get_operation(&self, name: &str) -> Result<&Operation> {
-        self.operations.iter().find(|o| o.name == name).ok_or_else(|| anyhow::anyhow!("No operation named {}", name))
+        self.operations
+            .iter()
+            .find(|o| o.name == name)
+            .ok_or_else(|| anyhow::anyhow!("No operation named {}", name))
     }
 
     pub fn server_strategy(&self) -> ServerStrategy {
@@ -293,14 +311,19 @@ impl HirSpec {
     }
 
     pub fn has_basic_auth(&self) -> bool {
-        self.security.iter().any(|s| matches!(s, AuthStrategy::Token(_)))
+        self.security
+            .iter()
+            .any(|s| matches!(s, AuthStrategy::Token(_)))
     }
 
     pub fn oauth2_auth(&self) -> Option<&Oauth2Auth> {
-        self.security.iter().filter_map(|s| match s {
-            AuthStrategy::OAuth2(o) => Some(o),
-            _ => None,
-        }).next()
+        self.security
+            .iter()
+            .filter_map(|s| match s {
+                AuthStrategy::OAuth2(o) => Some(o),
+                _ => None,
+            })
+            .next()
     }
 }
 
@@ -390,31 +413,29 @@ impl Operation {
                     example: None,
                 }]
             }
-            _ => {
-                self.parameters
-                    .iter()
-                    .filter(|p| !p.optional).cloned()
-                    .collect()
-            }
+            _ => self
+                .parameters
+                .iter()
+                .filter(|p| !p.optional)
+                .cloned()
+                .collect(),
         }
     }
 
     pub fn required_struct(&self, sourcegen: Language) -> Struct {
         let fields = match sourcegen {
-            Language::Typescript => {
-                self.parameters
-                    .iter()
-                    .map(|p| (p.name.clone(), p.into()))
-                    .collect()
-            }
-            Language::Rust | Language::Golang => {
-                self.parameters
-                    .iter()
-                    .filter(|p| !p.optional)
-                    .map(|p| (p.name.clone(), p.into()))
-                    .collect()
-            }
-            _ => unimplemented!()
+            Language::Typescript => self
+                .parameters
+                .iter()
+                .map(|p| (p.name.clone(), p.into()))
+                .collect(),
+            Language::Rust | Language::Golang => self
+                .parameters
+                .iter()
+                .filter(|p| !p.optional)
+                .map(|p| (p.name.clone(), p.into()))
+                .collect(),
+            _ => unimplemented!(),
         };
         Struct {
             nullable: false,

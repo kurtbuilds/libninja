@@ -5,30 +5,29 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
-use std::process::ExitCode;
 
 pub use ::openapiv3::OpenAPI;
 use anyhow::{anyhow, Context, Result};
 pub use openapiv3;
 use openapiv3::VersionedOpenAPI;
 use serde::{Deserialize, Serialize};
-use serde_yaml::Value;
 
 use commercial::*;
-use ln_core::{ConfigFlags, PackageConfig, OutputConfig};
-use ln_core::extractor::{extract_api_operations, extract_spec};
+use hir::Language;
+use ln_core::{OutputConfig, PackageConfig};
 use ln_core::extractor::add_operation_models;
-use ln_core::fs::open;
-use hir::{Language, HirSpec};
+use ln_core::extractor::extract_spec;
 
-pub mod custom;
-pub mod rust;
 pub mod command;
 mod commercial;
+pub mod custom;
+pub mod rust;
 
 pub fn read_spec(path: &Path) -> Result<OpenAPI> {
     let file = File::open(path).map_err(|_| anyhow!("{:?}: File not found.", path))?;
-    let ext = path.extension().map(|s| s.to_str().expect("Extension isn't utf8"))
+    let ext = path
+        .extension()
+        .map(|s| s.to_str().expect("Extension isn't utf8"))
         .unwrap_or_else(|| "yaml");
     let openapi: VersionedOpenAPI = match ext {
         "yaml" => serde_yaml::from_reader(file)?,
@@ -67,26 +66,41 @@ pub fn generate_examples(
     for operation in &spec.operations {
         let rust = {
             let generator = Language::Rust;
-            let opt = PackageConfig { language: generator, ..opt.clone() };
+            let opt = PackageConfig {
+                language: generator,
+                ..opt.clone()
+            };
             let spec = add_operation_models(generator, spec.clone())?;
             rust::generate_example(operation, &opt, &spec)?
         };
         let python = {
-            let opt = PackageConfig { language: Language::Python, ..opt.clone() };
+            let opt = PackageConfig {
+                language: Language::Python,
+                ..opt.clone()
+            };
             python::generate_sync_example(operation, &opt, &spec)?
         };
         let python_async = {
-            let opt = PackageConfig { language: Language::Python, ..opt.clone() };
+            let opt = PackageConfig {
+                language: Language::Python,
+                ..opt.clone()
+            };
             python::generate_async_example(operation, &opt, &spec)?
         };
         let typescript = {
             let generator = Language::Rust;
-            let opt = PackageConfig { language: generator, ..opt.clone() };
+            let opt = PackageConfig {
+                language: generator,
+                ..opt.clone()
+            };
             let spec = add_operation_models(generator, spec.clone())?;
             typescript::generate_example(operation, &opt, &spec)?
         };
         let go = {
-            let opt = PackageConfig { language: Language::Golang, ..opt.clone() };
+            let opt = PackageConfig {
+                language: Language::Golang,
+                ..opt.clone()
+            };
             go::generate_example(operation, &opt, &spec)?
         };
         let examples = Examples {

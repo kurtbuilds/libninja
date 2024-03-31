@@ -196,17 +196,16 @@ impl HirFieldExt for HirField {
 
 /// Generate a model.rs file that just imports from dependents.
 pub fn generate_model_rs(spec: &HirSpec, config: &ConfigFlags) -> File<TokenStream> {
-    let imports = spec
-        .schemas
-        .keys()
+    let it = spec.schemas.keys();
+    let imports = it
+        .clone()
         .map(|name: &String| {
             let fname = sanitize_filename(&name);
             Import::new(&fname, vec!["*"]).public()
         })
         .collect();
-    let code = spec
-        .schemas
-        .keys()
+    let code = it
+        .clone()
         .map(|name| {
             let name = Ident(sanitize_filename(name));
             quote! {
@@ -363,10 +362,10 @@ pub fn create_typealias(name: &str, schema: &HirField) -> TokenStream {
     }
 }
 
-pub fn create_struct(record: &Record, config: &PackageConfig, spec: &HirSpec) -> TokenStream {
+pub fn create_struct(record: &Record, config: &PackageConfig, hir: &HirSpec) -> TokenStream {
     match record {
-        Record::Struct(s) => create_sumtype_struct(s, &config.config, spec, &config.derives),
-        Record::NewType(nt) => create_newtype_struct(nt, spec, &config.derives),
+        Record::Struct(s) => create_sumtype_struct(s, &config.config, hir, &config.derives),
+        Record::NewType(nt) => create_newtype_struct(nt, hir, &config.derives),
         Record::Enum(en) => create_enum_struct(en, &config.derives),
         Record::TypeAlias(name, field) => create_typealias(name, field),
     }

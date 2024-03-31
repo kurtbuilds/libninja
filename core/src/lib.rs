@@ -9,5 +9,6 @@ pub mod child_schemas;
 pub mod extractor;
 pub mod fs;
 mod options;
+pub mod sanitize;
 mod template;
 pub mod util;

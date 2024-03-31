@@ -1,6 +1,8 @@
 use std::collections::HashMap;
-use std::sync::atomic::AtomicBool;
+
 use openapiv3::{OpenAPI, Operation, RequestBody, Response, Schema, SchemaKind, Type};
+
+use crate::sanitize::sanitize;
 
 pub trait ChildSchemas {
     fn add_child_schemas<'a>(&'a self, acc: &mut HashMap<String, &'a Schema>);
@@ -10,33 +12,45 @@ impl ChildSchemas for Schema {
     fn add_child_schemas<'a>(&'a self, acc: &mut HashMap<String, &'a Schema>) {
         match &self.kind {
             SchemaKind::Type(Type::Array(a)) => {
-                let Some(items) = &a.items else { return; };
-                let Some(item) = items.as_item() else { return; };
+                let Some(items) = &a.items else {
+                    return;
+                };
+                let Some(item) = items.as_item() else {
+                    return;
+                };
                 if let Some(title) = &item.title {
-                    acc.entry(title.clone()).or_insert(item);
+                    let title = sanitize(title).to_string();
+                    acc.entry(title).or_insert(item);
                 }
                 item.add_child_schemas(acc);
             }
             SchemaKind::Type(Type::Object(o)) => {
                 if let Some(title) = &self.title {
-                    acc.entry(title.clone()).or_insert(self);
+                    let title = sanitize(title).to_string();
+                    acc.entry(title).or_insert(self);
                 }
                 for (_name, prop) in &o.properties {
-                    let Some(prop) = prop.as_item() else { continue; };
+                    let Some(prop) = prop.as_item() else {
+                        continue;
+                    };
                     if let Some(title) = &prop.title {
-                        acc.entry(title.clone()).or_insert(prop);
+                        let title = sanitize(title).to_string();
+                        acc.entry(title).or_insert(prop);
                     }
                     prop.add_child_schemas(acc);
                 }
             }
             SchemaKind::Type(_) => {}
-            | SchemaKind::OneOf { one_of: schemas }
+            SchemaKind::OneOf { one_of: schemas }
             | SchemaKind::AllOf { all_of: schemas }
-            | SchemaKind::AnyOf { any_of: schemas} => {
+            | SchemaKind::AnyOf { any_of: schemas } => {
                 for schema in schemas {
-                    let Some(schema) = schema.as_item() else { continue; };
+                    let Some(schema) = schema.as_item() else {
+                        continue;
+                    };
                     if let Some(title) = &schema.title {
-                        acc.entry(title.clone()).or_insert(schema);
+                        let title = sanitize(title).to_string();
+                        acc.entry(title).or_insert(schema);
                     }
                     schema.add_child_schemas(acc);
                 }
@@ -50,18 +64,30 @@ impl ChildSchemas for Schema {
 impl ChildSchemas for Operation {
     fn add_child_schemas<'a>(&'a self, acc: &mut HashMap<String, &'a Schema>) {
         'body: {
-            let Some(body) = &self.request_body else { break 'body; };
-            let Some(body) = body.as_item() else { break 'body; };
+            let Some(body) = &self.request_body else {
+                break 'body;
+            };
+            let Some(body) = body.as_item() else {
+                break 'body;
+            };
             body.add_child_schemas(acc);
         }
         for par in &self.parameters {
-            let Some(par) = par.as_item() else { continue; };
-            let Some(schema) = par.data.schema() else { continue; };
-            let Some(schema) = schema.as_item() else { continue; };
+            let Some(par) = par.as_item() else {
+                continue;
+            };
+            let Some(schema) = par.data.schema() else {
+                continue;
+            };
+            let Some(schema) = schema.as_item() else {
+                continue;
+            };
             schema.add_child_schemas(acc);
         }
         for (_code, response) in &self.responses.responses {
-            let Some(response) = response.as_item() else { continue; };
+            let Some(response) = response.as_item() else {
+                continue;
+            };
             response.add_child_schemas(acc);
         }
     }
@@ -70,8 +96,12 @@ impl ChildSchemas for Operation {
 impl ChildSchemas for RequestBody {
     fn add_child_schemas<'a>(&'a self, acc: &mut HashMap<String, &'a Schema>) {
         for (_key, content) in &self.content {
-            let Some(schema) = &content.schema else { continue; };
-            let Some(schema) = schema.as_item() else { continue; };
+            let Some(schema) = &content.schema else {
+                continue;
+            };
+            let Some(schema) = schema.as_item() else {
+                continue;
+            };
             if let Some(title) = &schema.title {
                 acc.entry(title.clone()).or_insert(schema);
             }
@@ -83,8 +113,12 @@ impl ChildSchemas for RequestBody {
 impl ChildSchemas for Response {
     fn add_child_schemas<'a>(&'a self, acc: &mut HashMap<String, &'a Schema>) {
         for (k, content) in &self.content {
-            let Some(schema) = &content.schema else { continue; };
-            let Some(schema) = schema.as_item() else { continue; };
+            let Some(schema) = &content.schema else {
+                continue;
+            };
+            let Some(schema) = schema.as_item() else {
+                continue;
+            };
             if let Some(title) = &schema.title {
                 acc.entry(title.clone()).or_insert(schema);
             }
@@ -99,7 +133,9 @@ impl ChildSchemas for OpenAPI {
             op.add_child_schemas(acc);
         }
         for (name, schema) in &self.schemas {
-            let Some(schema) = schema.as_item() else { continue; };
+            let Some(schema) = schema.as_item() else {
+                continue;
+            };
             acc.entry(name.clone()).or_insert(schema);
             schema.add_child_schemas(acc);
         }

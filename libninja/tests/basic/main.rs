@@ -1,38 +1,27 @@
-use std::fs::File;
 use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::Result;
 use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
+use serde_yaml::from_str;
 
-use hir::{HirSpec, Language};
-use libninja::{generate_library, rust};
-use ln_core::extractor::{extract_api_operations, extract_inputs, extract_spec};
+use hir::Language;
+use libninja::generate_library;
+use libninja::rust::generate_example;
 use ln_core::{OutputConfig, PackageConfig};
-
-const BASIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/basic.yaml");
-const RECURLY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/recurly.yaml");
+use ln_core::extractor::extract_spec;
 
 const EXAMPLE: &str = include_str!("link_create_token.rs");
 
-#[test]
-pub fn test_required_args() {
-    let yaml = File::open(BASIC).unwrap();
-    let spec: OpenAPI = serde_yaml::from_reader(yaml).unwrap();
-    let (operation, path) = spec.get_operation("linkTokenCreate").unwrap();
-    let inputs = extract_inputs(&operation, path, &spec).unwrap();
-    assert_eq!(inputs[8].name, "user_token");
-    assert_eq!(inputs[8].optional, true);
-}
+const BASIC: &str = include_str!("../../../test_specs/basic.yaml");
+const RECURLY: &str = include_str!("../../../test_specs/recurly.yaml");
 
 #[test]
-fn test_generate_example() -> Result<()> {
-    let yaml = File::open(BASIC).unwrap();
-    let spec: OpenAPI = serde_yaml::from_reader(yaml).unwrap();
-    // let operation = spec.get_operation("linkTokenCreate").unwrap();
+fn test_generate_example() {
+    let spec: OpenAPI = from_str(BASIC).unwrap();
 
-    let opt = PackageConfig {
+    let config = PackageConfig {
         package_name: "plaid".to_string(),
         service_name: "Plaid".to_string(),
         language: Language::Rust,
@@ -41,26 +30,18 @@ fn test_generate_example() -> Result<()> {
         dest: PathBuf::from_str("..").unwrap(),
         derives: vec![],
     };
-    let mut result = HirSpec::default();
-    extract_api_operations(&spec, &mut result).unwrap();
-    let operation = result
-        .operations
-        .iter()
-        .find(|o| o.name == "linkTokenCreate")
-        .unwrap();
-
-    let spec = extract_spec(&spec).unwrap();
-    let example = rust::generate_example(&operation, &opt, &spec)?;
+    let hir = extract_spec(&spec).unwrap();
+    let op = hir.get_operation("linkTokenCreate").unwrap();
+    let example = generate_example(&op, &config, &hir).unwrap();
     assert_eq!(example, EXAMPLE);
-    Ok(())
 }
 
 #[test]
 pub fn test_build_full_library_recurly() -> Result<()> {
-    let yaml = File::open(RECURLY).unwrap();
+    let spec: OpenAPI = from_str(RECURLY).unwrap();
+
     let temp = tempfile::tempdir()?;
 
-    let spec: OpenAPI = serde_yaml::from_reader(yaml).unwrap();
     let opts = OutputConfig {
         dest_path: temp.path().to_path_buf(),
         build_examples: false,

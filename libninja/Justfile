@@ -1,9 +1,10 @@
+set export
 
 run:
     cargo run
 
 test *ARGS:
-    cargo test -- $(ARGS)
+    cargo test -- $ARGS
 
 build:
     cargo build

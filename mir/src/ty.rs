@@ -83,6 +83,9 @@ impl Ty {
     }
 
     pub fn model(s: &str) -> Self {
+        if s.contains('(') {
+            panic!("Model names should not contain parens: {}", s);
+        }
         Ty::Model(s.to_string())
     }
 }

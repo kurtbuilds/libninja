@@ -1,8 +1,11 @@
-use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
 use openapiv3 as oa;
+use openapiv3::{ArrayType, OpenAPI, ReferenceOr, Schema, SchemaKind, SchemaReference};
+use serde_json::Value;
 use tracing::warn;
 
 use mir::Ty;
+
+use crate::sanitize::sanitize;
 
 pub fn schema_ref_to_ty(schema_ref: &ReferenceOr<Schema>, spec: &OpenAPI) -> Ty {
     let schema = schema_ref.resolve(spec);
@@ -19,7 +22,7 @@ pub fn schema_ref_to_ty_already_resolved(
     } else {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
-                let r = oa::SchemaReference::from_str(reference);
+                let r = SchemaReference::from_str(reference);
                 match r {
                     SchemaReference::Schema { schema: s } => Ty::model(&s),
                     SchemaReference::Property {
@@ -37,6 +40,13 @@ pub fn schema_ref_to_ty_already_resolved(
 /// to use the ref'd model if one exists (e.g. User instead of resolving to Ty::Any)
 pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.kind {
+        SchemaKind::Type(oa::Type::String(s))
+            if !s.enumeration.is_empty() && schema.title.is_some() =>
+        {
+            let t = schema.title.as_deref().unwrap();
+            let t = sanitize(t);
+            Ty::model(&*t)
+        }
         SchemaKind::Type(oa::Type::String(s)) => match s.format.as_str() {
             "decimal" => Ty::Currency {
                 serialization: mir::DecimalSerialization::String,
@@ -52,9 +62,8 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         },
         SchemaKind::Type(oa::Type::Number(_)) => Ty::Float,
         SchemaKind::Type(oa::Type::Integer(_)) => {
-            let null_as_zero = schema
-                .data
-                .extensions
+            let ext = &schema.data.extensions;
+            let null_as_zero = ext
                 .get("x-null-as-zero")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false);
@@ -109,11 +118,12 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     }
 }
 
+/// what exactly is this?
 pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
     use openapiv3::SchemaKind::*;
     use openapiv3::Type::*;
     match &schema.kind {
-        Type(String(_)) => true,
+        Type(String(s)) => s.enumeration.is_empty(),
         Type(Number(_)) => true,
         Type(Integer(_)) => true,
         Type(Boolean {}) => true,
@@ -123,9 +133,7 @@ pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
             let inner = inner.resolve(spec);
             is_primitive(inner, spec)
         }
-        SchemaKind::AllOf { all_of } => {
-            all_of.len() == 1 && is_primitive(all_of[0].resolve(spec), spec)
-        }
+        AllOf { all_of } => all_of.len() == 1 && is_primitive(all_of[0].resolve(spec), spec),
         _ => false,
     }
 }
