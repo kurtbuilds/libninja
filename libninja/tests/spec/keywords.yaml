@@ -1,0 +1,48 @@
+openapi: 3.0.1
+servers:
+    - url: "{scheme}://example.com/keywords"
+      variables:
+          scheme:
+              description: "This OpenAPI schema names fields after Rust keywords."
+              enum:
+                  - "https"
+                  - "http"
+              default: "https"
+info:
+    description: >-
+        This api uses Rust keywords in dangerous places.
+    version: 1.0.0
+    title: Rust keyword test
+paths:
+    /:
+        get:
+            operationId: fetch-keywords
+            summary: Fetch keywords
+            responses:
+                "200":
+                    description: Returns a struct with fields named after rust keywords.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/dangerNoodle"
+components:
+    schemas:
+        dangerNoodle:
+            type: object
+            properties:
+                async:
+                    type: boolean
+                enum:
+                    type: string
+                final:
+                    type: boolean
+                match:
+                    type: integer
+                mut:
+                    type: boolean
+                self:
+                    type: string
+                type:
+                    type: boolean
+                use:
+                    type: boolean

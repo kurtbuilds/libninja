@@ -5,11 +5,11 @@ use regex::{Captures, Regex};
 
 use mir::{Doc, Ident, Literal, ParamKey, Visibility};
 
-mod file;
 mod class;
-mod import;
-mod function;
 mod r#enum;
+mod file;
+mod function;
+mod import;
 
 /// Use this for codegen structs: Function, Class, etc.
 pub trait ToRustCode {
@@ -39,7 +39,6 @@ impl ToRustCode for Visibility {
         }
     }
 }
-
 
 impl ToRustCode for Option<Doc> {
     fn to_rust_code(self) -> TokenStream {
@@ -71,7 +70,6 @@ impl ToRustCode for ParamKey {
         }
     }
 }
-
 
 pub trait ToRustIdent {
     fn to_rust_struct(&self) -> Ident;
@@ -155,7 +153,10 @@ fn sanitize_struct(s: impl AsRef<str>) -> Ident {
 }
 
 pub fn is_restricted(s: &str) -> bool {
-    ["type", "use", "ref", "self", "match", "final"].contains(&s)
+    [
+        "async", "enum", "final", "match", "mut", "ref", "self", "type", "use",
+    ]
+    .contains(&s)
 }
 
 fn assert_valid_ident(s: &str, original: &str) {
@@ -177,7 +178,10 @@ mod tests {
     #[test]
     fn test_filename() {
         let s = "SdAddress.contractor1099";
-        assert_eq!(String::from(s).to_rust_ident().0, "sd_address_contractor1099");
+        assert_eq!(
+            String::from(s).to_rust_ident().0,
+            "sd_address_contractor1099"
+        );
         assert_eq!(sanitize_filename(s), "sd_address_contractor1099");
     }
 }

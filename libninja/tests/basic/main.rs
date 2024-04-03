@@ -13,6 +13,7 @@ use ln_core::{OutputConfig, PackageConfig};
 
 const BASIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/basic.yaml");
 const RECURLY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/recurly.yaml");
+const KEYWORDS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/spec/keywords.yaml");
 
 const EXAMPLE: &str = include_str!("link_create_token.rs");
 
@@ -69,6 +70,26 @@ pub fn test_build_full_library_recurly() -> Result<()> {
         language: Language::Rust,
         config: Default::default(),
         github_repo: Some("libninjacom/recurly".to_string()),
+        version: None,
+        derive: vec![],
+    };
+    generate_library(spec, opts)
+}
+
+#[test]
+pub fn test_keywords_schema() -> Result<()> {
+    let yaml = File::open(KEYWORDS).unwrap();
+    let temp = tempfile::tempdir()?;
+
+    let spec: OpenAPI = serde_yaml::from_reader(yaml).unwrap();
+    let opts = OutputConfig {
+        dest_path: temp.path().to_path_buf(),
+        build_examples: false,
+        package_name: "keywords".to_string(),
+        service_name: "Keywords".to_string(),
+        language: Language::Rust,
+        config: Default::default(),
+        github_repo: Some("libninjacom/test".to_string()),
         version: None,
         derive: vec![],
     };
