@@ -33,11 +33,11 @@ mod tests {
 
     #[test]
     fn test_make_singular() {
-        assert!(singular("cats") == "cat");
-        assert!(singular("class") == "class");
-        assert!(singular("parties") == "party");
-        assert!(singular("party") == "party");
-        assert!(singular("party") == "party");
+        assert_eq!(singular("cats"), "cat");
+        assert_eq!(singular("class"), "class");
+        assert_eq!(singular("parties"), "party");
+        assert_eq!(singular("party"), "party");
+        assert_eq!(singular("party"), "party");
 
         // assert!(singular("mice") == "mouse");
         // assert!(singular("alumni") == "alumnus");

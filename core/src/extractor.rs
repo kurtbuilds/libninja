@@ -28,11 +28,11 @@ mod ty;
 pub fn extract_without_treeshake(spec: &OpenAPI) -> Result<HirSpec> {
     let mut hir = HirSpec::default();
 
+    // its important for built in schemas to come before operations, because
+    // we do some "create new schema" operations, and if those new ones overwrite
+    // the built in ones, that leads to confusion.
     for (name, schema) in &spec.components.schemas {
-        let RefOr::Item(schema) = schema else {
-            panic!("Expected schema");
-        };
-        let name = sanitize(name);
+        let schema = schema.as_item().expect("Expected schema, not reference");
         extract_schema(&name, schema, spec, &mut hir);
     }
 
@@ -54,7 +54,35 @@ pub fn extract_without_treeshake(spec: &OpenAPI) -> Result<HirSpec> {
 pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
     let mut hir = extract_without_treeshake(spec)?;
     treeshake(&mut hir);
+    validate(&hir);
+    debug!(
+        "Extracted {} schemas: {:?}",
+        hir.schemas.len(),
+        hir.schemas.keys()
+    );
     Ok(hir)
+}
+
+pub fn validate(spec: &HirSpec) {
+    for (name, schema) in &spec.schemas {
+        if let Record::Struct(s) = schema {
+            for (field, schema) in s.fields.iter() {
+                if let Ty::Any(Some(inner)) = &schema.ty {
+                    warn!(
+                        "Field {} in schema {} is an Any with inner: {:?}",
+                        field, name, inner
+                    );
+                } else if let Ty::Model(s) = &schema.ty {
+                    if !spec.schemas.contains_key(s) {
+                        warn!(
+                            "Field {} in schema {} is a model that doesn't exist: {}",
+                            field, name, s
+                        );
+                    }
+                }
+            }
+        }
+    }
 }
 
 // pub fn deanonymize_array_items(spec: &mut HirSpec, openapi: &OpenAPI) {
@@ -94,13 +122,6 @@ pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
         return false;
     };
     !req.iter().any(|s| s == name)
-}
-
-pub fn extract_schema_docs(schema: &Schema) -> Option<Doc> {
-    schema
-        .description
-        .as_ref()
-        .map(|d| Doc(d.trim().to_string()))
 }
 
 fn extract_servers(spec: &OpenAPI) -> Result<BTreeMap<String, String>> {

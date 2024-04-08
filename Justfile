@@ -1,5 +1,6 @@
 set positional-arguments
-set dotenv-load := true
+set dotenv-load
+set export
 
 help:
     @just --list --unsorted
@@ -94,7 +95,7 @@ generate:
 
 test *ARGS:
     checkexec commercial -- just dummy_commercial
-    cargo test
+    cargo test -- "$ARGS"
 alias t := test
 
 integration *ARGS:

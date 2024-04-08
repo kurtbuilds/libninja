@@ -10,6 +10,7 @@ fn test_link_token_create() {
     let mut spec = OpenAPI::default();
     let mut hir = HirSpec::default();
 
+    spec.schemas.insert("UserName", Schema::new_string());
     spec.schemas.insert("UserAddress", Schema::new_object());
     spec.schemas.insert("UserIDNumber", Schema::new_string());
 

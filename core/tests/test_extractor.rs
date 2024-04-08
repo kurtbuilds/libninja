@@ -24,7 +24,7 @@ fn test_post_translate() {
     };
     assert!(
         matches!(ty.as_ref(), Ty::Model(m) if m == "Translation"),
-        "{:?}",
+        "Return value of translateText operation is Vec<Any> instead of Vec<concrete object>: {:?}",
         ty
     );
     let p = op

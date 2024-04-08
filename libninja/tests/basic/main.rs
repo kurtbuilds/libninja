@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use anyhow::Result;
 use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
 use serde_yaml::from_str;
@@ -37,10 +36,15 @@ fn test_generate_example() {
 }
 
 #[test]
-pub fn test_build_full_library_recurly() -> Result<()> {
+pub fn test_build_full_library_recurly() {
+    tracing_subscriber::fmt()
+        .without_time()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_writer(std::io::stdout)
+        .init();
     let spec: OpenAPI = from_str(RECURLY).unwrap();
 
-    let temp = tempfile::tempdir()?;
+    let temp = tempfile::tempdir().unwrap();
 
     let opts = OutputConfig {
         dest_path: temp.path().to_path_buf(),
@@ -53,5 +57,5 @@ pub fn test_build_full_library_recurly() -> Result<()> {
         version: None,
         derive: vec![],
     };
-    generate_library(spec, opts)
+    generate_library(spec, opts).unwrap();
 }

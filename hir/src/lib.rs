@@ -123,6 +123,12 @@ pub struct Struct {
     pub docs: Option<Doc>,
 }
 
+impl Into<Record> for Struct {
+    fn into(self) -> Record {
+        Record::Struct(self)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct NewType {
     pub name: String,
@@ -144,6 +150,12 @@ pub struct StrEnum {
     pub docs: Option<Doc>,
 }
 
+impl Into<Record> for StrEnum {
+    fn into(self) -> Record {
+        Record::Enum(self)
+    }
+}
+
 /// an object type in the HIR
 #[derive(Debug, Clone)]
 pub enum Record {
@@ -151,6 +163,12 @@ pub enum Record {
     NewType(NewType),
     TypeAlias(String, HirField),
     Enum(StrEnum),
+}
+
+impl From<NewType> for Record {
+    fn from(nt: NewType) -> Self {
+        Record::NewType(nt)
+    }
 }
 
 impl Record {
@@ -223,6 +241,17 @@ pub struct HirSpec {
     pub security: Vec<AuthStrategy>,
 
     pub api_docs_url: Option<String>,
+}
+
+impl HirSpec {
+    pub fn insert_schema(&mut self, record: impl Into<Record>) {
+        let record = record.into();
+        let name = record.name().to_string();
+        if !name.chars().next().unwrap().is_uppercase() {
+            panic!("Schema name must be uppercase: {}", name);
+        }
+        self.schemas.insert(name, record);
+    }
 }
 
 pub enum ServerStrategy {

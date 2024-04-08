@@ -23,16 +23,17 @@ pub fn schema_ref_to_ty_already_resolved(
         match schema_ref {
             ReferenceOr::Reference { reference } => {
                 let r = SchemaReference::from_str(reference);
-                match r {
-                    SchemaReference::Schema { schema: s } => Ty::model(&s),
-                    SchemaReference::Property {
-                        schema: _,
-                        property: _,
-                    } => unimplemented!(),
-                }
+                schema_ref_to_model(r)
             }
             ReferenceOr::Item(schema) => schema_to_ty(schema, spec),
         }
+    }
+}
+
+pub fn schema_ref_to_model(reference: SchemaReference) -> Ty {
+    match reference {
+        SchemaReference::Schema { schema } => Ty::model(&schema),
+        SchemaReference::Property { .. } => unimplemented!(),
     }
 }
 
@@ -40,13 +41,6 @@ pub fn schema_ref_to_ty_already_resolved(
 /// to use the ref'd model if one exists (e.g. User instead of resolving to Ty::Any)
 pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.kind {
-        SchemaKind::Type(oa::Type::String(s))
-            if !s.enumeration.is_empty() && schema.title.is_some() =>
-        {
-            let t = schema.title.as_deref().unwrap();
-            let t = sanitize(t);
-            Ty::model(&*t)
-        }
         SchemaKind::Type(oa::Type::String(s)) => match s.format.as_str() {
             "decimal" => Ty::Currency {
                 serialization: mir::DecimalSerialization::String,
@@ -87,13 +81,7 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
             }
         }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,
-        SchemaKind::Type(oa::Type::Object(_)) => {
-            if let Some(title) = &schema.title {
-                Ty::model(&title)
-            } else {
-                Ty::Any(Some(schema.clone()))
-            }
-        }
+        SchemaKind::Type(oa::Type::Object(_)) => Ty::Any(Some(schema.clone())),
         SchemaKind::Type(oa::Type::Array(ArrayType {
             items: Some(item), ..
         })) => {
