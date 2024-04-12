@@ -164,7 +164,6 @@ pub fn to_rust_example_value(
                     docs: _docs,
                 }) => {
                     let variant = variants.first().unwrap();
-                    eprintln!("variant: {}", variant);
                     let variant = variant.to_rust_struct();
                     let model = model.to_rust_struct();
                     quote!(#model::#variant)

@@ -85,35 +85,6 @@ pub fn validate(spec: &HirSpec) {
     }
 }
 
-// pub fn deanonymize_array_items(spec: &mut HirSpec, openapi: &OpenAPI) {
-//     let current_schemas = spec
-//         .schemas
-//         .iter()
-//         .map(|(name, _)| name.clone())
-//         .collect::<HashSet<_>>();
-//     let mut new_schemas = vec![];
-//     for (name, schema) in spec.schemas.iter_mut() {
-//         let Record::Struct(s) = schema else {
-//             continue;
-//         };
-//         for (field, schema) in s.fields.iter_mut() {
-//             let Ty::Array(item) = &mut schema.ty else {
-//                 continue;
-//             };
-//             let Ty::Any(Some(inner)) = item.as_mut() else {
-//                 continue;
-//             };
-//             let Some(name) = create_unique_name(&current_schemas, name, field) else {
-//                 continue;
-//             };
-//             let record = create_record(&name, inner, openapi);
-//             *item = Box::new(Ty::model(&name));
-//             new_schemas.push((name, record));
-//         }
-//     }
-//     spec.schemas.extend(new_schemas);
-// }
-
 pub fn is_optional(name: &str, param: &Schema, parent: &Schema) -> bool {
     if param.nullable {
         return true;

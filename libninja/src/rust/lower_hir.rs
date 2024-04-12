@@ -305,15 +305,10 @@ pub fn create_sumtype_struct(
     }
 }
 
-// pub fn is_restricted(s: &str) -> bool {
-//     ["self"].contains(&s)
-// }
-
 fn create_enum_struct(e: &StrEnum, derives: &Vec<String>) -> TokenStream {
     let enums = e.variants.iter().filter(|s| !s.is_empty()).map(|s| {
         let original_name = s.to_string();
         let mut s = original_name.clone();
-        eprintln!("enum variant: {}", s);
         if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
             s = format!("{}{}", e.name, s);
         }

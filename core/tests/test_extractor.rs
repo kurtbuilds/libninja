@@ -20,8 +20,6 @@ fn test_post_translate() {
     };
     let z = &s.fields["translations"];
     let Ty::Array(ty) = &z.ty else {
-        // eprintln!("{:?}", s);
-        // eprintln!("{:?}", hir.get_record("Translation"));
         panic!("Expected array: {:?}", z.ty);
     };
     dbg!(&hir);
