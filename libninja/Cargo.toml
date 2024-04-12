@@ -39,7 +39,7 @@ strum = "0.26.1"
 semver = "1.0.17"
 indexmap = "2.0"
 libninja_macro = { path = "../macro" }
-libninja_core = { path = "../core" }
+ln_core = { path = "../core", package = "libninja_core" }
 libninja_mir = { path = "../mir" }
 libninja_hir = { path = "../hir" }
 libninja_mir_rust = { path = "../mir_rust" }

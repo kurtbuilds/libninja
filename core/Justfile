@@ -1,0 +1,12 @@
+
+run:
+    cargo run
+
+test *ARGS:
+    cargo test -- $(ARGS)
+
+build:
+    cargo build
+
+install:
+    cargo install --path .

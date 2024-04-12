@@ -1,16 +1,16 @@
 use convert_case::Casing;
 use proc_macro2::TokenStream;
 use quote::{quote, TokenStreamExt};
-use mir::{Ident, NewType, Ty};
-pub use typ::*;
+
 pub use example::*;
 pub use ident::*;
+use mir::Ident;
 use mir_rust::{ToRustCode, ToRustIdent};
+pub use ty::*;
 
 mod example;
 mod ident;
-mod typ;
-
+mod ty;
 
 #[cfg(test)]
 mod tests {
@@ -59,13 +59,9 @@ mod tests {
         );
 
         let import = Import::package("foo_bar");
-        assert_eq!(
-            import.to_rust_code().to_string(),
-            "use foo_bar ;"
-        );
+        assert_eq!(import.to_rust_code().to_string(), "use foo_bar ;");
     }
 }
-
 
 pub fn serde_rename(one: &str, two: &Ident) -> TokenStream {
     if one != &two.0 {

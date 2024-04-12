@@ -1,27 +1,26 @@
 use openapiv3::{OpenAPI, Schema};
+use serde_yaml::from_str;
 
-use hir::{HirSpec, Record};
+use hir::HirSpec;
 use libninja::rust::lower_hir::StructExt;
-
-const LINK_TOKEN_CREATE: &str = include_str!("link_token_create.yaml");
-
-
-fn record_for_schema(name: &str, schema: &str, spec: &OpenAPI) -> Record {
-    let schema = serde_yaml::from_str::<Schema>(schema).unwrap();
-    let mut record = ln_core::extractor::create_record(name, &schema, spec);
-    record.clear_docs();
-    record
-}
-
+use ln_core::extractor::extract_schema;
 
 #[test]
 fn test_link_token_create() {
     let mut spec = OpenAPI::default();
+    let mut hir = HirSpec::default();
+
+    spec.schemas.insert("UserName", Schema::new_string());
     spec.schemas.insert("UserAddress", Schema::new_object());
     spec.schemas.insert("UserIDNumber", Schema::new_string());
-    let record = record_for_schema("LinkTokenCreateRequestUser", LINK_TOKEN_CREATE, &spec);
-    let Record::Struct(struc) = record else {
-        panic!("expected struct");
-    };
-    assert!(struc.implements_default(&HirSpec::default()));
+
+    let schema = include_str!("link_token_create.yaml");
+    let schema: Schema = from_str(schema).unwrap();
+    extract_schema("LinkTokenCreateRequestUser", &schema, &spec, &mut hir);
+    let s = hir
+        .get_record("LinkTokenCreateRequestUser")
+        .unwrap()
+        .as_struct()
+        .unwrap();
+    assert!(s.implements_default(&hir));
 }

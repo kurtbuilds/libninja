@@ -1,19 +1,18 @@
 use std::collections::BTreeSet;
 
-use cargo_toml::Package;
 use convert_case::Casing;
-use proc_macro2::{extra, TokenStream};
+use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
 use hir::{HirField, HirSpec, NewType, Record, StrEnum, Struct};
 use ln_core::{ConfigFlags, PackageConfig};
-use mir::{import, Field, File, Ident, Import, Visibility};
+use mir::{Field, File, Ident, import, Import, Visibility};
 use mir::{DateSerialization, DecimalSerialization, IntegerSerialization, Ty};
+use mir_rust::{sanitize_filename, ToRustIdent};
+use mir_rust::ToRustCode;
 
 use crate::rust::codegen;
 use crate::rust::codegen::ToRustType;
-use mir_rust::ToRustCode;
-use mir_rust::{sanitize_filename, ToRustIdent};
 
 pub trait FieldExt {
     fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream>;
@@ -47,7 +46,7 @@ impl FieldExt for HirField {
             decorators.push(quote! {
                 #[serde(default, skip_serializing_if = "Vec::is_empty")]
             });
-        } else if matches!(self.ty, Ty::Any) {
+        } else if matches!(self.ty, Ty::Any(_)) {
             decorators.push(quote! {
                 #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
             });
@@ -197,17 +196,16 @@ impl HirFieldExt for HirField {
 
 /// Generate a model.rs file that just imports from dependents.
 pub fn generate_model_rs(spec: &HirSpec, config: &ConfigFlags) -> File<TokenStream> {
-    let imports = spec
-        .schemas
-        .keys()
+    let it = spec.schemas.keys();
+    let imports = it
+        .clone()
         .map(|name: &String| {
             let fname = sanitize_filename(&name);
             Import::new(&fname, vec!["*"]).public()
         })
         .collect();
-    let code = spec
-        .schemas
-        .keys()
+    let code = it
+        .clone()
         .map(|name| {
             let name = Ident(sanitize_filename(name));
             quote! {
@@ -307,10 +305,15 @@ pub fn create_sumtype_struct(
     }
 }
 
+// pub fn is_restricted(s: &str) -> bool {
+//     ["self"].contains(&s)
+// }
+
 fn create_enum_struct(e: &StrEnum, derives: &Vec<String>) -> TokenStream {
     let enums = e.variants.iter().filter(|s| !s.is_empty()).map(|s| {
         let original_name = s.to_string();
         let mut s = original_name.clone();
+        eprintln!("enum variant: {}", s);
         if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
             s = format!("{}{}", e.name, s);
         }
@@ -364,10 +367,10 @@ pub fn create_typealias(name: &str, schema: &HirField) -> TokenStream {
     }
 }
 
-pub fn create_struct(record: &Record, config: &PackageConfig, spec: &HirSpec) -> TokenStream {
+pub fn create_struct(record: &Record, config: &PackageConfig, hir: &HirSpec) -> TokenStream {
     match record {
-        Record::Struct(s) => create_sumtype_struct(s, &config.config, spec, &config.derives),
-        Record::NewType(nt) => create_newtype_struct(nt, spec, &config.derives),
+        Record::Struct(s) => create_sumtype_struct(s, &config.config, hir, &config.derives),
+        Record::NewType(nt) => create_newtype_struct(nt, hir, &config.derives),
         Record::Enum(en) => create_enum_struct(en, &config.derives),
         Record::TypeAlias(name, field) => create_typealias(name, field),
     }
@@ -388,11 +391,8 @@ pub fn derives_to_tokens(derives: &Vec<String>) -> TokenStream {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use hir::HirField;
     use mir::Ty;
-
     use mir_rust::format_code;
 
     use super::*;

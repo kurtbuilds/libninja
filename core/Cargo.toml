@@ -5,7 +5,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "ln_core"
+name = "libninja_core"
 
 [dependencies]
 anyhow = "1.0.71"
@@ -24,6 +24,8 @@ tera = "1.19.0"
 libninja_hir = { path = "../hir" }
 tracing = "0.1.40"
 tracing-ez = "0.3.0"
+regex-lite = "0.1.5"
 
 [dev-dependencies]
 serde_yaml = "0.9.25"
+http = "1.1.0"
