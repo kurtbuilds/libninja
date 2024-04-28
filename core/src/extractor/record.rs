@@ -71,7 +71,7 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
         length += schema_ref.as_ref_str().map(|_s| 1).unwrap_or_default();
         length += schema_ref
             .as_item()
-            .map(|s| s.properties())
+            .and_then(|s| s.get_properties())
             .map(|s| s.iter().len())
             .unwrap_or_default();
     }
@@ -181,7 +181,9 @@ fn extract_all_of(
                 fields.insert(name, field);
             }
             ReferenceOr::Item(item) => {
-                let props = item.properties();
+                let Some(props) = item.get_properties() else {
+                    continue;
+                };
                 for (name, schema) in props {
                     let mut field = create_field(schema, spec);
                     if !field.ty.is_iterable() && !item.required().iter().any(|s| s == name) {
