@@ -3,8 +3,7 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
 use hir::{
-    AuthLocation, AuthStrategy, HirSpec, Language, Operation, qualified_env_var
-    , ServerStrategy,
+    qualified_env_var, AuthLocation, AuthStrategy, HirSpec, Language, Operation, ServerStrategy,
 };
 use ln_core::PackageConfig;
 use mir::{Class, Field, Visibility};
@@ -139,7 +138,9 @@ pub fn struct_Client(spec: &HirSpec, opt: &PackageConfig) -> Class<TokenStream> 
             ..Function::default()
         });
     }
-    class_methods.push(build_Client_new_with(spec, opt));
+    if spec.has_security() {
+        class_methods.push(build_Client_new_with(spec, opt));
+    }
     Class {
         name: opt.client_name().to_rust_struct(),
         instance_fields,

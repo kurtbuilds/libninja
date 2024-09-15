@@ -7,9 +7,9 @@ use ln_macro::rfunction;
 use mir::{File, Import, Ty};
 use mir_rust::format_code;
 
-use crate::PackageConfig;
-use crate::rust::codegen::{ToRustCode, ToRustType};
 use crate::rust::codegen::ToRustIdent;
+use crate::rust::codegen::{ToRustCode, ToRustType};
+use crate::PackageConfig;
 
 pub trait ToRustExample {
     fn to_rust_example(&self, spec: &HirSpec) -> anyhow::Result<TokenStream>;
@@ -184,6 +184,7 @@ pub fn to_rust_example_value(
         Ty::Date { .. } => quote!(chrono::Utc::now().date_naive()),
         Ty::DateTime { .. } => quote!(chrono::Utc::now()),
         Ty::Currency { .. } => quote!(rust_decimal_macros::dec!(100.01)),
+        Ty::HashMap(_) => quote!(std::collections::HashMap::new()),
     };
     Ok(s)
 }

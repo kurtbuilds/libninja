@@ -3,8 +3,8 @@ use std::collections::{BTreeMap, HashSet};
 use convert_case::{Case, Casing};
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 use openapiv3::{
-    ObjectType, OpenAPI, ReferenceOr, RefOr, RefOrMap, Schema, SchemaData, SchemaKind,
-    SchemaReference, StringType, Type,
+    AdditionalProperties, ObjectType, OpenAPI, RefOr, RefOrMap, ReferenceOr, Schema, SchemaData,
+    SchemaKind, SchemaReference, StringType, Type,
 };
 
 use hir::{HirField, HirSpec, NewType, Record, StrEnum, Struct};
@@ -88,7 +88,21 @@ pub fn extract_schema(
     let name = name.to_string();
 
     let k = &schema.kind;
-    if let SchemaKind::Type(Type::Object(ObjectType { properties, .. })) = k {
+    if let SchemaKind::Type(Type::Object(ObjectType {
+        properties,
+        additional_properties,
+        ..
+    })) = k
+    {
+        if properties.is_empty() && additional_properties.is_some() {
+            let p = additional_properties.as_ref().unwrap();
+            return match p {
+                AdditionalProperties::Any(_) => Some(Ty::HashMap(Box::new(Ty::Any(None)))),
+                AdditionalProperties::Schema(s) => {
+                    Some(Ty::HashMap(Box::new(schema_ref_to_ty(s, spec))))
+                }
+            };
+        }
         let fields = extract_fields(properties, schema, spec, hir);
         let s = Struct {
             name: name.clone(),

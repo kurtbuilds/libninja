@@ -33,6 +33,10 @@ impl ToRustType for Ty {
             Ty::Date { .. } => quote!(chrono::NaiveDate),
             Ty::DateTime { .. } => quote!(chrono::DateTime<chrono::Utc>),
             Ty::Currency { .. } => quote!(rust_decimal::Decimal),
+            Ty::HashMap(inner) => {
+                let inner = inner.to_rust_type();
+                quote!(std::collections::HashMap<String, #inner>)
+            }
         }
     }
 
@@ -56,6 +60,10 @@ impl ToRustType for Ty {
             Ty::Date { .. } => quote!(chrono::NaiveDate),
             Ty::DateTime { .. } => quote!(chrono::DateTime<chrono::Utc>),
             Ty::Currency { .. } => quote!(rust_decimal::Decimal),
+            Ty::HashMap(inner) => {
+                let inner = inner.to_rust_type();
+                quote!(std::collections::HashMap<String, #inner>)
+            }
         }
     }
 
@@ -84,6 +92,7 @@ impl ToRustType for Ty {
             Ty::Date { .. } => true,
             Ty::DateTime => true,
             Ty::Currency { .. } => true,
+            Ty::HashMap(_) => true,
         }
     }
 
@@ -103,6 +112,7 @@ impl ToRustType for Ty {
             Ty::Date { .. } => true,
             Ty::DateTime => true,
             Ty::Currency { .. } => true,
+            Ty::HashMap(inner) => inner.implements_dummy(spec),
         }
     }
 }

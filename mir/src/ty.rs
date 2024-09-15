@@ -25,6 +25,7 @@ pub enum Ty {
     Float,
     Boolean,
     Array(Box<Ty>),
+    HashMap(Box<Ty>),
     // OpenAPI name for the model. Hasn't been converted to a language type (e.g. cased, sanitized)
     Model(String),
     Unit,
@@ -51,6 +52,7 @@ impl Ty {
         match self {
             Ty::Model(name) => Some(name),
             Ty::Array(ty) => ty.inner_model(),
+            Ty::HashMap(ty) => ty.inner_model(),
             _ => None,
         }
     }
@@ -73,6 +75,7 @@ impl Ty {
             Ty::Float => true,
             Ty::Boolean => true,
             Ty::Array(_) => false,
+            Ty::HashMap(_) => false,
             Ty::Model(_) => false,
             Ty::Any(_) => false,
             Ty::Unit => true,
