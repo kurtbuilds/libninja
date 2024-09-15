@@ -29,7 +29,7 @@ pub fn lower_enum(e: &hir::Enum, derives: &[String]) -> Enum<TokenStream, RustEx
         })
         .collect();
     let derives = derives_to_tokens(derives);
-    let derives = quote! { #[derive(Debug, Serialize, Deserialize #derives)] };
+    let derives = quote! { #[derive(Debug, Serialize, Deserialize, Clone #derives)] };
     Enum {
         name: e.name.to_rust_struct(),
         doc: e.doc.clone(),

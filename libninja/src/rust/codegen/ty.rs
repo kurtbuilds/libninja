@@ -1,8 +1,7 @@
-use proc_macro2::TokenStream;
-use quote::quote;
-
 use hir::HirSpec;
 use mir::Ty;
+use proc_macro2::TokenStream;
+use quote::quote;
 
 use crate::rust::codegen::ToRustIdent;
 use crate::rust::lower_hir::HirFieldExt;
@@ -85,7 +84,7 @@ impl ToRustType for Ty {
             Ty::Array(_) => true,
             Ty::Model(name) => {
                 let model = spec.get_record(name.as_str()).expect("Model not found");
-                model.fields().all(|f| f.implements_default(spec))
+                model.fields().count() > 0 && model.fields().all(|f| f.implements_default(spec))
             }
             Ty::Unit => true,
             Ty::Any(_) => true,
