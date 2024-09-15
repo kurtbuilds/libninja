@@ -9,14 +9,14 @@ use regex::Captures;
 use hir::{HirSpec, Operation};
 use hir::{Language, Location, Parameter};
 use ln_core::PackageConfig;
-use mir::{Class, Field, FnArg2, Function, Ident, Visibility};
 use mir::Doc;
 use mir::Ty;
+use mir::{Class, Field, FnArg2, Function, Ident, Visibility};
 use mir_rust::{ToRustCode, ToRustIdent};
 
 use crate::rust::codegen::ToRustType;
 
-use super::lower_hir::derives_to_tokens;
+use mir_rust::derives_to_tokens;
 
 pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
     let params_except_path: Vec<&Parameter> = inputs

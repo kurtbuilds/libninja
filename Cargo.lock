@@ -735,6 +735,7 @@ name = "libninja_mir_rust"
 version = "0.1.0"
 dependencies = [
  "convert_case",
+ "libninja_hir",
  "libninja_mir",
  "prettyplease",
  "proc-macro2",

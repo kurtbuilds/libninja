@@ -70,11 +70,3 @@ pub fn serde_rename(value: &str, ident: &Ident) -> TokenStream {
         TokenStream::new()
     }
 }
-
-pub fn serde_rename2(value: &str, ident: &Ident) -> Option<TokenStream> {
-    if ident.0 != value {
-        Some(quote!(#[serde(rename = #value)]))
-    } else {
-        None
-    }
-}

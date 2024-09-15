@@ -10,6 +10,28 @@ mod r#enum;
 mod file;
 mod function;
 mod import;
+pub use r#enum::lower_enum;
+
+pub fn serde_rename2(value: &str, ident: &Ident) -> Option<TokenStream> {
+    if ident.0 != value {
+        Some(quote!(#[serde(rename = #value)]))
+    } else {
+        None
+    }
+}
+
+pub fn derives_to_tokens(derives: &[String]) -> TokenStream {
+    derives
+        .iter()
+        .map(|d| {
+            if let Ok(d) = d.trim().parse::<TokenStream>() {
+                quote! { , #d }
+            } else {
+                return TokenStream::new();
+            }
+        })
+        .collect()
+}
 
 #[derive(Debug, Clone)]
 pub struct RustExtra {

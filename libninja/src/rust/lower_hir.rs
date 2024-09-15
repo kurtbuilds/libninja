@@ -4,14 +4,14 @@ use convert_case::Casing;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
+use crate::rust::codegen::ToRustType;
 use hir::{HirField, HirSpec, NewType, Record, Struct};
 use ln_core::{ConfigFlags, PackageConfig};
-use mir::{import, Field, File, Ident, Import, Variant, Visibility};
+use mir::{import, Field, File, Ident, Import, Visibility};
 use mir::{DateSerialization, DecimalSerialization, IntegerSerialization, Ty};
 use mir_rust::ToRustCode;
+use mir_rust::{derives_to_tokens, lower_enum};
 use mir_rust::{sanitize_filename, RustExtra, ToRustIdent};
-
-use crate::rust::codegen::{serde_rename2, ToRustType};
 
 pub trait FieldExt {
     fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream>;
@@ -304,46 +304,6 @@ pub fn create_sumtype_struct(
     }
 }
 
-fn create_enum_struct(e: &hir::Enum, derives: &Vec<String>) -> TokenStream {
-    let variants = e
-        .variants
-        .iter()
-        .map(|s| {
-            let ident = if let Some(a) = &s.alias {
-                a.to_rust_struct()
-            } else {
-                let mut s = s.value.clone();
-                if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
-                    s = format!("{}{}", e.name, s);
-                }
-                s.to_rust_struct()
-            };
-            let rename = serde_rename2(&s.value, &ident);
-            Variant {
-                ident,
-                doc: None,
-                value: None,
-                extra: RustExtra {
-                    attributes: rename.into_iter().collect(),
-                },
-            }
-        })
-        .collect();
-    let derives = derives_to_tokens(derives);
-    let derives = quote! { #[derive(Debug, Serialize, Deserialize #derives)] };
-    mir::Enum {
-        name: e.name.to_rust_struct(),
-        doc: e.doc.clone(),
-        variants,
-        vis: Visibility::Public,
-        methods: Vec::new(),
-        extra: RustExtra {
-            attributes: vec![derives],
-        },
-    }
-    .to_rust_code()
-}
-
 pub fn create_newtype_struct(
     schema: &NewType,
     spec: &HirSpec,
@@ -381,22 +341,9 @@ pub fn create_struct(record: &Record, config: &PackageConfig, hir: &HirSpec) -> 
     match record {
         Record::Struct(s) => create_sumtype_struct(s, &config.config, hir, &config.derives),
         Record::NewType(nt) => create_newtype_struct(nt, hir, &config.derives),
-        Record::Enum(en) => create_enum_struct(en, &config.derives),
+        Record::Enum(en) => lower_enum(en, &config.derives).to_rust_code(),
         Record::TypeAlias(name, field) => create_typealias(name, field),
     }
-}
-
-pub fn derives_to_tokens(derives: &Vec<String>) -> TokenStream {
-    derives
-        .iter()
-        .map(|d| {
-            if let Ok(d) = d.trim().parse::<TokenStream>() {
-                quote! { , #d }
-            } else {
-                return TokenStream::new();
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]
