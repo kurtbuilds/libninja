@@ -2,7 +2,7 @@ use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use hir::{HirField, HirSpec, Language, NewType, Operation, Parameter, Record, StrEnum, Struct};
+use hir::{Enum, HirField, HirSpec, Language, NewType, Operation, Parameter, Record, Struct};
 use ln_macro::rfunction;
 use mir::{File, Import, Ty};
 use mir_rust::format_code;
@@ -90,6 +90,12 @@ pub fn generate_example(
     Ok(format_code(code))
 }
 
+impl ToRustExample for hir::Enum {
+    fn to_rust_example(&self, spec: &HirSpec) -> anyhow::Result<TokenStream> {
+        todo!()
+    }
+}
+
 pub fn to_rust_example_value(
     ty: &Ty,
     name: &str,
@@ -149,7 +155,7 @@ pub fn to_rust_example_value(
                 Record::NewType(NewType {
                     name,
                     fields,
-                    docs: _docs,
+                    doc: _docs,
                 }) => {
                     let fields = fields
                         .iter()
@@ -158,13 +164,17 @@ pub fn to_rust_example_value(
                     let name = name.to_rust_struct();
                     quote!(#name(#(#fields),*))
                 }
-                Record::Enum(StrEnum {
+                Record::Enum(Enum {
                     name,
                     variants,
-                    docs: _docs,
+                    doc: _docs,
                 }) => {
                     let variant = variants.first().unwrap();
-                    let variant = variant.to_rust_struct();
+                    let variant = if let Some(a) = &variant.alias {
+                        a.to_rust_struct()
+                    } else {
+                        variant.value.to_rust_struct()
+                    };
                     let model = model.to_rust_struct();
                     quote!(#model::#variant)
                 }

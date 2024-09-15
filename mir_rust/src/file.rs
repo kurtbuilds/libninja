@@ -1,9 +1,9 @@
+use crate::{RustExtra, ToRustCode};
 use mir::File;
 use proc_macro2::TokenStream;
-use crate::ToRustCode;
 use quote::quote;
 
-impl ToRustCode for File<TokenStream> {
+impl ToRustCode for File<TokenStream, RustExtra> {
     fn to_rust_code(self) -> TokenStream {
         let File {
             imports,
@@ -30,4 +30,3 @@ impl ToRustCode for File<TokenStream> {
         }
     }
 }
-

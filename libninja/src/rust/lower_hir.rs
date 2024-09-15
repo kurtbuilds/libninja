@@ -4,15 +4,14 @@ use convert_case::Casing;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-use hir::{HirField, HirSpec, NewType, Record, StrEnum, Struct};
+use hir::{HirField, HirSpec, NewType, Record, Struct};
 use ln_core::{ConfigFlags, PackageConfig};
-use mir::{Field, File, Ident, import, Import, Visibility};
+use mir::{import, Field, File, Ident, Import, Variant, Visibility};
 use mir::{DateSerialization, DecimalSerialization, IntegerSerialization, Ty};
-use mir_rust::{sanitize_filename, ToRustIdent};
 use mir_rust::ToRustCode;
+use mir_rust::{sanitize_filename, RustExtra, ToRustIdent};
 
-use crate::rust::codegen;
-use crate::rust::codegen::ToRustType;
+use crate::rust::codegen::{serde_rename2, ToRustType};
 
 pub trait FieldExt {
     fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream>;
@@ -195,7 +194,7 @@ impl HirFieldExt for HirField {
 }
 
 /// Generate a model.rs file that just imports from dependents.
-pub fn generate_model_rs(spec: &HirSpec, config: &ConfigFlags) -> File<TokenStream> {
+pub fn generate_model_rs(spec: &HirSpec, config: &ConfigFlags) -> File<TokenStream, RustExtra> {
     let it = spec.schemas.keys();
     let imports = it
         .clone()
@@ -226,7 +225,7 @@ pub fn generate_single_model_file(
     record: &Record,
     spec: &HirSpec,
     config: &PackageConfig,
-) -> File<TokenStream> {
+) -> File<TokenStream, RustExtra> {
     let mut imports = vec![import!("serde", Serialize, Deserialize)];
     if let Some(import) = record.imports("super") {
         imports.push(import);
@@ -305,28 +304,44 @@ pub fn create_sumtype_struct(
     }
 }
 
-fn create_enum_struct(e: &StrEnum, derives: &Vec<String>) -> TokenStream {
-    let enums = e.variants.iter().filter(|s| !s.is_empty()).map(|s| {
-        let original_name = s.to_string();
-        let mut s = original_name.clone();
-        if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
-            s = format!("{}{}", e.name, s);
-        }
-        let name = s.to_rust_struct();
-        let serde_attr = codegen::serde_rename(&original_name, &name);
-        quote! {
-            #serde_attr
-            #name
-        }
-    });
-    let name = e.name.to_rust_struct();
+fn create_enum_struct(e: &hir::Enum, derives: &Vec<String>) -> TokenStream {
+    let variants = e
+        .variants
+        .iter()
+        .map(|s| {
+            let ident = if let Some(a) = &s.alias {
+                a.to_rust_struct()
+            } else {
+                let mut s = s.value.clone();
+                if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
+                    s = format!("{}{}", e.name, s);
+                }
+                s.to_rust_struct()
+            };
+            let rename = serde_rename2(&s.value, &ident);
+            Variant {
+                ident,
+                doc: None,
+                value: None,
+                extra: RustExtra {
+                    attributes: rename.into_iter().collect(),
+                },
+            }
+        })
+        .collect();
     let derives = derives_to_tokens(derives);
-    quote! {
-        #[derive(Debug, Serialize, Deserialize #derives)]
-        pub enum #name {
-            #(#enums,)*
-        }
+    let derives = quote! { #[derive(Debug, Serialize, Deserialize #derives)] };
+    mir::Enum {
+        name: e.name.to_rust_struct(),
+        doc: e.doc.clone(),
+        variants,
+        vis: Visibility::Public,
+        methods: Vec::new(),
+        extra: RustExtra {
+            attributes: vec![derives],
+        },
     }
+    .to_rust_code()
 }
 
 pub fn create_newtype_struct(
@@ -401,7 +416,7 @@ mod tests {
                 ty: Ty::String,
                 ..HirField::default()
             }],
-            docs: None,
+            doc: None,
         };
         let code = create_newtype_struct(&schema, &HirSpec::default(), &vec![]);
         let code = format_code(code);

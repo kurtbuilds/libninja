@@ -2,7 +2,7 @@ use tera::Context;
 
 use hir::HirSpec;
 
-use crate::{OutputConfig, PackageConfig, write_file};
+use crate::{write_file, PackageConfig};
 
 pub static TEMPLATE_DIR: include_dir::Dir<'_> =
     include_dir::include_dir!("$CARGO_MANIFEST_DIR/template");
@@ -47,8 +47,6 @@ pub fn add_templates(tera: &mut tera::Tera, dir: &include_dir::Dir<'static>) {
 pub fn prepare_templates() -> tera::Tera {
     let mut tera = tera::Tera::default();
     add_templates(&mut tera, &TEMPLATE_DIR);
-    #[cfg(feature = "commercial")]
-    add_templates(&mut tera, &ln_commercial::COMMERCIAL_TEMPLATE_DIR);
     tera
 }
 
@@ -72,5 +70,9 @@ pub fn create_context(opts: &PackageConfig, spec: &HirSpec) -> Context {
 }
 
 pub fn get_template_file(path: &str) -> &'static str {
-    TEMPLATE_DIR.get_file(path).expect(&format!("{} not found in TEMPLATE_DIR", path)).contents_utf8().unwrap()
+    TEMPLATE_DIR
+        .get_file(path)
+        .expect(&format!("{} not found in TEMPLATE_DIR", path))
+        .contents_utf8()
+        .unwrap()
 }

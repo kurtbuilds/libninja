@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::ValueEnum;
+use std::fmt::Display;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, ValueEnum)]
 pub enum Language {
@@ -9,15 +10,16 @@ pub enum Language {
     Golang,
 }
 
-impl ToString for Language {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for Language {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
             Language::Rust => "rust",
             Language::Python => "python",
             Language::Typescript => "typescript",
             Language::Golang => "go",
         }
-        .to_string()
+        .to_string();
+        write!(f, "{}", str)
     }
 }
 

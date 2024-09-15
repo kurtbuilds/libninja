@@ -13,7 +13,6 @@ use syn::Item;
 use text_io::read;
 use tracing::debug;
 
-use ::mir::{File, Import, Visibility};
 use codegen::ToRustType;
 use hir::{qualified_env_var, AuthStrategy, HirSpec, Location, Oauth2Auth, Parameter};
 use ln_core::fs;
@@ -23,8 +22,9 @@ use ln_core::{
 };
 use mir::Ident;
 use mir::{DateSerialization, IntegerSerialization};
-use mir_rust::format_code;
+use ::mir::{File, Import, Visibility};
 use mir_rust::ToRustIdent;
+use mir_rust::{format_code, RustExtra};
 use mir_rust::{sanitize_filename, ToRustCode};
 
 use crate::rust::client::{build_Client_authenticate, server_url};
@@ -202,7 +202,7 @@ pub fn generate_rust_library(spec: OpenAPI, opts: OutputConfig) -> Result<()> {
 }
 
 fn write_file_with_template(
-    mut file: File<TokenStream>,
+    mut file: File<TokenStream, RustExtra>,
     template: Option<String>,
     path: &Path,
 ) -> Result<()> {

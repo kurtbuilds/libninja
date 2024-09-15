@@ -1,10 +1,13 @@
-use std::path::Path;
-use proc_macro2::TokenStream;
 use ln_core::fs;
-use mir_rust::format_code;
 use mir_rust::ToRustCode;
+use mir_rust::{format_code, RustExtra};
+use proc_macro2::TokenStream;
+use std::path::Path;
 
-pub fn write_rust_file_to_path(path: &Path, file: mir::File<TokenStream>) -> anyhow::Result<()> {
+pub fn write_rust_file_to_path(
+    path: &Path,
+    file: mir::File<TokenStream, RustExtra>,
+) -> anyhow::Result<()> {
     let code = file.to_rust_code();
     write_rust_code_to_path(path, code)
 }

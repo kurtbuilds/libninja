@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 /// The API model.
 /// Higher level compared to code level models in ln-model.
 use std::fmt::Debug;
-use std::iter::{empty, Iterator, once};
+use std::iter::{empty, once, Iterator};
 use std::string::{String, ToString};
 
 use anyhow::Result;
@@ -10,8 +10,8 @@ use convert_case::{Case, Casing};
 use openapiv3 as oa;
 
 pub use lang::*;
-use mir::{Doc, ParamKey};
 use mir::Ty;
+use mir::{Doc, ParamKey};
 
 mod lang;
 
@@ -133,7 +133,7 @@ impl Into<Record> for Struct {
 pub struct NewType {
     pub name: String,
     pub fields: Vec<HirField>,
-    pub docs: Option<Doc>,
+    pub doc: Option<Doc>,
 }
 
 #[derive(Debug, Clone)]
@@ -144,13 +144,19 @@ pub struct TypeAlias {
 }
 
 #[derive(Debug, Clone)]
-pub struct StrEnum {
-    pub name: String,
-    pub variants: Vec<String>,
-    pub docs: Option<Doc>,
+pub struct Variant {
+    pub value: String,
+    pub alias: Option<String>,
 }
 
-impl Into<Record> for StrEnum {
+#[derive(Debug, Clone)]
+pub struct Enum {
+    pub name: String,
+    pub variants: Vec<Variant>,
+    pub doc: Option<Doc>,
+}
+
+impl Into<Record> for Enum {
     fn into(self) -> Record {
         Record::Enum(self)
     }
@@ -162,7 +168,7 @@ pub enum Record {
     Struct(Struct),
     NewType(NewType),
     TypeAlias(String, HirField),
-    Enum(StrEnum),
+    Enum(Enum),
 }
 
 impl From<NewType> for Record {

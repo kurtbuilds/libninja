@@ -7,7 +7,7 @@ use openapiv3::{
     SchemaKind, SchemaReference, StringType, Type,
 };
 
-use hir::{HirField, HirSpec, NewType, Record, StrEnum, Struct};
+use hir::{Enum, HirField, HirSpec, NewType, Record, Struct, Variant};
 use mir::{Doc, Ty};
 
 use crate::extractor;
@@ -117,11 +117,27 @@ pub fn extract_schema(
         return None;
     }
     if let SchemaKind::Type(Type::String(StringType { enumeration, .. })) = k {
+        let lookup = schema
+            .extensions
+            .get("x-rename")
+            .and_then(|v| v.as_object());
         if !enumeration.is_empty() {
-            let s = StrEnum {
+            let s = Enum {
                 name: name.clone(),
-                variants: enumeration.iter().map(|s| s.clone()).collect(),
-                docs: schema.description.as_ref().map(|d| Doc(d.clone())),
+                variants: enumeration
+                    .iter()
+                    .map(|s| {
+                        let alias = lookup
+                            .and_then(|l| l.get(s))
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string());
+                        Variant {
+                            value: s.clone(),
+                            alias,
+                        }
+                    })
+                    .collect(),
+                doc: schema.description.as_ref().map(|d| Doc(d.clone())),
             };
             hir.insert_schema(s);
             return None;
@@ -162,7 +178,7 @@ fn extract_newtype(name: String, schema: &Schema, spec: &OpenAPI, hir: &mut HirS
             example: None,
             flatten: false,
         }],
-        docs: schema.description.as_ref().map(|d| Doc(d.clone())),
+        doc: schema.description.as_ref().map(|d| Doc(d.clone())),
     };
     hir.insert_schema(t);
 }

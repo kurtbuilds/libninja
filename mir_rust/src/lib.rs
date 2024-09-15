@@ -11,6 +11,11 @@ mod file;
 mod function;
 mod import;
 
+#[derive(Debug, Clone)]
+pub struct RustExtra {
+    pub attributes: Vec<TokenStream>,
+}
+
 /// Use this for codegen structs: Function, Class, etc.
 pub trait ToRustCode {
     fn to_rust_code(self) -> TokenStream;
