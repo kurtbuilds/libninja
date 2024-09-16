@@ -49,8 +49,10 @@ pub fn generate_rust_library(spec: HirSpec, cfg: Config) -> Result<()> {
 }
 
 fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
-    let mut to_delete: Vec<_> = fs::read_dir(dest.join("examples"))?
-        .chain(fs::read_dir(dest.join("src"))?)
+    let mut to_delete: Vec<_> = fs::read_dir(dest.join("examples"))
+        .into_iter()
+        .flatten()
+        .chain(fs::read_dir(dest.join("src")).into_iter().flatten())
         .flat_map(|e| e.ok())
         .map(|e| e.path())
         .filter(|e| e.ends_with(".rs"))

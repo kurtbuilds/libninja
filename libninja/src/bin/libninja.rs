@@ -1,20 +1,9 @@
 use anyhow::Result;
-use clap::{Args, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use libninja::command::*;
 use tracing::Level;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-
-fn warn_if_not_found(command: &str) {
-    if std::process::Command::new(command)
-        .stderr(std::process::Stdio::null())
-        .stdout(std::process::Stdio::null())
-        .spawn()
-        .is_err()
-    {
-        eprintln!("Warning: {} not found. Some commands may fail.", command);
-    }
-}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
