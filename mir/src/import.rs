@@ -10,14 +10,13 @@ pub struct Import {
     /// If a wildcard import and if we want to alias, then alias
     pub alias: Option<String>,
     pub vis: Visibility,
-    pub feature: Option<String>
+    pub feature: Option<String>,
 }
 
-
 impl Import {
-    pub fn package(path: &str) -> Self {
+    pub fn package(path: impl AsRef<str>) -> Self {
         Self {
-            path: path.to_string(),
+            path: path.as_ref().to_string(),
             imports: vec![],
             alias: None,
             vis: Visibility::Private,
@@ -25,13 +24,10 @@ impl Import {
         }
     }
 
-    pub fn new(path: &str, imports: impl IntoIterator<Item=impl Into<ImportItem>>) -> Self {
+    pub fn new(path: &str, imports: impl IntoIterator<Item = impl Into<ImportItem>>) -> Self {
         Self {
             path: path.to_string(),
-            imports: imports
-                .into_iter()
-                .map(|s| s.into())
-                .collect(),
+            imports: imports.into_iter().map(|s| s.into()).collect(),
             alias: None,
             vis: Visibility::Private,
             feature: None,
@@ -54,7 +50,6 @@ impl Import {
     }
 }
 
-
 pub struct ImportItem {
     /// This might not conform to standard ident rules for the language, so its a string, not an ident.
     pub name: String,
@@ -63,7 +58,10 @@ pub struct ImportItem {
 
 impl ImportItem {
     pub fn alias(name: &str, alias: &str) -> Self {
-        Self { name: name.to_string(), alias: Some(alias.to_string()) }
+        Self {
+            name: name.to_string(),
+            alias: Some(alias.to_string()),
+        }
     }
 
     pub fn validate(&self) -> Result<(), String> {
@@ -79,7 +77,10 @@ impl ImportItem {
 
 impl From<&String> for ImportItem {
     fn from(s: &String) -> Self {
-        let r = Self { name: s.clone(), alias: None };
+        let r = Self {
+            name: s.clone(),
+            alias: None,
+        };
         r.validate().unwrap();
         r
     }
@@ -87,7 +88,10 @@ impl From<&String> for ImportItem {
 
 impl From<String> for ImportItem {
     fn from(s: String) -> Self {
-        let r = Self { name: s, alias: None };
+        let r = Self {
+            name: s,
+            alias: None,
+        };
         r.validate().unwrap();
         r
     }
@@ -95,7 +99,10 @@ impl From<String> for ImportItem {
 
 impl From<&str> for ImportItem {
     fn from(s: &str) -> Self {
-        let r = Self { name: s.to_string(), alias: None };
+        let r = Self {
+            name: s.to_string(),
+            alias: None,
+        };
         r.validate().unwrap();
         r
     }
@@ -103,7 +110,9 @@ impl From<&str> for ImportItem {
 
 impl From<Ident> for ImportItem {
     fn from(s: Ident) -> Self {
-        Self { name: s.0, alias: None }
+        Self {
+            name: s.0,
+            alias: None,
+        }
     }
 }
-

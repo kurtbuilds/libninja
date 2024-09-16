@@ -20,7 +20,6 @@ fn closing(delim: Delimiter) -> &'static str {
     }
 }
 
-
 /// Use this to create a binding for the given ident.
 /// E.g. if we encounter #foo while tokenizing, get the idx of foo, returning it as the literal string r#"{idx}"#
 /// If foo is not already captured, then we push to captured, returning that new idx.
@@ -33,12 +32,19 @@ fn interpolation_binding(ident: &str, captured: &mut Vec<String>, escape: bool) 
         }
         Some(idx) => idx,
     };
-    format!("{{{}{}}}", interpolation_idx, if escape { ":?" } else { "" })
+    format!(
+        "{{{}{}}}",
+        interpolation_idx,
+        if escape { ":?" } else { "" }
+    )
 }
 
-
 /// Call this after we encounter a # in tokenization.
-pub fn pull_interpolation(toks: &mut impl Iterator<Item=TokenTree>, captured: &mut Vec<String>, escape: bool) -> String {
+pub fn pull_interpolation(
+    toks: &mut impl Iterator<Item = TokenTree>,
+    captured: &mut Vec<String>,
+    escape: bool,
+) -> String {
     let ident = match toks.next() {
         Some(TokenTree::Ident(ident)) => ident.to_string(),
         other => panic!("Expected ident after #, got {:?}", other),
@@ -46,8 +52,12 @@ pub fn pull_interpolation(toks: &mut impl Iterator<Item=TokenTree>, captured: &m
     interpolation_binding(&ident, captured, escape)
 }
 
-
-fn body_recurse(body: TokenStream, captured: &mut Vec<String>, lines: &mut Vec<String>, indent: usize) {
+fn body_recurse(
+    body: TokenStream,
+    captured: &mut Vec<String>,
+    lines: &mut Vec<String>,
+    indent: usize,
+) {
     let mut toks = body.into_iter().peekable();
     loop {
         match toks.next() {
@@ -58,8 +68,7 @@ fn body_recurse(body: TokenStream, captured: &mut Vec<String>, lines: &mut Vec<S
                     .unwrap()
                     .push_str(pull_interpolation(&mut toks, captured, false).as_str());
                 match toks.peek() {
-                    Some(TokenTree::Punct(punct))
-                    if ['#', '=', ':'].contains(&punct.as_char()) => {
+                    Some(TokenTree::Punct(punct)) if ['#', '=', ':'].contains(&punct.as_char()) => {
                         lines.last_mut().unwrap().push(' ');
                     }
                     _ => {}
@@ -76,7 +85,10 @@ fn body_recurse(body: TokenStream, captured: &mut Vec<String>, lines: &mut Vec<S
             }
             Some(TokenTree::Group(group)) => {
                 let n_lines = lines.len();
-                lines.last_mut().unwrap().push_str(opening(group.delimiter()));
+                lines
+                    .last_mut()
+                    .unwrap()
+                    .push_str(opening(group.delimiter()));
                 let group_indent = indent + 4;
                 if group.stream().to_string().contains(';') {
                     lines.push(" ".repeat(group_indent));
@@ -86,7 +98,10 @@ fn body_recurse(body: TokenStream, captured: &mut Vec<String>, lines: &mut Vec<S
                 if multiline {
                     lines.last_mut().unwrap().truncate(indent);
                 }
-                lines.last_mut().unwrap().push_str(closing(group.delimiter()));
+                lines
+                    .last_mut()
+                    .unwrap()
+                    .push_str(closing(group.delimiter()));
                 if multiline {
                     lines.push(" ".repeat(indent));
                 }
@@ -94,9 +109,11 @@ fn body_recurse(body: TokenStream, captured: &mut Vec<String>, lines: &mut Vec<S
             Some(TokenTree::Ident(ident)) => {
                 lines.last_mut().unwrap().push_str(&ident.to_string());
                 match toks.peek() {
-                    Some(TokenTree::Punct(punct)) if ['.', ';', ','].contains(&punct.as_char()) => {}
+                    Some(TokenTree::Punct(punct)) if ['.', ';', ','].contains(&punct.as_char()) => {
+                    }
                     Some(TokenTree::Group(g)) if g.delimiter() != Delimiter::Brace => {}
-                    Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Brace && !g.to_string().contains(';') => {}
+                    Some(TokenTree::Group(g))
+                        if g.delimiter() == Delimiter::Brace && !g.to_string().contains(';') => {}
                     None => {}
                     _ => {
                         lines.last_mut().unwrap().push(' ');
@@ -107,7 +124,7 @@ fn body_recurse(body: TokenStream, captured: &mut Vec<String>, lines: &mut Vec<S
                 lines.last_mut().unwrap().push(punct.as_char());
                 match toks.peek() {
                     Some(TokenTree::Punct(punct))
-                    if ['>', '<', '=', '*'].contains(&punct.as_char()) => {}
+                        if ['>', '<', '=', '*'].contains(&punct.as_char()) => {}
                     Some(TokenTree::Group(_)) => {}
                     None => {}
                     _ => {

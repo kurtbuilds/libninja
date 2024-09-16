@@ -1,69 +1,34 @@
-use crate::{generate_library, read_spec, Language, OutputConfig, PackageConfig};
-use anyhow::Result;
-use clap::{Args, ValueEnum};
+use crate::{rust, Language};
+use anyhow::{anyhow, Result};
+use clap::Args;
 use convert_case::{Case, Casing};
-use ln_core::ConfigFlags;
+use openapiv3::{OpenAPI, VersionedOpenAPI};
+use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::process::Output;
-use tracing::debug;
-
-#[derive(ValueEnum, Debug, Clone, Copy)]
-pub enum Config {
-    /// Only used by Rust. Adds ormlite::TableMeta flags to the code.
-    Ormlite,
-    /// Only used by Rust (for now). Adds fake::Dummy flags to the code.
-    Fake,
-}
-
-fn build_config(configs: &[Config]) -> ConfigFlags {
-    let mut config = ConfigFlags::default();
-    for c in configs {
-        match c {
-            Config::Ormlite => config.ormlite = true,
-            Config::Fake => config.fake = true,
-        }
-    }
-    config
-}
 
 #[derive(Args, Debug)]
 pub struct Generate {
     /// Service name.
-    #[clap(short, long = "lang")]
+    #[clap(short, long = "lang", default_value = "rust")]
     pub language: Language,
 
     /// Toggle whether to generate examples.
     /// Defaults to true
-    #[clap(long)]
-    examples: Option<bool>,
+    #[clap(long, default_value = "true")]
+    examples: bool,
 
     #[clap(short, long)]
     output_dir: Option<String>,
 
+    /// List of additional namespaced traits to derive on generated structs.
     #[clap(long)]
-    version: Option<String>,
-
-    /// config options
-    #[clap(short, long)]
-    config: Vec<Config>,
-
-    /// Repo (e.g. libninjacom/plaid-rs)
-    #[clap(long)]
-    repo: Option<String>,
-
-    /// Package name. Defaults to the service name.
-    #[clap(short, long = "package")]
-    package_name: Option<String>,
+    derive: Vec<String>,
 
     /// The "service" name. E.g. if we want to generate a library for the Stripe API, this would be "Stripe".
     name: String,
 
     /// Path to the OpenAPI spec file.
     spec_filepath: String,
-
-    /// List of additional namespaced traits to derive on generated structs.
-    #[clap(long)]
-    derive: Vec<String>,
 }
 
 impl Generate {
@@ -77,7 +42,7 @@ impl Generate {
         let spec = read_spec(&path)?;
         generate_library(
             spec,
-            OutputConfig {
+            Config {
                 dest_path: PathBuf::from(output_dir),
                 config: build_config(&self.config),
                 language: self.language,
@@ -89,5 +54,30 @@ impl Generate {
                 derive: self.derive,
             },
         )
+    }
+}
+
+pub fn read_spec(path: &Path) -> Result<OpenAPI> {
+    let file = File::open(path).map_err(|_| anyhow!("{:?}: File not found.", path))?;
+    let ext = path
+        .extension()
+        .map(|s| s.to_str().expect("Extension isn't utf8"))
+        .unwrap_or_else(|| "yaml");
+    let openapi: VersionedOpenAPI = match ext {
+        "yaml" => serde_yaml::from_reader(file)?,
+        "json" => serde_json::from_reader(file)?,
+        _ => panic!("Unknown file extension"),
+    };
+    let openapi = openapi.upgrade();
+    Ok(openapi)
+}
+
+pub fn generate_library(spec: OpenAPI, opts: Config) -> Result<()> {
+    let spec = extract_spec(&spec)?;
+    match opts.language {
+        Language::Rust => rust::generate_rust_library(spec, opts),
+        // Language::Python => python::generate_library(spec, opts),
+        // Language::Typescript => typescript::generate_library(spec, opts),
+        // Language::Golang => go::generate_library(spec, opts),
     }
 }

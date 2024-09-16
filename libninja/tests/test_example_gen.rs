@@ -1,7 +1,7 @@
 use hir::Language;
 use libninja::rust;
 use ln_core::extractor::add_operation_models;
-use ln_core::{extract_spec, PackageConfig};
+use ln_core::{extract_spec, Config};
 use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
 
@@ -13,7 +13,7 @@ fn test_example_generation_with_refs() {
     let spec = add_operation_models(Language::Rust, spec).unwrap();
 
     let op = spec.operations.iter().next().unwrap();
-    let opt = PackageConfig {
+    let opt = Config {
         package_name: "plaid".to_string(),
         service_name: "Plaid".to_string(),
         language: Language::Rust,
@@ -34,7 +34,7 @@ fn test_example_generation_with_refs2() {
     let spec = add_operation_models(Language::Rust, spec).unwrap();
 
     let op = spec.operations.iter().next().unwrap();
-    let opt = PackageConfig {
+    let opt = Config {
         package_name: "plaid".to_string(),
         service_name: "Plaid".to_string(),
         language: Language::Rust,

@@ -10,6 +10,10 @@ impl Ident {
     pub fn new(s: &'static str) -> Self {
         Ident(s.into())
     }
+
+    pub fn empty() -> Self {
+        Ident("".into())
+    }
 }
 
 impl std::fmt::Display for Ident {

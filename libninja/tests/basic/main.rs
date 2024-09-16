@@ -5,10 +5,10 @@ use openapiv3::OpenAPI;
 use pretty_assertions::assert_eq;
 use serde_yaml::from_str;
 
+use hir::Config;
 use hir::Language;
 use libninja::generate_library;
 use libninja::rust::generate_example;
-use ln_core::{OutputConfig, PackageConfig};
 use ln_core::extractor::extract_spec;
 
 const EXAMPLE: &str = include_str!("link_create_token.rs");
@@ -20,7 +20,7 @@ const RECURLY: &str = include_str!("../../../test_specs/recurly.yaml");
 fn test_generate_example() {
     let spec: OpenAPI = from_str(BASIC).unwrap();
 
-    let config = PackageConfig {
+    let config = Config {
         package_name: "plaid".to_string(),
         service_name: "Plaid".to_string(),
         language: Language::Rust,
@@ -46,7 +46,7 @@ pub fn test_build_full_library_recurly() {
 
     let temp = tempfile::tempdir().unwrap();
 
-    let opts = OutputConfig {
+    let opts = Config {
         dest_path: temp.path().to_path_buf(),
         build_examples: false,
         package_name: "recurly".to_string(),

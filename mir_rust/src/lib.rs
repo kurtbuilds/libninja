@@ -3,14 +3,21 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use regex::{Captures, Regex};
 
-use mir::{Doc, Ident, Literal, ParamKey, Visibility};
+use mir::parameter::ParamKey;
+use mir::Literal;
+use mir::{Doc, Ident, Visibility};
 
 mod class;
 mod r#enum;
+mod example;
 mod file;
 mod function;
+mod ident;
 mod import;
+mod ty;
+
 pub use r#enum::lower_enum;
+pub use ty::ToRustType;
 
 pub fn serde_rename2(value: &str, ident: &Ident) -> Option<TokenStream> {
     if ident.0 != value {
@@ -31,11 +38,6 @@ pub fn derives_to_tokens(derives: &[String]) -> TokenStream {
             }
         })
         .collect()
-}
-
-#[derive(Debug, Clone)]
-pub struct RustExtra {
-    pub attributes: Vec<TokenStream>,
 }
 
 /// Use this for codegen structs: Function, Class, etc.
@@ -95,31 +97,6 @@ impl ToRustCode for ParamKey {
                 quote!(#s)
             }
         }
-    }
-}
-
-pub trait ToRustIdent {
-    fn to_rust_struct(&self) -> Ident;
-    fn to_rust_ident(&self) -> Ident;
-}
-
-impl ToRustIdent for String {
-    fn to_rust_struct(&self) -> Ident {
-        sanitize_struct(self)
-    }
-
-    fn to_rust_ident(&self) -> Ident {
-        sanitize_ident(self)
-    }
-}
-
-impl ToRustIdent for &str {
-    fn to_rust_struct(&self) -> Ident {
-        sanitize_struct(self)
-    }
-
-    fn to_rust_ident(&self) -> Ident {
-        sanitize_ident(self)
     }
 }
 
@@ -204,6 +181,7 @@ fn assert_valid_ident(s: &str, original: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ident::ToRustIdent;
 
     #[test]
     fn test_filename() {

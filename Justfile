@@ -61,27 +61,6 @@ clean MODE='debug':
 rust: clean
     cargo run -- gen --name PetStore --output-dir gen/rust --generator rust data/openapi-spec/petstore/petstore.yaml --github libninjacom/petstore-rs --version 0.1.0
 
-python: clean
-    cargo run -- gen --name PetStore --output-dir gen/python --generator python --version 0.1.0 --github libninjacom/petstore-py spec/petstore.yaml
-
-python-example:
-    #!/bin/bash -euxo pipefail
-    cd gen/python
-    eval "$(pdm --pep582)"
-    python3 -m examples.list_pets
-
-typescript: clean
-    cargo run -- gen --name PetStore --output-dir gen/typescript --generator typescript data/openapi-spec/petstore/petstore.yaml
-
-java:
-    just gen/java/build
-    just gen/java/run
-
-go:
-    rm -rf gen/petstore-go
-    checkexec ${CARGO_TARGET_DIR:-target}/debug/ocg $(fd . ocg/template) -- cargo clean --package ocg
-    cargo run -- gen --name PetStore --output-dir gen/petstore-go --generator go spec/petstore.yaml --github libninjacom/petstore-go --version 0.1.0
-
 generate:
     #!/bin/bash -euxo pipefail
     if [ -n "${LIBRARY:-}" ]; then
@@ -94,13 +73,8 @@ generate:
     cargo run -- gen --name $SERVICE --output-dir $REPO_DIR --generator $SOURCEGEN --github $REPO --version $VERSION $LIBRARY $SPEC
 
 test *ARGS:
-    checkexec commercial -- just dummy_commercial
     cargo test -- "$ARGS"
 alias t := test
-
-integration *ARGS:
-    cd libninja && cargo test -F integration -- "$@"
-alias int := integration
 
 # Test the library we just generated
 test_lib:
@@ -119,15 +93,3 @@ clean-gen:
         exit 1
     fi
     rm -rf $DIR/*
-
-delete *ARG:
-    gh repo delete $REPO {{ARG}}
-
-commercial:
-    rm -rf commercial
-    git clone https://github.com/kurtbuilds/libninja-commercial commercial
-
-# Create a dummy commercial repo that lets the workspace work
-# without the commericial code
-dummy_commercial:
-    cargo new --lib commercial --name libninja_commercial

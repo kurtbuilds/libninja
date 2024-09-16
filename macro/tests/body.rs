@@ -1,4 +1,4 @@
-use ln_macro::body;
+use libninja_macro::body;
 use pretty_assertions::assert_eq;
 
 // #[test]
@@ -65,5 +65,8 @@ fn test_go_assignment_spacing() {
 fn test_go_doesnt_wrap_brace() {
     let inside = "\"api\" : \"v1\"";
     let b = body!(postBody, _ := json.Marshal(map[string]string{#inside}));
-    assert_eq!(b, "postBody, _ := json.Marshal(map[string]string{\"api\" : \"v1\"})");
+    assert_eq!(
+        b,
+        "postBody, _ := json.Marshal(map[string]string{\"api\" : \"v1\"})"
+    );
 }

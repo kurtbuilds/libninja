@@ -1,0 +1,43 @@
+use crate::Language;
+use convert_case::{Case, Casing};
+use mir::Literal;
+use std::path::PathBuf;
+
+#[derive(Debug, Clone)]
+pub struct Config {
+    pub name: String,
+    pub language: Language,
+    pub dest: PathBuf,
+    pub derives: Vec<String>,
+}
+
+impl Config {
+    pub fn user_agent(&self) -> Literal<String> {
+        Literal(format!(
+            "{}/{}",
+            self.name,
+            self.language.to_string(),
+            // self.package_version
+        ))
+    }
+
+    pub fn client_name(&self) -> String {
+        format!("{}Client", self.name)
+    }
+
+    pub fn async_client_name(&self) -> String {
+        format!("Async{}Client", self.name)
+    }
+
+    pub fn authenticator_name(&self) -> String {
+        format!("{}Auth", self.name)
+    }
+
+    pub fn env_var(&self, name: &str) -> Literal<String> {
+        Literal(format!(
+            "{}_{}",
+            self.name.to_case(Case::ScreamingSnake),
+            name.to_case(Case::ScreamingSnake)
+        ))
+    }
+}

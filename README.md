@@ -5,19 +5,20 @@
 The best way to see it in action is to see what it produces.
 
 [`plaid-rs`](https://github.com/libninjacom/plaid-rs) is generated entirely by Libninja. This includes:
+
 - The client library itself
-- Idiomatic interface, where required arguments are passed directly or as part of a struct, and optional arguments are included via method chaining.
+- Idiomatic interface, where required arguments are passed directly or as part of a struct, and optional arguments are
+  included via method chaining.
 - Documentation is published online (docs.rs), and crate is published to registry (crates.io)
 - `examples/` folder containing an example for every API endpoint
 - The API client has the ability to record/replay requests, greatly aiding development for end users.
-- API documentation is included in function docstrings, so it's available inline in the editor. The docstrings also include links to plaid's hosted API documentation.
-- Github Action .yaml files to run tests and publish the package to package registries
-- README that includes badges (that showcase a Green passing build) and usage examples
+- API documentation is included in function docstrings, so it's available inline in the editor. The docstrings also
+  include links to plaid's hosted API documentation.
 
 All of that is created with this command:
 
 ```bash
-libninja gen --lang rust --repo libninjacom/plaid-rs -o . Plaid ~/path/to/plaid/openapi.yaml
+libninja gen Plaid ~/path/to/plaid/openapi.yaml
 ```
 
 # Installation
@@ -28,16 +29,14 @@ cargo install --git https://github.com/kurtbuilds/libninja
 
 Use the command line help to see required arguments & options when generating libraries.
 
-The open source version builds client libraries for Rust. Libninja also supports other languages with a commercial license. Reach out at the email in author Github profile.
-
-# Advanced usage
+# Usage
 
 ## Deriving traits for generated structs
 
 You can derive traits for the generated structs by passing them using one (or many) `--derive` arguments:
 
 ```bash
-libninja gen --lang rust --repo libninjacom/plaid-rs --derive oasgen::OaSchema -o . Plaid ~/path/to/plaid/openapi.yaml 
+libninja gen --derive oasgen::OaSchema --derive faker::Dummy Plaid ~/path/to/plaid/openapi.yaml 
 ```
 
 Make sure to add the referenced crate(s) (and any necessary features) to your `Cargo.toml`:
@@ -47,6 +46,7 @@ cargo add oasgen --features chrono
 ```
 
 Then, the traits will be added to the `derive` attribute on the generated `model` and `request` structs:
+
 ```rust
 use serde::{Serialize, Deserialize};
 use super::Glossary;
@@ -57,26 +57,32 @@ pub struct ListGlossariesResponse {
 }
 ```
 
-## Customizing generation further
+## Customizing Files
 
-There are two ways to customize codegen, first by modifying the OpenAPI spec, and second, using a file template system.
+During codegen, `libninja` will examine the target directory for files or content it should keep (effectively, using the
+existing crate as a template). It looks for two directives, `libninja: static` and `libninja: after`.
 
-During codegen, `libninja` will look for a directory called `template`, and use files there to customize the generated code.
+If `libninja` encounters `libninja: static`, it will skip generation entirely, and keep the existing file as-is.
 
-For example, if libninja generates `src/model/user.rs`, it will check for `template/src/model/user.rs`.
+If `libninja` encounters `libninja: after`, it will overwrite any code encountered after that directive, replacing
+it with the generated code. Generally, use this when you want to customize the imports or add additional structs or
+functions to the file.
 
-If it's found, `libninja` will try to intelligently interpolate generated code with the templated file. The specific order of items in the output file will be:
+Importantly, libninja removes outdated code, so any handwritten file is not marked with `libninja: static` will be
+removed.
 
-1. codegen docstring
-2. codegen imports
-3. template imports
-4. template items (structs, enums, traits, impl, etc)
-5. codegen items
+### Customize the OpenAPI spec
 
-Alternatively, if the string `libninja: static` is found in the file template, it will ignore all codegen for that file, and pass the template file through as-is.
+Most OpenAPI specs you encounter in the real world are not perfect, and sometimes are entirely broken. You can manually
+modify the script or write a script to do so.
 
-# Development
+The preferred way is to write a script to modify the spec. You can use `serde` to deserialize the spec, modify it, and
+then serialize it back to disk. This way, you can rerun the same modifications every time the spec changes. This script
+can be a standalone crate (which can live in the same repo), or part of build.rs.
 
-If you run into errors about a missing `commericial` package, run the command `just dummy_commercial` to create a dummy
-package.
+If the spec is invalid and doesn't deserialize, deserialize it as a `serde_json::Value` to make it compliant, and then
+deserialize again (serde_json::from_value) into a OpenAPI spec for further processing.
 
+Alternatively, manually modifying the script is great for one-off changes, but your target spec might be evolving over
+time. You can use `git` diffings to partially address this, but it's not ideal.
+If you go this route, the [openapi](https://github.com/kurtbuilds/openapiv3_cli) cli tool can help.

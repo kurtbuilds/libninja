@@ -1,6 +1,6 @@
 use pretty_assertions::assert_eq;
 
-use ln_macro::function;
+use libninja_macro::function;
 use mir::{Function, Visibility};
 
 #[test]
@@ -18,9 +18,9 @@ fn test_function_args() {
     assert_eq!(s.async_, false);
     assert_eq!(s.vis, Visibility::Private);
     assert_eq!(s.args.len(), 2);
-    assert_eq!(s.args[0].name().unwrap(), "s");
+    assert_eq!(s.args[0].ident().unwrap(), "s");
     assert_eq!(s.args[0].ty().unwrap(), "str");
-    assert_eq!(s.args[1].name().unwrap(), "n");
+    assert_eq!(s.args[1].ident().unwrap(), "n");
     assert_eq!(s.args[1].ty().unwrap(), "int");
     assert_eq!(s.ret, "".to_string());
 }

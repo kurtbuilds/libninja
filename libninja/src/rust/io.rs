@@ -16,7 +16,7 @@ pub fn write_rust_code_to_path(path: &Path, code: TokenStream) -> anyhow::Result
     write_rust_to_path(path, code, "")
 }
 
-pub fn write_rust_to_path(path: &Path, code: TokenStream, template: &str) -> anyhow::Result<()> {
+pub fn write_rust_to_path(path: &Path, code: TokenStream) -> anyhow::Result<()> {
     let code = format_code(code);
     let mut f = fs::open(path)?;
     let mut s = template.to_string();

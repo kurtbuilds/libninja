@@ -91,9 +91,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.76"
+version = "1.0.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59d2a3357dde987206219e78ecfbbb6e8dad06cbb65292758d3270e6254f7355"
+checksum = "86fdf8605db99b54d3cd748a44c6d04df638eb5dafb219b135d0149bd0db01f6"
 dependencies = [
  "backtrace",
 ]
@@ -163,15 +163,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
 
 [[package]]
-name = "cargo_toml"
-version = "0.17.2"
-source = "git+https://github.com/kurtbuilds/cargo_toml#cedc8cf967e4a23ec181055e1326f477d0cb5817"
-dependencies = [
- "serde",
- "toml",
-]
-
-[[package]]
 name = "cc"
 version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -188,14 +179,16 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.31"
+version = "0.4.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
+checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
- "windows-targets 0.48.5",
+ "wasm-bindgen",
+ "windows-targets 0.52.0",
 ]
 
 [[package]]
@@ -259,6 +252,20 @@ name = "clap_lex"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98cc8fbded0c607b7ba9dd60cd98df59af97e84d24e49c8557331cfc26d301ce"
+
+[[package]]
+name = "codegen_rust"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "convert_case",
+ "libninja_hir",
+ "libninja_mir",
+ "libninja_mir_rust",
+ "proc-macro2",
+ "quote",
+ "regex",
+]
 
 [[package]]
 name = "colorchoice"
@@ -631,8 +638,9 @@ name = "libninja"
 version = "0.1.10"
 dependencies = [
  "anyhow",
- "cargo_toml",
+ "chrono",
  "clap",
+ "codegen_rust",
  "convert_case",
  "env_logger",
  "http",
@@ -640,12 +648,8 @@ dependencies = [
  "include_dir",
  "indexmap",
  "indoc",
- "libninja_commercial",
- "libninja_core",
  "libninja_hir",
- "libninja_macro",
  "libninja_mir",
- "libninja_mir_rust",
  "log",
  "openapiv3-extended",
  "pretty_assertions",
@@ -671,35 +675,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libninja_commercial"
-version = "0.1.0"
-
-[[package]]
-name = "libninja_core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "convert_case",
- "http",
- "include_dir",
- "indexmap",
- "libninja_hir",
- "libninja_mir",
- "openapiv3-extended",
- "proc-macro2",
- "quote",
- "regex-lite",
- "serde",
- "serde_json",
- "serde_yaml",
- "syn",
- "tera",
- "tracing",
- "tracing-ez",
-]
-
-[[package]]
 name = "libninja_hir"
 version = "0.1.0"
 dependencies = [
@@ -719,6 +694,7 @@ dependencies = [
  "pretty_assertions",
  "proc-macro2",
  "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1010,9 +986,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.78"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2422ad645d89c99f8f3e6b88a9fdeca7fabeac836b1002371c4367c8f984aae"
+checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
 dependencies = [
  "unicode-ident",
 ]
@@ -1067,9 +1043,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.10.3"
+version = "1.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b62dbe01f0b06f9d8dc7d49e05a0785f153b00b2c227856282f671e0318c9b15"
+checksum = "4219d74c6b67a3654a9fbebc4b419e22126d13d2f3c4a07ee0cb61ff79a79619"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1087,12 +1063,6 @@ dependencies = [
  "memchr",
  "regex-syntax",
 ]
-
-[[package]]
-name = "regex-lite"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30b661b2f27137bdbc16f00eda72866a92bb28af1753ffbd56744fb6e2e9cd8e"
 
 [[package]]
 name = "regex-syntax"
@@ -1274,9 +1244,9 @@ checksum = "723b93e8addf9aa965ebe2d11da6d7540fa2283fcea14b3371ff055f7ba13f5f"
 
 [[package]]
 name = "syn"
-version = "2.0.48"
+version = "2.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f3531638e407dfc0814761abb7c00a5b54992b849452a0646b7f65c9f770f3f"
+checksum = "9f35bcdf61fd8e7be6caf75f429fdca8beb3ed76584befb503b1569faee373ed"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1469,16 +1439,6 @@ checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
  "valuable",
-]
-
-[[package]]
-name = "tracing-ez"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bde38bb862b421d16f4fe66ec800c898c863911143d4854001d9ab681d2938b6"
-dependencies = [
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

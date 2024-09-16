@@ -4,14 +4,15 @@ use convert_case::Casing;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-use crate::rust::codegen::ToRustType;
 use hir::{HirField, HirSpec, NewType, Record, Struct};
-use ln_core::{ConfigFlags, PackageConfig};
+use ln_core::{Config, ConfigFlags};
 use mir::{import, Field, File, Ident, Import, Visibility};
 use mir::{DateSerialization, DecimalSerialization, IntegerSerialization, Ty};
+use mir_rust::ident::ToRustIdent;
+use mir_rust::ty::ToRustType;
 use mir_rust::ToRustCode;
 use mir_rust::{derives_to_tokens, lower_enum};
-use mir_rust::{sanitize_filename, RustExtra, ToRustIdent};
+use mir_rust::{sanitize_filename, RustExtra};
 
 pub trait FieldExt {
     fn decorators(&self, name: &str, config: &ConfigFlags) -> Vec<TokenStream>;
@@ -224,7 +225,7 @@ pub fn generate_single_model_file(
     name: &str,
     record: &Record,
     spec: &HirSpec,
-    config: &PackageConfig,
+    config: &Config,
 ) -> File<TokenStream, RustExtra> {
     let mut imports = vec![import!("serde", Serialize, Deserialize)];
     if let Some(import) = record.imports("super") {
@@ -337,7 +338,7 @@ pub fn create_typealias(name: &str, schema: &HirField) -> TokenStream {
     }
 }
 
-pub fn create_struct(record: &Record, config: &PackageConfig, hir: &HirSpec) -> TokenStream {
+pub fn create_struct(record: &Record, config: &Config, hir: &HirSpec) -> TokenStream {
     match record {
         Record::Struct(s) => create_sumtype_struct(s, &config.config, hir, &config.derives),
         Record::NewType(nt) => create_newtype_struct(nt, hir, &config.derives),

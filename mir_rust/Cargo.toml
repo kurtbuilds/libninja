@@ -13,7 +13,7 @@ path = "src/lib.rs"
 libninja_mir = { path = "../mir" }
 proc-macro2 = "1.0.78"
 quote = "1.0.9"
-syn = "2.0.48"
+syn = { version = "2.0.48", features = ["full"] }
 convert_case = "0.6.0"
 regex = "1.10.3"
 prettyplease = "0.2.16"

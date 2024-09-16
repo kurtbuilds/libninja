@@ -1,9 +1,10 @@
-use crate::{derives_to_tokens, serde_rename2, RustExtra, ToRustCode, ToRustIdent};
+use crate::ident::ToRustIdent;
+use crate::{derives_to_tokens, serde_rename2, ToRustCode};
 use mir::{Enum, Variant, Visibility};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-pub fn lower_enum(e: &hir::Enum, derives: &[String]) -> Enum<TokenStream, RustExtra> {
+pub fn lower_enum(e: &hir::Enum, derives: &[String]) -> Enum<TokenStream> {
     let variants = e
         .variants
         .iter()
@@ -22,9 +23,7 @@ pub fn lower_enum(e: &hir::Enum, derives: &[String]) -> Enum<TokenStream, RustEx
                 ident,
                 doc: None,
                 value: None,
-                extra: RustExtra {
-                    attributes: rename.into_iter().collect(),
-                },
+                attributes: rename.into_iter().collect(),
             }
         })
         .collect();
@@ -36,13 +35,11 @@ pub fn lower_enum(e: &hir::Enum, derives: &[String]) -> Enum<TokenStream, RustEx
         variants,
         vis: Visibility::Public,
         methods: Vec::new(),
-        extra: RustExtra {
-            attributes: vec![derives],
-        },
+        attributes: vec![derives],
     }
 }
 
-impl ToRustCode for Enum<TokenStream, RustExtra> {
+impl ToRustCode for Enum<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
         let Enum {
             name,
@@ -50,13 +47,12 @@ impl ToRustCode for Enum<TokenStream, RustExtra> {
             vis,
             variants,
             methods,
-            extra,
+            attributes,
         } = self;
         let vis = vis.to_rust_code();
         let doc = doc.to_rust_code();
         let variants = variants.into_iter().map(|v| v.to_rust_code());
         let methods = methods.into_iter().map(|m| m.to_rust_code());
-        let attributes = extra.attributes;
         quote! {
             #doc
             #(#attributes)*
@@ -70,16 +66,15 @@ impl ToRustCode for Enum<TokenStream, RustExtra> {
     }
 }
 
-impl ToRustCode for Variant<RustExtra> {
+impl ToRustCode for Variant<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
         let Variant {
             ident,
             doc,
             value,
-            extra,
+            attributes,
         } = self;
         let doc = doc.to_rust_code();
-        let attributes = extra.attributes;
         let value = value.map(|v| quote!(= #v)).unwrap_or_default();
         quote! {
             #doc

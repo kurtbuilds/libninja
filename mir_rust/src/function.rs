@@ -1,24 +1,52 @@
+use crate::{FluentBool, ToRustCode};
+use mir::Arg;
 use proc_macro2::TokenStream;
 use quote::quote;
-use mir::{FnArg2, Function};
-use crate::{FluentBool, ToRustCode};
+use std::ops::{Deref, DerefMut};
 
-impl ToRustCode for Function<TokenStream> {
+#[derive(Debug)]
+pub struct RustFunction {
+    pub inner: mir::Function<TokenStream>,
+    pub annotations: Vec<TokenStream>,
+}
+
+impl From<mir::Function<TokenStream>> for RustFunction {
+    fn from(inner: mir::Function<TokenStream>) -> Self {
+        Self {
+            inner,
+            annotations: vec![],
+        }
+    }
+}
+
+impl Deref for RustFunction {
+    type Target = mir::Function<TokenStream>;
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for RustFunction {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
+impl ToRustCode for RustFunction {
     fn to_rust_code(self) -> TokenStream {
-        let Function {
-            name,
-            args,
-            body,
-            doc,
-            async_,
+        let RustFunction {
             annotations,
-            ret,
-            vis,
-            ..
+            inner:
+                mir::Function {
+                    name,
+                    args,
+                    ret,
+                    body,
+                    doc,
+                    is_async: async_,
+                    vis,
+                },
         } = self;
-        let annotations = annotations
-            .into_iter()
-            .map(|a| syn::parse_str::<syn::Expr>(&a).unwrap());
         let doc = doc.to_rust_code();
         let vis = vis.to_rust_code();
         let async_ = async_.to_value(|| quote!(async));
@@ -34,22 +62,24 @@ impl ToRustCode for Function<TokenStream> {
     }
 }
 
-impl ToRustCode for FnArg2<TokenStream> {
+impl ToRustCode for Arg<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
         match self {
-            FnArg2::Basic { name, ty, default } => {
+            Arg::Basic { name, ty, default } => {
                 if default.is_some() {
                     panic!("No default args in Rust")
                 }
                 quote!(#name: #ty)
             }
-            FnArg2::Unpack { .. } => panic!("unpack args not yet supported in Rust"),
-            FnArg2::SelfArg { reference, mutable } => {
+            Arg::Unpack { .. } => panic!("unpack args not yet supported in Rust"),
+            Arg::SelfArg { reference, mutable } => {
                 let mutability = mutable.then(|| quote!(mut)).unwrap_or_default();
                 let reference = reference.then(|| quote!(&)).unwrap_or_default();
                 quote!(#reference #mutability self)
             }
-            FnArg2::Variadic { .. } | FnArg2::Kwargs { .. } => panic!("No variadic or kwargs args in Rust"),
+            Arg::Variadic { .. } | Arg::Kwargs { .. } => {
+                panic!("No variadic or kwargs args in Rust")
+            }
         }
     }
 }

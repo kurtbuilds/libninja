@@ -1,19 +1,31 @@
 use crate::{Class, Doc, Enum, Function, Import};
 
-pub struct File<T, E> {
+/// A file is a collection of imports, classes, enums, functions, and code.
+/// Layout:
+///
+/// {docs}
+/// {imports}
+/// {declaration}
+/// {classes}
+/// {enums}
+/// {functions}
+/// {code}
+///
+/// TODO wheres package go?
+pub struct File<T> {
     pub imports: Vec<Import>,
     pub doc: Option<Doc>,
     /// Code that is before function and class declarations
     pub declaration: Option<T>,
     pub classes: Vec<Class<T>>,
-    pub enums: Vec<Enum<T, E>>,
+    pub enums: Vec<Enum<T>>,
     pub functions: Vec<Function<T>>,
     /// Code that follows after the function and class declarations
     pub code: Option<T>,
     pub package: Option<String>,
 }
 
-impl<T, E> Default for File<T, E>
+impl<T> Default for File<T>
 where
     T: Default,
 {

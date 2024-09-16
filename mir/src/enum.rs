@@ -1,20 +1,20 @@
 use crate::{Doc, Function, Ident, Visibility};
 
 #[derive(Debug, Default)]
-pub struct Enum<T, E> {
+pub struct Enum<T> {
     pub name: Ident,
     pub doc: Option<Doc>,
-    pub variants: Vec<Variant<E>>,
+    pub variants: Vec<Variant<T>>,
     pub vis: Visibility,
     pub methods: Vec<Function<T>>,
-    pub extra: E,
+    pub attributes: Vec<T>,
 }
 
 #[derive(Debug)]
-pub struct Variant<E> {
+pub struct Variant<T> {
     pub ident: Ident,
     pub doc: Option<Doc>,
     // in rust, value is like enum { Error = 0 }
-    pub value: Option<String>,
-    pub extra: E,
+    pub value: Option<T>,
+    pub attributes: Vec<T>,
 }

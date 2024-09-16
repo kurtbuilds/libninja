@@ -6,12 +6,12 @@ use serde_yaml::from_str;
 
 use hir::{HirSpec, Record};
 use libninja::rust::lower_hir::create_struct;
-use ln_core::{ConfigFlags, PackageConfig};
 use ln_core::extractor::{extract_schema, extract_without_treeshake};
+use ln_core::{Config, ConfigFlags};
 use mir_rust::format_code;
 
 fn formatted_code(record: &Record, spec: &HirSpec) -> String {
-    let config = PackageConfig {
+    let config = Config {
         package_name: "test".to_string(),
         service_name: "service".to_string(),
         language: hir::Language::Rust,

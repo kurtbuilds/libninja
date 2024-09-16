@@ -4,31 +4,28 @@ use quote::quote;
 
 use crate::ToRustCode;
 
-impl ToRustCode for Class<TokenStream> {
-    fn to_rust_code(self) -> TokenStream {
-        let Class {
-            name,
-            doc,
-            code,
-            instance_fields,
-            static_fields,
-            constructors,
-            class_methods,
-            static_methods,
-            vis,
-            lifetimes,
-            decorators,
-            superclasses
-        } = self;
-        assert!(superclasses.is_empty(), "superclasses not supported in Rust");
-        assert!(static_fields.is_empty(), "static fields not supported in Rust");
-        assert!(constructors.is_empty(), "constructors not supported in Rust");
-        assert!(code.is_none(), "code in class body not supported in Rust");
-        assert!(static_methods.is_empty(), "static methods not supported in Rust");
+pub struct RustClass {
+    pub class: Class<TokenStream>,
+    pub lifetimes: Vec<String>,
+}
 
+impl ToRustCode for RustClass {
+    fn to_rust_code(self) -> TokenStream {
+        let RustClass {
+            class:
+                Class {
+                    vis,
+                    name,
+                    doc,
+                    fields,
+                    methods,
+                    attributes,
+                },
+            lifetimes,
+        } = self;
         let vis = vis.to_rust_code();
-        let fields = instance_fields.into_iter().map(|f| f.to_rust_code());
-        let class_methods = class_methods.into_iter().map(|m| m.to_rust_code());
+        let fields = fields.into_iter().map(|f| f.to_rust_code());
+        let class_methods = methods.into_iter().map(|m| m.into().to_rust_code());
 
         let doc = doc.to_rust_code();
         let lifetimes = if lifetimes.is_empty() {
@@ -42,9 +39,7 @@ impl ToRustCode for Class<TokenStream> {
         };
         quote! {
             #doc
-            #(
-                #decorators
-            )*
+            #(#attributes)*
             #vis struct #name #lifetimes {
                 #(#fields,)*
             }
