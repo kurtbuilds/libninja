@@ -22,7 +22,7 @@ impl ToRustCode for File<TokenStream> {
         let doc = doc.to_rust_code();
         let items = items.into_iter().map(|f| f.to_rust_code());
         quote! {
-            #(#![ #annotations ])*
+            #(#annotations)*
             #doc
             #(#imports)*
             #(#items)*

@@ -46,9 +46,7 @@ impl Operation {
         self.parameters.iter().filter(|p| !p.optional).collect()
     }
 
-    pub fn parameters_by_header_query_body(
-        &self,
-    ) -> (Vec<&Parameter>, Vec<&Parameter>, Vec<&Parameter>) {
+    pub fn parameters_by_header_query_body(&self) -> (Vec<&Parameter>, Vec<&Parameter>, Vec<&Parameter>) {
         let mut header = Vec::new();
         let mut query = Vec::new();
         let mut body = Vec::new();
@@ -89,12 +87,7 @@ impl Operation {
                     example: None,
                 }]
             }
-            _ => self
-                .parameters
-                .iter()
-                .filter(|p| !p.optional)
-                .cloned()
-                .collect(),
+            _ => self.parameters.iter().filter(|p| !p.optional).cloned().collect(),
         }
     }
 

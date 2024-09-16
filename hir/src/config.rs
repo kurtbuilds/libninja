@@ -31,6 +31,10 @@ impl Config {
         format!("{}Auth", self.name)
     }
 
+    pub fn package_name(&self) -> String {
+        self.name.to_case(Case::Snake)
+    }
+
     pub fn env_var(&self, name: &str) -> Literal<String> {
         Literal(format!(
             "{}_{}",

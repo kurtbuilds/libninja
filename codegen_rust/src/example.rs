@@ -2,7 +2,7 @@ use crate::write_rust;
 use anyhow::Result;
 use hir::{Config, HirSpec, Language, Operation};
 use libninja_macro::rfunction;
-use mir::{File, Function, Import, Item};
+use mir::{import, File, Function, Item};
 use mir_rust::{to_rust_example_value, ToRustCode, ToRustIdent};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -10,11 +10,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 
-pub fn write_examples_folder(
-    spec: &HirSpec,
-    config: &Config,
-    modified: &mut HashSet<PathBuf>,
-) -> Result<()> {
+pub fn write_examples_folder(spec: &HirSpec, config: &Config, modified: &mut HashSet<PathBuf>) -> Result<()> {
     let path = config.dest.join("examples");
     fs::create_dir_all(&path)?;
     for operation in &spec.operations {
@@ -25,11 +21,7 @@ pub fn write_examples_folder(
     Ok(())
 }
 
-pub fn generate_example(
-    operation: &Operation,
-    opt: &Config,
-    spec: &HirSpec,
-) -> Result<File<TokenStream>> {
+pub fn generate_example(operation: &Operation, cfg: &Config, spec: &HirSpec) -> Result<File<TokenStream>> {
     let args = operation.function_args(Language::Rust);
     let declarations = args
         .iter()
@@ -42,7 +34,7 @@ pub fn generate_example(
         })
         .collect::<Result<Vec<_>>>()?;
     let fn_args = args.iter().map(|p| p.name.to_rust_ident());
-    let optionals = operation
+    let optionals: Vec<TokenStream> = operation
         .optional_args()
         .into_iter()
         .map(|p| {
@@ -52,19 +44,17 @@ pub fn generate_example(
                 .#ident(#value)
             })
         })
-        .collect::<anyhow::Result<Vec<_>, anyhow::Error>>()?;
-    let qualified_client = format!("{}::{}", opt.name, opt.client_name());
+        .collect::<Result<Vec<_>>>()?;
     let mut imports = vec![
-        Import::package(&qualified_client),
-        Import::package("crate::model::*"),
+        import!(format!("{}::model::*", cfg.package_name())),
+        import!(cfg.package_name(), cfg.client_name()),
     ];
-    let struct_name = operation
-        .required_struct_name()
-        .to_rust_struct()
-        .to_string();
-    imports.push(Import::package(format!("crate::request::{}", struct_name)));
+    if operation.use_required_struct(Language::Rust) {
+        let struct_name = operation.required_struct_name();
+        imports.push(import!(format!("{}::request", cfg.package_name()), struct_name));
+    }
     let operation = operation.name.to_rust_ident();
-    let client = opt.client_name();
+    let client = cfg.client_name();
     let mut main: Function<TokenStream> = rfunction!(async main() {
        let client = #client::from_env();
         #(#declarations)*
@@ -77,7 +67,7 @@ pub fn generate_example(
     main.attributes.push(quote!(#[tokio::main]));
 
     Ok(File {
-        attributes: vec![quote! {allow(unused_imports)}],
+        attributes: vec![quote! {#![allow(unused_imports)]}],
         imports,
         items: vec![Item::Fn(main)],
         ..File::default()

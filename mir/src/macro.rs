@@ -19,6 +19,12 @@ macro_rules! import {
     (pub $path:path, $($imports:ident),*) => {
         ::mir::Import::new(stringify!($path), vec![$(stringify!($imports)),*]).public()
     };
+    ($c:expr, $($imports:expr),*) => {
+        ::mir::Import::new($c, vec![$($imports),*])
+    };
+    ($c:expr) => {
+        ::mir::Import::package($c)
+    };
 }
 /// Macro to create a FnArg. Called targ because the type is a TokenStream (specifically a path), rather than a &str.
 /// targ!(access_token: String)

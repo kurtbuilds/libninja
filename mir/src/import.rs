@@ -14,9 +14,9 @@ pub struct Import {
 }
 
 impl Import {
-    pub fn package(path: impl AsRef<str>) -> Self {
+    pub fn package(path: impl Into<String>) -> Self {
         Self {
-            path: path.as_ref().to_string(),
+            path: path.into(),
             imports: vec![],
             alias: None,
             vis: Visibility::Private,
@@ -24,9 +24,9 @@ impl Import {
         }
     }
 
-    pub fn new(path: &str, imports: impl IntoIterator<Item = impl Into<ImportItem>>) -> Self {
+    pub fn new(path: impl Into<String>, imports: impl IntoIterator<Item = impl Into<ImportItem>>) -> Self {
         Self {
-            path: path.to_string(),
+            path: path.into(),
             imports: imports.into_iter().map(|s| s.into()).collect(),
             alias: None,
             vis: Visibility::Private,
@@ -88,10 +88,7 @@ impl From<&String> for ImportItem {
 
 impl From<String> for ImportItem {
     fn from(s: String) -> Self {
-        let r = Self {
-            name: s,
-            alias: None,
-        };
+        let r = Self { name: s, alias: None };
         r.validate().unwrap();
         r
     }
@@ -110,9 +107,6 @@ impl From<&str> for ImportItem {
 
 impl From<Ident> for ImportItem {
     fn from(s: Ident) -> Self {
-        Self {
-            name: s.0,
-            alias: None,
-        }
+        Self { name: s.0, alias: None }
     }
 }

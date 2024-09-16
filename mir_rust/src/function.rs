@@ -22,7 +22,7 @@ impl ToRustCode for Function<TokenStream> {
         let args = args.into_iter().map(|a| a.to_rust_code());
         let ret = (!ret.is_empty()).to_value(|| quote!( -> #ret));
         quote! {
-            #(#[ #annotations ])*
+            #(#annotations)*
             #doc
             #vis #async_ fn #name(#(#args),*) #ret {
                 #body
