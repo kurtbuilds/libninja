@@ -1,11 +1,11 @@
+pub use class::make_class;
 use convert_case::{Case, Casing};
-use proc_macro2::TokenStream;
-use quote::quote;
-use regex::{Captures, Regex};
-
 use mir::parameter::ParamKey;
 use mir::Literal;
 use mir::{Doc, Ident, Visibility};
+use proc_macro2::TokenStream;
+use quote::quote;
+use regex::{Captures, Regex};
 
 mod class;
 mod r#enum;
@@ -14,10 +14,17 @@ mod file;
 mod function;
 mod ident;
 mod import;
+mod record;
 mod ty;
+mod util;
 
-pub use r#enum::lower_enum;
+pub use example::to_rust_example_value;
+
+pub use ident::ToRustIdent;
+pub use r#enum::make_enum;
+pub use record::make_item;
 pub use ty::ToRustType;
+pub use util::*;
 
 pub fn serde_rename2(value: &str, ident: &Ident) -> Option<TokenStream> {
     if ident.0 != value {
@@ -100,6 +107,12 @@ impl ToRustCode for ParamKey {
     }
 }
 
+impl ToRustCode for TokenStream {
+    fn to_rust_code(self) -> TokenStream {
+        self
+    }
+}
+
 pub fn sanitize_filename(s: &str) -> String {
     sanitize(s)
 }
@@ -178,6 +191,28 @@ fn assert_valid_ident(s: &str, original: &str) {
     }
 }
 
+pub fn format_code(code: TokenStream) -> String {
+    let syntax_tree = match syn::parse2(code.clone()) {
+        Ok(syntax_tree) => syntax_tree,
+        Err(e) => {
+            eprintln!("{}", code.to_string());
+            panic!("Failed to parse generated code: {}", e);
+        }
+    };
+    prettyplease::unparse(&syntax_tree)
+}
+
+pub fn format_string(code: &str) -> String {
+    let syntax_tree = match syn::parse_str(code) {
+        Ok(syntax_tree) => syntax_tree,
+        Err(e) => {
+            eprintln!("{}", code);
+            panic!("Failed to parse generated code: {}", e);
+        }
+    };
+    prettyplease::unparse(&syntax_tree)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -192,20 +227,4 @@ mod tests {
         );
         assert_eq!(sanitize_filename(s), "sd_address_contractor1099");
     }
-}
-
-pub fn format_code(code: TokenStream) -> String {
-    let code = code.to_string();
-    let syntax_tree = match syn::parse_file(&code) {
-        Ok(syntax_tree) => syntax_tree,
-        Err(e) => {
-            eprintln!("{}", code);
-            panic!("Failed to parse generated code: {}", e);
-        }
-    };
-    let mut code = prettyplease::unparse(&syntax_tree);
-    if code.ends_with('\n') {
-        code.pop();
-    }
-    code
 }

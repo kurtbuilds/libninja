@@ -21,7 +21,7 @@ pub enum IntegerSerialization {
 #[derive(Debug, Clone)]
 pub enum Ty {
     String,
-    Integer { serialization: IntegerSerialization },
+    Integer { ser: IntegerSerialization },
     Float,
     Boolean,
     Array(Box<Ty>),
@@ -29,9 +29,9 @@ pub enum Ty {
     // OpenAPI name for the model. Hasn't been converted to a language type (e.g. cased, sanitized)
     Model(String),
     Unit,
-    Date { serialization: DateSerialization },
+    Date { ser: DateSerialization },
     DateTime,
-    Currency { serialization: DecimalSerialization },
+    Currency { ser: DecimalSerialization },
     Any(Option<oa::Schema>),
 }
 
@@ -44,7 +44,7 @@ impl Default for Ty {
 impl Ty {
     pub fn integer() -> Self {
         Ty::Integer {
-            serialization: IntegerSerialization::Simple,
+            ser: IntegerSerialization::Simple,
         }
     }
 

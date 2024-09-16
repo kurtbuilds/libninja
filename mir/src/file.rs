@@ -1,28 +1,20 @@
+use crate::interface::Interface;
 use crate::{Class, Doc, Enum, Function, Import};
 
-/// A file is a collection of imports, classes, enums, functions, and code.
-/// Layout:
-///
-/// {docs}
-/// {imports}
-/// {declaration}
-/// {classes}
-/// {enums}
-/// {functions}
-/// {code}
-///
-/// TODO wheres package go?
+pub enum Item<T> {
+    Class(Class<T>),
+    Enum(Enum<T>),
+    Interface(Interface<T>),
+    Fn(Function<T>),
+    Block(T),
+}
+
 pub struct File<T> {
-    pub imports: Vec<Import>,
+    pub attributes: Vec<T>,
     pub doc: Option<Doc>,
+    pub imports: Vec<Import>,
     /// Code that is before function and class declarations
-    pub declaration: Option<T>,
-    pub classes: Vec<Class<T>>,
-    pub enums: Vec<Enum<T>>,
-    pub functions: Vec<Function<T>>,
-    /// Code that follows after the function and class declarations
-    pub code: Option<T>,
-    pub package: Option<String>,
+    pub items: Vec<Item<T>>,
 }
 
 impl<T> Default for File<T>
@@ -31,14 +23,10 @@ where
 {
     fn default() -> Self {
         Self {
+            attributes: vec![],
             doc: None,
-            declaration: None,
-            classes: vec![],
-            enums: vec![],
-            functions: vec![],
-            code: None,
             imports: vec![],
-            package: None,
+            items: vec![],
         }
     }
 }

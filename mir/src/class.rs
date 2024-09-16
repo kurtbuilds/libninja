@@ -1,6 +1,8 @@
-use crate::{Doc, Function, Ident, Visibility};
+use crate::{Doc, Function, Ident, Import, Item, Visibility};
+use proc_macro2::TokenStream;
 use std::fmt::{Debug, Formatter};
 
+#[derive(Default)]
 pub struct Class<T> {
     pub vis: Visibility,
     pub name: Ident,
@@ -8,6 +10,9 @@ pub struct Class<T> {
     pub fields: Vec<Field<T>>,
     pub methods: Vec<Function<T>>,
     pub attributes: Vec<T>,
+    pub lifetimes: Vec<String>,
+    pub items: Vec<Item<TokenStream>>,
+    pub imports: Vec<Import>,
 }
 
 #[derive(Debug, Default)]
@@ -26,21 +31,8 @@ impl Debug for Class<String> {
         f.debug_struct("Class")
             .field("name", &self.name)
             .field("doc", &self.doc)
-            .field("instance_fields", &self.fields)
+            .field("fields", &self.fields)
             .field("vis", &self.vis)
             .finish()
-    }
-}
-
-impl<T> Default for Class<T> {
-    fn default() -> Self {
-        Self {
-            name: Ident::empty(),
-            doc: None,
-            fields: vec![],
-            vis: Visibility::Private,
-            attributes: vec![],
-            methods: vec![],
-        }
     }
 }

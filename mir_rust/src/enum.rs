@@ -1,10 +1,10 @@
 use crate::ident::ToRustIdent;
 use crate::{derives_to_tokens, serde_rename2, ToRustCode};
-use mir::{Enum, Variant, Visibility};
+use mir::{Enum, Item, Variant, Visibility};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-pub fn lower_enum(e: &hir::Enum, derives: &[String]) -> Enum<TokenStream> {
+pub fn make_enum(e: &hir::Enum, derives: &[String]) -> Item<TokenStream> {
     let variants = e
         .variants
         .iter()
@@ -29,14 +29,14 @@ pub fn lower_enum(e: &hir::Enum, derives: &[String]) -> Enum<TokenStream> {
         .collect();
     let derives = derives_to_tokens(derives);
     let derives = quote! { #[derive(Debug, Serialize, Deserialize, Clone #derives)] };
-    Enum {
+    Item::Enum(Enum {
         name: e.name.to_rust_struct(),
         doc: e.doc.clone(),
         variants,
         vis: Visibility::Public,
         methods: Vec::new(),
         attributes: vec![derives],
-    }
+    })
 }
 
 impl ToRustCode for Enum<TokenStream> {

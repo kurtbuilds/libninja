@@ -61,9 +61,9 @@ impl Operation {
         (header, query, body)
     }
 
-    pub fn use_required_struct(&self, sourcegen: Language) -> bool {
+    pub fn use_required_struct(&self, _sourcegen: Language) -> bool {
         // matches!(sourcegen, Language::Rust | Language::Golang | Language::Typescript if self.crowded_args())
-        matches!(sourcegen, Language::Rust)
+        self.crowded_args()
     }
 
     /// Returns the params that are used as function arguments.

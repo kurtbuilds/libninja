@@ -18,3 +18,6 @@ convert_case = "0.6.0"
 regex = "1.10.3"
 prettyplease = "0.2.16"
 libninja_hir = { path = "../hir" }
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"

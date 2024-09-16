@@ -1,83 +1,86 @@
+pub mod client;
 mod example;
+mod extras;
+mod model;
 pub mod request;
+mod serde;
 
-use hir::Config;
-use hir::{HirSpec, Language};
-use std::collections::HashMap;
-use std::fs;
-use std::fs::File;
-use std::path::Path;
-use proc_macro2::TokenStream;
+use crate::client::make_lib_rs;
+use crate::example::write_examples_folder;
+use crate::extras::calculate_extras;
+use crate::model::write_model_module;
+use crate::request::write_request_module;
+use crate::serde::write_serde_module;
 use anyhow::Result;
-use mir_rust::format_code;
+use hir::Config;
+use hir::HirSpec;
+use mir_rust::{format_code, ToRustCode};
+use std::collections::HashSet;
+use std::fs;
+use std::path::{Path, PathBuf};
 
-pub fn generate_rust_library(spec: HirSpec, config: Config) -> Result<()> {
-    let src_path = opts.dest_path.join("src");
+pub type Modified = HashSet<PathBuf>;
 
-    // Prepare the HIR Spec.
+pub fn generate_rust_library(spec: HirSpec, cfg: Config) -> Result<()> {
+    let src = cfg.dest.join("src");
     let extras = calculate_extras(&spec);
 
-    // if src doesn't exist that's fine
-    let _ = fs::remove_dir_all(&src_path);
-    fs::create_dir_all(&src_path)?;
+    let mut m: Modified = HashSet::new();
+    fs::create_dir_all(&src)?;
 
-    // If there's nothing in cargo.toml, you want to prompt for it here.
-    // Then pass it back in.
-    // But you only need it if you're generating the README and/or Cargo.toml
-    let mut context = HashMap::<String, String>::new();
-    if !opts.dest_path.join("README.md").exists() || !opts.dest_path.join("Cargo.toml").exists() {
-        if let Some(github_repo) = &opts.github_repo {
-            context.insert("github_repo".to_string(), github_repo.to_string());
-        } else {
-            println!(
-                "Because this is a first-time generation, please provide additional information."
-            );
-            print!("Please provide a Github repo name (e.g. libninja/plaid-rs): ");
-            let github_repo: String = read!("{}\n");
-            context.insert("github_repo".to_string(), github_repo);
-        }
+    write_model_module(&spec, &cfg, &mut m)?;
+    write_request_module(&spec, &cfg, &mut m)?;
+
+    let file = make_lib_rs(&spec, &extras, &cfg);
+    write_rust(&src.join("lib.rs"), file, &mut m)?;
+
+    write_serde_module(&extras, &src, &mut m)?;
+
+    // let spec = add_operation_models(opts.language, spec)?;
+
+    if cfg.build_examples {
+        write_examples_folder(&spec, &cfg, &mut m)?;
     }
-    let version = cargo_toml::update_cargo_toml(&extras, &opts, &context)?;
-    let build_examples = opts.build_examples;
-    let opts = Config {
-        package_name: opts.package_name,
-        service_name: opts.service_name,
-        language: opts.language,
-        package_version: version,
-        config: opts.config,
-        dest: opts.dest_path,
-        derives: opts.derive,
-    };
-    write_model_module(&spec, &opts)?;
-    write_request_module(&spec, &opts)?;
-    write_lib_rs(&spec, &extras, &opts)?;
-    write_serde_module_if_needed(&extras, &opts.dest)?;
-
-    let spec = add_operation_models(opts.language, spec)?;
-
-    if build_examples {
-        write_examples(&spec, &opts)?;
-    }
-
-    let tera = prepare_templates();
-    let mut template_context = create_context(&opts, &spec);
-    template_context.insert(
-        "client_docs_url",
-        &format!("https://docs.rs/{}", opts.package_name),
-    );
-    if let Some(github_repo) = context.get("github_repo") {
-        template_context.insert("github_repo", github_repo);
-    }
-    copy_builtin_files(&opts.dest, &opts.language.to_string(), &["src"])?;
-    copy_builtin_templates(&opts, &tera, &template_context)?;
-    copy_from_target_templates(&opts.dest)?;
+    remove_old_files(&cfg.dest, &m)?;
     Ok(())
 }
 
+fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
+    let mut to_delete: Vec<_> = fs::read_dir(dest.join("examples"))?
+        .chain(fs::read_dir(dest.join("src"))?)
+        .flat_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|e| e.ends_with(".rs"))
+        .filter(|e| {
+            fs::read_to_string(&e)
+                .map(|content| !content.contains("libninja: static"))
+                .unwrap_or(false)
+        })
+        .collect();
+    to_delete.retain(|f| !modified.contains(f));
+    for file in to_delete {
+        fs::remove_file(file)?;
+    }
+    Ok(())
+}
 
-pub fn write_rust(path: &Path, tokens: TokenStream) -> Result<()> {
-    let code = format_code(tokens);
-    let existing_content = fs::read_to_string(path).unwrap_or_default();
-    if existing_content.st
-    
+fn write_rust(
+    path: &Path,
+    code: impl ToRustCode,
+    modified: &mut HashSet<PathBuf>,
+) -> std::io::Result<()> {
+    modified.insert(path.to_path_buf());
+    let code = format_code(code.to_rust_code());
+    let mut content = fs::read_to_string(path).unwrap_or_default();
+    if content.contains("libninja: static") {
+        return Ok(());
+    } else if content.contains("libninja: after") {
+        let (static_content, _gen) = content.split_once("libninja: after").unwrap();
+        content.truncate(static_content.len() + "libninja: after".len());
+        content.push('\n');
+        content.push_str(&code);
+    } else {
+        content = code;
+    }
+    hir::write_file(path, &content)
 }

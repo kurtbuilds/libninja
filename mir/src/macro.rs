@@ -4,14 +4,20 @@
 /// import!(pub "bytes::*");
 #[macro_export]
 macro_rules! import {
-    ($path:expr) => {
+    ($path:literal) => {
         ::mir::Import::package($path)
     };
-    ($path:expr, $($imports:ident),*) => {
+    ($path:literal, $($imports:ident),*) => {
         ::mir::Import::new($path, vec![$(stringify!($imports)),*])
     };
-    (pub $path:expr, $($imports:ident),*) => {
+    (pub $path:literal, $($imports:ident),*) => {
         ::mir::Import::new($path, vec![$(stringify!($imports)),*]).public()
+    };
+    ($path:path, $($imports:ident),*) => {
+        ::mir::Import::new(stringify!($path), vec![$(stringify!($imports)),*])
+    };
+    (pub $path:path, $($imports:ident),*) => {
+        ::mir::Import::new(stringify!($path), vec![$(stringify!($imports)),*]).public()
     };
 }
 /// Macro to create a FnArg. Called targ because the type is a TokenStream (specifically a path), rather than a &str.

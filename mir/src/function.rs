@@ -1,6 +1,5 @@
-use std::fmt::{Debug, Formatter};
-
 use crate::{Doc, Ident, Visibility};
+use std::fmt::{Debug, Formatter};
 
 pub enum Arg<T> {
     /// fn foo(a: i32)
@@ -52,6 +51,14 @@ pub struct Function<T> {
     pub doc: Option<Doc>,
     pub is_async: bool,
     pub vis: Visibility,
+    pub attributes: Vec<T>,
+}
+
+impl<T> Function<T> {
+    pub fn body(mut self, body: T) -> Self {
+        self.body = body;
+        self
+    }
 }
 
 impl<T> Debug for Function<T>
@@ -81,6 +88,7 @@ where
             doc: None,
             is_async: false,
             vis: Default::default(),
+            attributes: vec![],
         }
     }
 }

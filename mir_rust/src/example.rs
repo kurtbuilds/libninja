@@ -54,7 +54,7 @@ pub fn to_rust_example_value(
                 Record::Struct(Struct {
                     name: _name,
                     fields,
-                    nullable,
+                    nullable: _,
                     docs: _docs,
                 }) => {
                     let fields = fields.iter().map(|(name, field)| {
@@ -64,10 +64,10 @@ pub fn to_rust_example_value(
                         if field.optional {
                             value = quote!(Some(#value));
                         }
-                        Ok(quote!(#name: #value))
+                        quote!(#name: #value)
                     });
                     let model = model.to_rust_struct();
-                    quote!(#model{#(#fields),*})
+                    quote!(#model{#(#fields),*}).into()
                 }
                 Record::NewType(NewType {
                     name,
@@ -81,7 +81,7 @@ pub fn to_rust_example_value(
                     quote!(#name(#(#fields),*))
                 }
                 Record::Enum(Enum {
-                    name,
+                    name: _,
                     variants,
                     doc: _docs,
                 }) => {

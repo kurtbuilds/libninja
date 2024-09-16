@@ -1,4 +1,4 @@
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 
 use quote::TokenStreamExt;
 
@@ -10,13 +10,9 @@ impl Ident {
     pub fn new(s: &'static str) -> Self {
         Ident(s.into())
     }
-
-    pub fn empty() -> Self {
-        Ident("".into())
-    }
 }
 
-impl std::fmt::Display for Ident {
+impl Display for Ident {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }

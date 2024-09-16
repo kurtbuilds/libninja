@@ -4,7 +4,7 @@ use pretty_assertions::assert_eq;
 #[test]
 fn test_only_need_single_braces() {
     let client_name = "foobar";
-    let s = function!(pub fn NewClientFromEnv() -> #client_name);
+    let mut s = function!(pub NewClientFromEnv() -> #client_name);
     s.body = body! {
         baseUrl, exists := os.LookupEnv("PET_STORE_BASE_URL");
         if !exists {

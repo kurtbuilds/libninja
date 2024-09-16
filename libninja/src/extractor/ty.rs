@@ -39,13 +39,13 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
     match &schema.kind {
         SchemaKind::Type(oa::Type::String(s)) => match s.format.as_str() {
             "decimal" => Ty::Currency {
-                serialization: mir::DecimalSerialization::String,
+                ser: mir::DecimalSerialization::String,
             },
             "integer" => Ty::Integer {
-                serialization: mir::IntegerSerialization::String,
+                ser: mir::IntegerSerialization::String,
             },
             "date" => Ty::Date {
-                serialization: mir::DateSerialization::Iso8601,
+                ser: mir::DateSerialization::Iso8601,
             },
             "date-time" => Ty::DateTime,
             _ => Ty::String,
@@ -59,7 +59,7 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
                 .unwrap_or(false);
             if null_as_zero {
                 return Ty::Integer {
-                    serialization: mir::IntegerSerialization::NullAsZero,
+                    ser: mir::IntegerSerialization::NullAsZero,
                 };
             }
             match schema
@@ -69,10 +69,10 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
                 .and_then(|s| s.as_str())
             {
                 Some("date") => Ty::Date {
-                    serialization: mir::DateSerialization::Integer,
+                    ser: mir::DateSerialization::Integer,
                 },
                 _ => Ty::Integer {
-                    serialization: mir::IntegerSerialization::Simple,
+                    ser: mir::IntegerSerialization::Simple,
                 },
             }
         }

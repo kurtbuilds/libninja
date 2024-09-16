@@ -1,26 +1,104 @@
+#![allow(non_snake_case)]
+
 use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
+use std::io;
 
-use hir::operation::Operation;
-use hir::{qualified_env_var, AuthLocation, AuthStrategy, HirSpec, Language, ServerStrategy};
-use ln_core::Config;
-use mir::{Arg, Function, Ident};
-use mir::{Class, Field, Visibility};
-use mir_rust::ident::ToRustIdent;
-use mir_rust::ty::ToRustType;
-use mir_rust::ToRustCode;
+use crate::extras::Extras;
+use hir::{
+    qualified_env_var, AuthLocation, AuthStrategy, HirSpec, Language, Oauth2Auth, ServerStrategy,
+};
+use hir::{Config, Operation};
+use libninja_macro::{function, rfunction};
+use mir::{import, Arg, Class, Field, File, Function, Ident, Item, Visibility};
+use mir_rust::{ToRustCode, ToRustIdent, ToRustType};
 
-pub fn server_url(spec: &HirSpec, opt: &Config) -> TokenStream {
+/// Generates the client code for a given OpenAPI specification.
+pub fn make_lib_rs(spec: &HirSpec, extras: &Extras, cfg: &Config) -> File<TokenStream> {
+    let src_path = cfg.dest.join("src");
+    let mut struct_Client = struct_Client(spec, &cfg);
+    let impl_Client = impl_Client(spec, &cfg);
+
+    let client_name = struct_Client.name.clone();
+
+    let struct_Client = struct_Client.to_rust_code();
+
+    let serde = extras
+        .needs_serde()
+        .then(|| {
+            quote! {
+                mod serde;
+            }
+        })
+        .unwrap_or_default();
+
+    let fluent_request = quote! {
+        #[derive(Clone)]
+        pub struct FluentRequest<'a, T> {
+            pub(crate) client: &'a #client_name,
+            pub params: T,
+        }
+    };
+    let base64_import = extras
+        .basic_auth
+        .then(|| {
+            quote! {
+                use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD};
+            }
+        })
+        .unwrap_or_default();
+
+    let security = spec
+        .has_security()
+        .then(|| {
+            let struct_ServiceAuthentication = struct_Authentication(spec, &cfg);
+            let impl_ServiceAuthentication = impl_Authentication(spec, &cfg);
+            quote! {
+                #struct_ServiceAuthentication
+                #impl_ServiceAuthentication
+            }
+        })
+        .unwrap_or_default();
+    let static_shared_http_client = static_shared_http_client(spec, cfg);
+    let oauth = spec
+        .security
+        .iter()
+        .filter_map(|s| match s {
+            AuthStrategy::OAuth2(auth) => Some(auth),
+            _ => None,
+        })
+        .next();
+    let shared_oauth2_flow = oauth
+        .map(|auth| shared_oauth2_flow(auth, spec, cfg))
+        .unwrap_or_default();
+    File {
+        attributes: vec![],
+        doc: None,
+        imports: vec![],
+        items: vec![
+            Item::Block(base64_import),
+            Item::Block(serde),
+            Item::Block(static_shared_http_client),
+            Item::Block(shared_oauth2_flow),
+            Item::Block(fluent_request),
+            Item::Block(struct_Client),
+            Item::Block(impl_Client),
+            Item::Block(security),
+        ],
+    }
+}
+
+fn server_url(spec: &HirSpec, opt: &Config) -> TokenStream {
     match spec.server_strategy() {
         ServerStrategy::Single(url) => quote!(#url),
         ServerStrategy::Env => {
-            let var = qualified_env_var(&opt.service_name, "env");
+            let var = qualified_env_var(&opt.name, "env");
             let error = format!("Missing environment variable {}", var);
             quote!(std::env::var(#var).expect(#error).as_str())
         }
         ServerStrategy::BaseUrl => {
-            let var = qualified_env_var(&opt.service_name, "base_url");
+            let var = qualified_env_var(&opt.name, "base_url");
             let error = format!("Missing environment variable {}", var);
             quote!(std::env::var(#var).expect(#error).as_str())
         }
@@ -44,39 +122,20 @@ fn build_Client_from_env(spec: &HirSpec, opt: &Config) -> Function<TokenStream> 
             }
         }
     };
-
-    Function {
-        name: Ident::new("from_env"),
-        vis: Visibility::Public,
-        ret: quote!(Self),
-        body,
-        ..Function::default()
-    }
+    rfunction!(pub from_env() -> Self).body(body)
 }
 
-fn build_Client_with_auth(spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
+fn build_Client_with_auth(_spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
     let auth_struct = opt.authenticator_name().to_rust_struct();
-    let body = quote! {
+    rfunction!(pub with_auth(authentication: #auth_struct) -> Self {
         Self {
             client: shared_http_client(),
             authentication
         }
-    };
-    Function {
-        name: Ident::new("with_auth"),
-        vis: Visibility::Public,
-        ret: quote!(Self),
-        body,
-        args: vec![Arg::Basic {
-            name: Ident("authentication".to_string()),
-            ty: quote!(#auth_struct),
-            default: None,
-        }],
-        ..Function::default()
-    }
+    })
 }
 
-fn build_Client_new_with(spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
+fn build_Client_new_with(_spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
     let auth_struct = opt.authenticator_name().to_rust_struct();
     let body = quote! {
         Self {
@@ -84,25 +143,7 @@ fn build_Client_new_with(spec: &HirSpec, opt: &Config) -> Function<TokenStream> 
             authentication,
         }
     };
-    Function {
-        name: Ident::new("new_with"),
-        vis: Visibility::Public,
-        ret: quote!(Self),
-        body,
-        args: vec![
-            Arg::Basic {
-                name: Ident("client".to_string()),
-                ty: quote!(httpclient::Client),
-                default: None,
-            },
-            Arg::Basic {
-                name: Ident("authentication".to_string()),
-                ty: quote!(#auth_struct),
-                default: None,
-            },
-        ],
-        ..Function::default()
-    }
+    rfunction!(pub new_with(client: Client, authentication: #auth_struct)).body(body)
 }
 
 pub fn struct_Client(spec: &HirSpec, opt: &Config) -> Class<TokenStream> {
@@ -121,30 +162,25 @@ pub fn struct_Client(spec: &HirSpec, opt: &Config) -> Class<TokenStream> {
         });
     }
 
-    let mut class_methods = vec![build_Client_from_env(spec, opt)];
+    let mut methods = vec![build_Client_from_env(spec, opt)];
     if spec.has_security() {
-        class_methods.push(build_Client_with_auth(spec, opt));
+        methods.push(build_Client_with_auth(spec, opt));
     } else {
-        class_methods.push(Function {
-            name: Ident::new("new"),
-            vis: Visibility::Public,
-            ret: quote!(Self),
-            body: quote! {
-                Self {
-                    client: shared_http_client()
-                }
-            },
-            ..Function::default()
-        });
+        methods.push(rfunction!(pub new() -> Self {
+            Self {
+                client: shared_http_client()
+            }
+        }));
     }
     if spec.has_security() {
-        class_methods.push(build_Client_new_with(spec, opt));
+        methods.push(build_Client_new_with(spec, opt));
     }
     Class {
-        name: opt.client_name().to_rust_struct(),
+        name: opt.client_name(),
         fields: instance_fields,
-        class_methods,
+        methods,
         vis: Visibility::Public,
+        imports: vec![import!(httpclient, Client)],
         ..Class::default()
     }
 }
@@ -228,10 +264,7 @@ pub fn authenticate_variant(req: &AuthStrategy, opt: &Config) -> TokenStream {
                 .fields
                 .iter()
                 .map(|field| {
-                    let field = syn::Ident::new(
-                        &field.name.to_case(Case::Snake),
-                        proc_macro2::Span::call_site(),
-                    );
+                    let field = field.name.to_rust_ident();
                     quote! { #field }
                 })
                 .collect::<Vec<_>>();
@@ -240,10 +273,7 @@ pub fn authenticate_variant(req: &AuthStrategy, opt: &Config) -> TokenStream {
                 .fields
                 .iter()
                 .map(|sec_field| {
-                    let field = syn::Ident::new(
-                        &sec_field.name.to_case(Case::Snake),
-                        proc_macro2::Span::call_site(),
-                    );
+                    let field = sec_field.name.to_rust_ident();
                     match &sec_field.location {
                         AuthLocation::Header { key } => quote! { r = r.header(#key, #field); },
                         AuthLocation::Basic => quote! { r = r.basic_auth(#field); },
@@ -294,7 +324,7 @@ pub fn build_Client_authenticate(spec: &HirSpec, opt: &Config) -> TokenStream {
 }
 
 pub fn impl_Client(spec: &HirSpec, opt: &Config) -> TokenStream {
-    let client_struct_name = opt.client_name().to_rust_struct();
+    let client_struct_name = opt.client_name();
     let path_fns = impl_ServiceClient_paths(spec);
 
     let security = spec.has_security();
@@ -341,7 +371,7 @@ pub fn struct_Authentication(mir_spec: &HirSpec, opt: &Config) -> TokenStream {
     }
 }
 
-fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStream {
+fn build_Authentication_from_env(spec: &HirSpec, name: &str) -> TokenStream {
     let Some(strat) = spec.security.first() else {
         return TokenStream::new();
     };
@@ -352,11 +382,8 @@ fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStr
                 .iter()
                 .map(|f| {
                     let basic = matches!(f.location, AuthLocation::Basic);
-                    let field = syn::Ident::new(
-                        &f.name.to_case(Case::Snake),
-                        proc_macro2::Span::call_site(),
-                    );
-                    let env_var = qualified_env_var(service_name, &f.name);
+                    let field = Ident(f.name.to_case(Case::Snake));
+                    let env_var = qualified_env_var(name, &f.name);
                     let expect = format!("Environment variable {} is not set.", env_var);
                     if basic {
                         quote! {
@@ -372,10 +399,7 @@ fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStr
                     }
                 })
                 .collect::<Vec<_>>();
-            let variant_name = syn::Ident::new(
-                &strat.name.to_case(Case::Pascal),
-                proc_macro2::Span::call_site(),
-            );
+            let variant_name = Ident(strat.name.to_case(Case::Pascal));
             quote! {
                 pub fn from_env() -> Self {
                     Self::#variant_name {
@@ -392,8 +416,8 @@ fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStr
             }
         }
         AuthStrategy::OAuth2(_) => {
-            let access = qualified_env_var(service_name, "access_token");
-            let refresh = qualified_env_var(service_name, "refresh_token");
+            let access = qualified_env_var(name, "access_token");
+            let refresh = qualified_env_var(name, "refresh_token");
             quote! {
                 pub fn from_env() -> Self {
                     let access = std::env::var(#access).unwrap();
@@ -410,10 +434,10 @@ fn build_Authentication_from_env(spec: &HirSpec, service_name: &str) -> TokenStr
 
 pub fn impl_Authentication(spec: &HirSpec, opt: &Config) -> TokenStream {
     let auth_struct_name = opt.authenticator_name().to_rust_struct();
-    let from_env = build_Authentication_from_env(spec, &opt.service_name);
+    let from_env = build_Authentication_from_env(spec, &opt.name);
     let oauth2 = spec
         .oauth2_auth()
-        .map(|oauth| {
+        .map(|_oauth| {
             quote! {
                 pub fn oauth2(access: String, refresh: String) -> Self {
                     let mw = shared_oauth2_flow().bearer_middleware(access, refresh);
@@ -427,6 +451,68 @@ pub fn impl_Authentication(spec: &HirSpec, opt: &Config) -> TokenStream {
         impl #auth_struct_name {
             #from_env
             #oauth2
+        }
+    }
+}
+
+fn static_shared_http_client(spec: &HirSpec, opt: &Config) -> TokenStream {
+    let url = server_url(spec, opt);
+    quote! {
+        static SHARED_HTTPCLIENT: OnceLock<httpclient::Client> = OnceLock::new();
+
+        pub fn default_http_client() -> httpclient::Client {
+            httpclient::Client::new()
+                .base_url(#url)
+        }
+
+        /// Use this method if you want to add custom middleware to the httpclient.
+        /// It must be called before any requests are made, otherwise it will have no effect.
+        /// Example usage:
+        ///
+        /// ```
+        /// init_http_client(default_http_client()
+        ///     .with_middleware(..)
+        /// );
+        /// ```
+        pub fn init_http_client(init: httpclient::Client) {
+            let _ = SHARED_HTTPCLIENT.set(init);
+        }
+
+        fn shared_http_client() -> Cow<'static, httpclient::Client> {
+            Cow::Borrowed(SHARED_HTTPCLIENT.get_or_init(default_http_client))
+        }
+    }
+}
+
+fn shared_oauth2_flow(auth: &Oauth2Auth, _spec: &HirSpec, cfg: &Config) -> TokenStream {
+    let service_name = cfg.name.as_str();
+
+    let client_id = qualified_env_var(service_name, "client id");
+    let client_id_expect = format!("{} must be set", client_id);
+    let client_secret = qualified_env_var(service_name, "client secret");
+    let client_secret_expect = format!("{} must be set", client_secret);
+    let redirect_uri = qualified_env_var(service_name, "redirect uri");
+    let redirect_uri_expect = format!("{} must be set", redirect_uri);
+
+    let init_endpoint = auth.auth_url.as_str();
+    let exchange_endpoint = auth.exchange_url.as_str();
+    let refresh_endpoint = auth.refresh_url.as_str();
+    quote! {
+        static SHARED_OAUTH2FLOW: OnceLock<httpclient_oauth2::OAuth2Flow> = OnceLock::new();
+
+        pub fn init_oauth2_flow(init: httpclient_oauth2::OAuth2Flow) {
+            let _ = SHARED_OAUTH2FLOW.set(init);
+        }
+
+        pub fn shared_oauth2_flow() -> &'static httpclient_oauth2::OAuth2Flow {
+            SHARED_OAUTH2FLOW.get_or_init(|| httpclient_oauth2::OAuth2Flow {
+                client_id: std::env::var(#client_id).expect(#client_id_expect),
+                client_secret: std::env::var(#client_secret).expect(#client_secret_expect),
+                init_endpoint: #init_endpoint.to_string(),
+                exchange_endpoint: #exchange_endpoint.to_string(),
+                refresh_endpoint: #refresh_endpoint.to_string(),
+                redirect_uri: std::env::var(#redirect_uri).expect(#redirect_uri_expect),
+            })
         }
     }
 }

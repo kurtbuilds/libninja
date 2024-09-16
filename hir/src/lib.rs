@@ -2,7 +2,11 @@ use std::collections::BTreeMap;
 /// The API model.
 /// Higher level compared to code level models in ln-model.
 use std::fmt::Debug;
+use std::fs::File;
+use std::io;
+use std::io::Write;
 use std::iter::{empty, once, Iterator};
+use std::path::Path;
 use std::string::{String, ToString};
 
 use anyhow::Result;
@@ -120,7 +124,24 @@ pub struct HirField {
     pub flatten: bool,
 }
 
-#[derive(Debug, Clone)]
+impl HirField {
+    pub fn new(ty: Ty) -> Self {
+        Self {
+            ty,
+            optional: false,
+            doc: None,
+            example: None,
+            flatten: false,
+        }
+    }
+
+    pub fn nullable(mut self) -> Self {
+        self.optional = true;
+        self
+    }
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct Struct {
     pub name: String,
     pub nullable: bool,
@@ -377,4 +398,11 @@ impl From<&Parameter> for HirField {
             flatten: false,
         }
     }
+}
+
+pub fn write_file(path: &Path, text: &str) -> io::Result<()> {
+    let mut f = File::create(path)?;
+    f.write_all(text.as_bytes())?;
+    println!("{}: Wrote file.", path.display());
+    Ok(())
 }

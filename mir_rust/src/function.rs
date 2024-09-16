@@ -1,55 +1,24 @@
 use crate::{FluentBool, ToRustCode};
 use mir::Arg;
+use mir::Function;
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::ops::{Deref, DerefMut};
 
-#[derive(Debug)]
-pub struct RustFunction {
-    pub inner: mir::Function<TokenStream>,
-    pub annotations: Vec<TokenStream>,
-}
-
-impl From<mir::Function<TokenStream>> for RustFunction {
-    fn from(inner: mir::Function<TokenStream>) -> Self {
-        Self {
-            inner,
-            annotations: vec![],
-        }
-    }
-}
-
-impl Deref for RustFunction {
-    type Target = mir::Function<TokenStream>;
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl DerefMut for RustFunction {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-
-impl ToRustCode for RustFunction {
+impl ToRustCode for Function<TokenStream> {
     fn to_rust_code(self) -> TokenStream {
-        let RustFunction {
-            annotations,
-            inner:
-                mir::Function {
-                    name,
-                    args,
-                    ret,
-                    body,
-                    doc,
-                    is_async: async_,
-                    vis,
-                },
+        let Function {
+            name,
+            args,
+            ret,
+            body,
+            doc,
+            is_async,
+            vis,
+            attributes: annotations,
         } = self;
         let doc = doc.to_rust_code();
         let vis = vis.to_rust_code();
-        let async_ = async_.to_value(|| quote!(async));
+        let async_ = is_async.to_value(|| quote!(async));
         let args = args.into_iter().map(|a| a.to_rust_code());
         let ret = (!ret.is_empty()).to_value(|| quote!( -> #ret));
         quote! {

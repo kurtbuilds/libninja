@@ -7,7 +7,7 @@ use mir::{Function, Visibility};
 fn test_function() {
     let s: Function<String> = function!(async main() {});
     assert_eq!(s.name.0, "main");
-    assert_eq!(s.async_, true);
+    assert_eq!(s.is_async, true);
     assert_eq!(s.vis, Visibility::Private);
 }
 
@@ -15,7 +15,7 @@ fn test_function() {
 fn test_function_args() {
     let s: Function<String> = function!(print_repeated(s: str, n: int) {});
     assert_eq!(s.name.0, "print_repeated");
-    assert_eq!(s.async_, false);
+    assert_eq!(s.is_async, false);
     assert_eq!(s.vis, Visibility::Private);
     assert_eq!(s.args.len(), 2);
     assert_eq!(s.args[0].ident().unwrap(), "s");
@@ -29,7 +29,7 @@ fn test_function_args() {
 fn test_function_return() {
     let s: Function<String> = function!(add(a: int, b: int) -> int {});
     assert_eq!(s.name.0, "add");
-    assert_eq!(s.async_, false);
+    assert_eq!(s.is_async, false);
     assert_eq!(s.vis, Visibility::Private);
     assert_eq!(s.args.len(), 2);
     assert_eq!(s.ret, "int".to_string());
@@ -40,7 +40,7 @@ fn test_interpolation_in_arg_position() {
     let z = "int";
     let s: Function<String> = function!(add(a: int, b: #z) -> int {});
     assert_eq!(s.name.0, "add");
-    assert_eq!(s.async_, false);
+    assert_eq!(s.is_async, false);
     assert_eq!(s.vis, Visibility::Private);
     assert_eq!(s.args.len(), 2);
     assert_eq!(s.args[1].ty().unwrap(), "int");

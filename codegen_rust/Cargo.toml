@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+libninja_mir = { path = "../mir" }
+libninja_macro = { path = "../macro" }
 libninja_hir = { path = "../hir" }
 libninja_mir_rust = { path = "../mir_rust" }
 anyhow = "1.0.89"
 quote = "1.0.35"
-libninja_mir = { path = "../mir" }
 proc-macro2 = "1.0.86"
 convert_case = "0.6.0"
 regex = "1.10.6"

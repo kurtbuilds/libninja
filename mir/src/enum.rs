@@ -1,6 +1,5 @@
 use crate::{Doc, Function, Ident, Visibility};
 
-#[derive(Debug, Default)]
 pub struct Enum<T> {
     pub name: Ident,
     pub doc: Option<Doc>,
@@ -10,7 +9,6 @@ pub struct Enum<T> {
     pub attributes: Vec<T>,
 }
 
-#[derive(Debug)]
 pub struct Variant<T> {
     pub ident: Ident,
     pub doc: Option<Doc>,

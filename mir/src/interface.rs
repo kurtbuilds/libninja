@@ -1,5 +1,6 @@
 use crate::{Doc, Field, Function};
 
+#[derive(Debug)]
 pub struct Interface<T> {
     pub name: String,
     pub doc: Option<Doc>,

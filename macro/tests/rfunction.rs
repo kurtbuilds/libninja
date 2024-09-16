@@ -1,13 +1,14 @@
+use proc_macro2::TokenStream;
 use quote::quote;
 
-use libninja_macro::function;
+use libninja_macro::rfunction;
+use mir::Function;
 
 #[test]
 fn test_quote_body() {
-    let mut s = function!(fn add(a: i32, b: i32) -> i32);
-    s.body = quote! {
+    let s: Function<TokenStream> = rfunction!(add(a: i32, b: i32) -> i32 {
         println!("Hello, World!")
-    };
+    });
     assert_eq!(s.name.0, "add");
     assert_eq!(s.body.to_string(), "println ! (\"Hello, World!\")");
     assert_eq!(s.ret.to_string(), "i32");
@@ -22,7 +23,7 @@ fn test_regression1() {
     let declarations = vec![quote!(let a = 1), quote!(let b = 2), quote!(let c = 3)];
     let operation = quote!(link_token_create);
     let fn_args = vec![quote!(a), quote!(b), quote!(c)];
-    let mut main = function!(fn main());
+    let mut main = rfunction!(main());
     main.body = quote! {
         let client = #client::from_env();
         #(#declarations)*

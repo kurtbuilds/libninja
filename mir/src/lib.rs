@@ -1,12 +1,13 @@
 pub use class::*;
 pub use doc::{Doc, DocFormat};
-pub use file::File;
+pub use file::{File, Item};
 pub use function::{build_dict, build_struct, Arg, Function};
 pub use ident::*;
 pub use import::*;
+pub use interface::Interface;
 pub use r#enum::*;
 pub use ty::*;
-pub use visibility::*;
+pub use visibility::Visibility;
 
 mod class;
 mod doc;
