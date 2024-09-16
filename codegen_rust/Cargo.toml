@@ -1,7 +1,11 @@
 [package]
-name = "codegen_rust"
+name = "libninja_codegen_rust"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "codegen_rust"
+path = "src/lib.rs"
 
 [dependencies]
 libninja_mir = { path = "../mir" }

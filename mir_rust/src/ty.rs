@@ -82,7 +82,7 @@ impl ToRustType for Ty {
             Ty::Array(_) => true,
             Ty::Model(name) => {
                 let model = spec.get_record(name.as_str()).expect("Model not found");
-                model.fields().count() > 0 && model.fields().all(|f| f.ty.implements_default(spec))
+                model.fields().all(|f| f.ty.implements_default(spec))
             }
             Ty::Unit => true,
             Ty::Any(_) => true,
@@ -102,7 +102,7 @@ impl ToRustType for Ty {
             Ty::Array(inner) => inner.implements_dummy(spec),
             Ty::Model(name) => {
                 let model = spec.get_record(name.as_str()).expect("Model not found");
-                model.fields().count() > 0 && model.fields().all(|f| f.ty.implements_dummy(spec))
+                model.fields().all(|f| f.ty.implements_dummy(spec))
             }
             Ty::Unit => true,
             Ty::Any(_) => false,

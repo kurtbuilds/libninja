@@ -1,27 +1,12 @@
 use crate::ident::ToRustIdent;
 use crate::ty::ToRustType;
 use convert_case::{Case, Casing};
-use hir::{Enum, HirField, HirSpec, NewType, Parameter, Record, Struct};
+use hir::{Enum, HirField, HirSpec, NewType, Record, Struct};
 use mir::Ty;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-pub trait ToRustExample {
-    fn to_rust_example(&self, spec: &HirSpec) -> TokenStream;
-}
-
-impl ToRustExample for Parameter {
-    fn to_rust_example(&self, spec: &HirSpec) -> TokenStream {
-        to_rust_example_value(&self.ty, &self.name, spec, false)
-    }
-}
-
-pub fn to_rust_example_value(
-    ty: &Ty,
-    name: &str,
-    spec: &HirSpec,
-    use_ref_value: bool,
-) -> TokenStream {
+pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value: bool) -> TokenStream {
     match ty {
         Ty::String => {
             let s = format!("your {}", name.to_case(Case::Lower));
@@ -74,9 +59,7 @@ pub fn to_rust_example_value(
                     fields,
                     doc: _docs,
                 }) => {
-                    let fields = fields
-                        .iter()
-                        .map(|f| to_rust_example_value(&f.ty, name, spec, false));
+                    let fields = fields.iter().map(|f| to_rust_example_value(&f.ty, name, spec, false));
                     let name = name.to_rust_struct();
                     quote!(#name(#(#fields),*))
                 }

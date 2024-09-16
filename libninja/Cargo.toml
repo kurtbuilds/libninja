@@ -36,12 +36,14 @@ semver = "1.0.17"
 indexmap = "2.0"
 libninja_mir = { path = "../mir" }
 libninja_hir = { path = "../hir" }
-codegen_rust = { path = "../codegen_rust" }
+libninja_mir_rust = { path = "../mir_rust" }
+libninja_codegen_rust = { path = "../codegen_rust" }
 ignore = "0.4.21"
 text_io = "0.1.12"
 tracing-subscriber = "0.3.18"
 tracing = "0.1.40"
 chrono = "0.4.38"
+tracing-ez = "0.3.0"
 
 [dev-dependencies]
 env_logger = "0.11.2"

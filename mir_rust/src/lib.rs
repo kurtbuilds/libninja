@@ -7,7 +7,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use regex::{Captures, Regex};
 
-mod class;
+pub mod class;
 mod r#enum;
 mod example;
 mod file;
@@ -134,7 +134,7 @@ fn rewrite_names(s: &str) -> String {
         .replace('.', "_")
 }
 
-fn sanitize(s: impl AsRef<str>) -> String {
+pub fn sanitize(s: impl AsRef<str>) -> String {
     let s = s.as_ref();
     let original = s;
     let s = rewrite_names(s);
@@ -221,10 +221,7 @@ mod tests {
     #[test]
     fn test_filename() {
         let s = "SdAddress.contractor1099";
-        assert_eq!(
-            String::from(s).to_rust_ident().0,
-            "sd_address_contractor1099"
-        );
+        assert_eq!(String::from(s).to_rust_ident().0, "sd_address_contractor1099");
         assert_eq!(sanitize_filename(s), "sd_address_contractor1099");
     }
 }

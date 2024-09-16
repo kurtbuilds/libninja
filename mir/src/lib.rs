@@ -5,6 +5,7 @@ pub use function::{build_dict, build_struct, Arg, Function};
 pub use ident::*;
 pub use import::*;
 pub use interface::Interface;
+pub use newtype::NewType;
 pub use r#enum::*;
 pub use ty::*;
 pub use visibility::Visibility;

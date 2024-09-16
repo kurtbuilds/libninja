@@ -3,19 +3,19 @@ use std::collections::{BTreeMap, HashSet};
 use convert_case::{Case, Casing};
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 use openapiv3::{
-    AdditionalProperties, ObjectType, OpenAPI, RefOr, RefOrMap, ReferenceOr, Schema, SchemaData,
-    SchemaKind, SchemaReference, StringType, Type,
+    AdditionalProperties, ObjectType, OpenAPI, RefOr, RefOrMap, ReferenceOr, Schema, SchemaData, SchemaKind,
+    SchemaReference, StringType, Type,
 };
 
 use hir::{Enum, HirField, HirSpec, NewType, Record, Struct, Variant};
 use mir::{Doc, Ty};
+use mir_rust::sanitize;
 
-use crate::extractor;
-use crate::extractor::plural::{is_plural, singular};
-use crate::extractor::{
-    is_optional, is_primitive, schema_ref_to_ty, schema_ref_to_ty2, schema_to_ty,
+use crate::{
+    extractor,
+    extractor::plural::{is_plural, singular},
+    extractor::{is_optional, is_primitive, schema_ref_to_ty, schema_ref_to_ty2, schema_to_ty},
 };
-use crate::sanitize::sanitize;
 
 fn extract_fields(
     properties: &RefOrMap<Schema>,
@@ -78,12 +78,7 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
     length
 }
 
-pub fn extract_schema(
-    name: &str,
-    schema: &Schema,
-    spec: &OpenAPI,
-    hir: &mut HirSpec,
-) -> Option<Ty> {
+pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut HirSpec) -> Option<Ty> {
     println!("Extracting schema: {}", name);
     let name = name.to_string();
 
@@ -98,9 +93,7 @@ pub fn extract_schema(
             let p = additional_properties.as_ref().unwrap();
             return match p {
                 AdditionalProperties::Any(_) => Some(Ty::HashMap(Box::new(Ty::Any(None)))),
-                AdditionalProperties::Schema(s) => {
-                    Some(Ty::HashMap(Box::new(schema_ref_to_ty(s, spec))))
-                }
+                AdditionalProperties::Schema(s) => Some(Ty::HashMap(Box::new(schema_ref_to_ty(s, spec)))),
             };
         }
         let fields = extract_fields(properties, schema, spec, hir);
@@ -108,19 +101,13 @@ pub fn extract_schema(
             name: name.clone(),
             fields,
             nullable: schema.nullable,
-            docs: schema
-                .description
-                .as_ref()
-                .map(|d| Doc(d.trim().to_string())),
+            docs: schema.description.as_ref().map(|d| Doc(d.trim().to_string())),
         };
         hir.insert_schema(s);
         return None;
     }
     if let SchemaKind::Type(Type::String(StringType { enumeration, .. })) = k {
-        let lookup = schema
-            .extensions
-            .get("x-rename")
-            .and_then(|v| v.as_object());
+        let lookup = schema.extensions.get("x-rename").and_then(|v| v.as_object());
         if !enumeration.is_empty() {
             let s = Enum {
                 name: name.clone(),
@@ -183,13 +170,7 @@ fn extract_newtype(name: String, schema: &Schema, spec: &OpenAPI, hir: &mut HirS
     hir.insert_schema(t);
 }
 
-fn extract_all_of(
-    name: String,
-    all_of: &[ReferenceOr<Schema>],
-    data: &SchemaData,
-    spec: &OpenAPI,
-    hir: &mut HirSpec,
-) {
+fn extract_all_of(name: String, all_of: &[ReferenceOr<Schema>], data: &SchemaData, spec: &OpenAPI, hir: &mut HirSpec) {
     if effective_length(&all_of) == 1 {
         let ty = schema_ref_to_ty(&all_of[0], spec);
         let field = HirField {
@@ -236,11 +217,7 @@ fn extract_all_of(
 /// When encountering anonymous nested structs (e.g. array items), use this function to come up with a name.
 /// name: the object it resides on
 /// field: the field name
-fn create_unique_name(
-    current_schemas: &HashSet<String>,
-    name: &str,
-    field: &str,
-) -> Option<String> {
+fn create_unique_name(current_schemas: &HashSet<String>, name: &str, field: &str) -> Option<String> {
     if is_plural(field) {
         let singular_field = singular(field).to_case(Case::Pascal);
         if !current_schemas.contains(&singular_field) {
@@ -262,6 +239,10 @@ fn create_unique_name(
     None
 }
 
+pub fn extract_docs(schema: &Schema) -> Option<Doc> {
+    schema.description.as_ref().map(|d| Doc(d.trim().to_string()))
+}
+
 #[cfg(test)]
 mod tests {
     use openapiv3::{OpenAPI, Schema, SchemaData, SchemaKind};
@@ -274,7 +255,7 @@ mod tests {
     #[test]
     fn test_all_of_required_set_correctly() {
         let mut hir = HirSpec::default();
-        let mut schema: Schema = from_str(include_str!("pet_tag.yaml")).unwrap();
+        let schema: Schema = from_str(include_str!("test_spec/pet_tag.yaml")).unwrap();
         let SchemaKind::AllOf { all_of } = &schema.kind else {
             panic!()
         };
@@ -288,11 +269,4 @@ mod tests {
         assert_eq!(eye_color.optional, false);
         assert_eq!(weight.optional, true);
     }
-}
-
-pub fn extract_docs(schema: &Schema) -> Option<Doc> {
-    schema
-        .description
-        .as_ref()
-        .map(|d| Doc(d.trim().to_string()))
 }

@@ -1,12 +1,12 @@
 use crate::extractor::extract_spec;
-use crate::Language;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
-use hir::Config;
+use hir::{Config, Language};
 use openapiv3::{OpenAPI, VersionedOpenAPI};
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
+/// CLI flags
 #[derive(ValueEnum, Debug, Clone, Copy)]
 pub enum Flag {
     /// Only used by Rust. Adds ormlite::TableMeta flags to the code.

@@ -71,7 +71,7 @@ pub fn make_single_module(record: &Record, spec: &HirSpec, cfg: &Config) -> File
         imports.push(import);
     }
     File {
-        items: vec![make_item(record, &cfg, spec)],
+        items: vec![make_item(record, spec, &cfg)],
         imports,
         ..File::default()
     }

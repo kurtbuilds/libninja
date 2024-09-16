@@ -1,12 +1,6 @@
-use anyhow::Context;
-pub use openapiv3;
-pub use ::openapiv3::OpenAPI;
-use serde::{Deserialize, Serialize};
+pub mod command;
+pub mod extractor;
 
-use hir::Language;
-
-mod command;
-mod config;
-mod extractor;
-mod fs;
-mod rust;
+pub fn default<T: Default>() -> T {
+    Default::default()
+}

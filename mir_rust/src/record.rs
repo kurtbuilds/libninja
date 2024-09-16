@@ -1,8 +1,6 @@
-use crate::{class, derives_to_tokens, make_enum, ToRustIdent, ToRustType};
+use crate::{derives_to_tokens, make_class, make_enum, ToRustIdent, ToRustType};
 use hir::{Config, HirField, HirSpec, NewType, Record};
-use mir::{
-    Item, Ty,
-};
+use mir::Item;
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -35,11 +33,11 @@ pub fn make_typealias(name: &str, schema: &HirField) -> Item<TokenStream> {
     })
 }
 
-pub fn make_item(record: &Record, config: &Config, hir: &HirSpec) -> Item<TokenStream> {
+pub fn make_item(record: &Record, spec: &HirSpec, cfg: &Config) -> Item<TokenStream> {
     match record {
-        Record::Struct(s) => Item::Class(class::make_class(s, &config, hir)),
-        Record::NewType(nt) => make_newtype(nt, hir, &config.derives),
-        Record::Enum(en) => make_enum(en, &config.derives),
+        Record::Struct(s) => Item::Class(make_class(s, &cfg, spec)),
+        Record::NewType(nt) => make_newtype(nt, spec, &cfg.derives),
+        Record::Enum(en) => make_enum(en, &cfg.derives),
         Record::TypeAlias(name, field) => make_typealias(name, field),
     }
 }
@@ -48,6 +46,8 @@ pub fn make_item(record: &Record, config: &Config, hir: &HirSpec) -> Item<TokenS
 mod tests {
     use super::*;
     use crate::{format_code, ToRustCode};
+    use mir::Ty;
+
     #[test]
     fn test_struct_newtype() {
         let name = "NewType".to_string();

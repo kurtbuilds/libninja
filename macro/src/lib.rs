@@ -47,7 +47,7 @@ pub fn function(item: TokenStream) -> TokenStream {
         other => panic!("Expected a function body. Got: {:?}", other),
     };
     
-    quote! {
+    TokenStream::from(quote! {
         ::mir::Function {
             name: #fn_name,
             is_async: #asyn,
@@ -57,7 +57,7 @@ pub fn function(item: TokenStream) -> TokenStream {
             body: #body,
             ..::mir::Function::default()
         }
-    }.into()
+    })
 }
 
 

@@ -82,7 +82,7 @@ impl ToRustCode for Field<TokenStream> {
     }
 }
 
-fn implements_default(schema: &Struct, spec: &HirSpec) -> bool {
+pub fn implements_default(schema: &Struct, spec: &HirSpec) -> bool {
     schema.fields.iter().all(|(_, f)| f.ty.implements_default(spec))
 }
 

@@ -1,38 +1,25 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use openapiv3::OpenAPI;
-use pretty_assertions::assert_eq;
-use serde_yaml::from_str;
-
+use codegen_rust::generate_example;
 use hir::Config;
-use hir::Language;
-use libninja::generate_library;
-use libninja::rust::generate_example;
-use ln_core::extractor::extract_spec;
-
-const EXAMPLE: &str = include_str!("link_create_token.rs");
-
-const BASIC: &str = include_str!("../../../test_specs/basic.yaml");
-const RECURLY: &str = include_str!("../../../test_specs/recurly.yaml");
+use libninja::{default, extractor::extract_spec};
+use mir_rust::assert_code_eq;
+use openapiv3::OpenAPI;
 
 #[test]
 fn test_generate_example() {
-    let spec: OpenAPI = from_str(BASIC).unwrap();
+    let spec: OpenAPI = serde_yaml::from_str(include_str!("../../../test_specs/basic.yaml")).unwrap();
 
     let config = Config {
-        package_name: "plaid".to_string(),
-        service_name: "Plaid".to_string(),
-        language: Language::Rust,
-        package_version: "0.1.0".to_string(),
-        config: Default::default(),
+        name: "Plaid".to_string(),
         dest: PathBuf::from_str("..").unwrap(),
-        derives: vec![],
+        ..default()
     };
     let hir = extract_spec(&spec).unwrap();
     let op = hir.get_operation("linkTokenCreate").unwrap();
     let example = generate_example(&op, &config, &hir).unwrap();
-    assert_eq!(example, EXAMPLE);
+    assert_code_eq!(example, include_str!("link_create_token.rs"));
 }
 
 #[test]
@@ -42,20 +29,16 @@ pub fn test_build_full_library_recurly() {
         .with_max_level(tracing::Level::DEBUG)
         .with_writer(std::io::stdout)
         .init();
-    let spec: OpenAPI = from_str(RECURLY).unwrap();
+    let spec = include_str!("../../../test_specs/recurly.yaml");
+    let spec: OpenAPI = serde_yaml::from_str(spec).unwrap();
 
     let temp = tempfile::tempdir().unwrap();
 
-    let opts = Config {
-        dest_path: temp.path().to_path_buf(),
-        build_examples: false,
-        package_name: "recurly".to_string(),
-        service_name: "Recurly".to_string(),
-        language: Language::Rust,
-        config: Default::default(),
-        github_repo: Some("libninjacom/recurly".to_string()),
-        version: None,
-        derive: vec![],
+    let spec = extract_spec(&spec).unwrap();
+    let config = Config {
+        name: "Recurly".to_string(),
+        dest: temp.path().to_path_buf(),
+        ..default()
     };
-    generate_library(spec, opts).unwrap();
+    codegen_rust::generate_rust_library(spec, config).unwrap();
 }

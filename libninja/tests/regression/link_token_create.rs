@@ -1,9 +1,7 @@
+use hir::HirSpec;
+use mir_rust::class::implements_default;
 use openapiv3::{OpenAPI, Schema};
 use serde_yaml::from_str;
-
-use hir::HirSpec;
-use libninja::rust::lower_hir::StructExt;
-use ln_core::extractor::extract_schema;
 
 #[test]
 fn test_link_token_create() {
@@ -22,5 +20,5 @@ fn test_link_token_create() {
         .unwrap()
         .as_struct()
         .unwrap();
-    assert!(s.implements_default(&hir));
+    assert!(implements_default(s, &hir));
 }

@@ -3,21 +3,17 @@
 use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::io;
 
 use crate::extras::Extras;
-use hir::{
-    qualified_env_var, AuthLocation, AuthStrategy, HirSpec, Language, Oauth2Auth, ServerStrategy,
-};
+use hir::{qualified_env_var, AuthLocation, AuthStrategy, HirSpec, Language, Oauth2Auth, ServerStrategy};
 use hir::{Config, Operation};
-use libninja_macro::{function, rfunction};
-use mir::{import, Arg, Class, Field, File, Function, Ident, Item, Visibility};
+use libninja_macro::rfunction;
+use mir::{import, Class, Field, File, Function, Ident, Item, Visibility};
 use mir_rust::{ToRustCode, ToRustIdent, ToRustType};
 
 /// Generates the client code for a given OpenAPI specification.
 pub fn make_lib_rs(spec: &HirSpec, extras: &Extras, cfg: &Config) -> File<TokenStream> {
-    let src_path = cfg.dest.join("src");
-    let mut struct_Client = struct_Client(spec, &cfg);
+    let struct_Client = struct_Client(spec, &cfg);
     let impl_Client = impl_Client(spec, &cfg);
 
     let client_name = struct_Client.name.clone();
@@ -106,7 +102,6 @@ fn server_url(spec: &HirSpec, opt: &Config) -> TokenStream {
 }
 
 fn build_Client_from_env(spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
-    let auth_struct = opt.authenticator_name().to_rust_struct();
     let body = if spec.has_security() {
         let auth_struct = opt.authenticator_name().to_rust_struct();
         quote! {

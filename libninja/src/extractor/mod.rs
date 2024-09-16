@@ -1,28 +1,30 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use convert_case::{Case, Casing};
 use openapiv3 as oa;
-use openapiv3::{APIKeyLocation, OpenAPI, RefOr, ReferenceOr, Schema, SecurityScheme};
-use tracing_ez::{debug, span, warn};
+use openapiv3::{APIKeyLocation, OpenAPI, Schema, SecurityScheme};
+use tracing::{debug, warn};
 
-use hir::{
-    AuthLocation, AuthParam, AuthStrategy, HirSpec, Language, Location, Oauth2Auth, Operation,
-    Parameter, Record, TokenAuth,
-};
-use mir::Ty;
-use mir::{Doc, DocFormat, NewType};
+use hir::{AuthLocation, AuthParam, AuthStrategy, HirSpec, Language, Oauth2Auth, Record, TokenAuth};
+use mir::{NewType, Ty};
 pub use record::*;
-pub use ty::*;
-pub use ty::{schema_ref_to_ty, schema_ref_to_ty2, schema_to_ty};
+pub use ty::{schema_ref_to_ty, schema_ref_to_ty2, schema_to_ty, *};
 
-use crate::extractor::operation::extract_operation;
-use crate::sanitize::sanitize;
+use operation::extract_operation;
 
 mod operation;
 pub mod plural;
 mod record;
 mod ty;
+
+pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
+    let mut hir = extract_without_treeshake(spec)?;
+    treeshake(&mut hir);
+    validate(&hir);
+    debug!("Extracted {} schemas: {:?}", hir.schemas.len(), hir.schemas.keys());
+    Ok(hir)
+}
 
 /// You might need to call add_operation_models after this
 pub fn extract_without_treeshake(spec: &OpenAPI) -> Result<HirSpec> {
@@ -51,27 +53,12 @@ pub fn extract_without_treeshake(spec: &OpenAPI) -> Result<HirSpec> {
     Ok(hir)
 }
 
-pub fn extract_spec(spec: &OpenAPI) -> Result<HirSpec> {
-    let mut hir = extract_without_treeshake(spec)?;
-    treeshake(&mut hir);
-    validate(&hir);
-    debug!(
-        "Extracted {} schemas: {:?}",
-        hir.schemas.len(),
-        hir.schemas.keys()
-    );
-    Ok(hir)
-}
-
 pub fn validate(spec: &HirSpec) {
     for (name, schema) in &spec.schemas {
         if let Record::Struct(s) = schema {
             for (field, schema) in s.fields.iter() {
                 if let Ty::Any(Some(inner)) = &schema.ty {
-                    warn!(
-                        "Field {} in schema {} is an Any with inner: {:?}",
-                        field, name, inner
-                    );
+                    warn!("Field {} in schema {} is an Any with inner: {:?}", field, name, inner);
                 } else if let Ty::Model(s) = &schema.ty {
                     if !spec.schemas.contains_key(s) {
                         warn!(
@@ -109,7 +96,10 @@ fn extract_servers(spec: &OpenAPI) -> Result<BTreeMap<String, String>> {
                 continue 'outer;
             }
         }
-        warn!("Server description not recognized. User must pass in server directly. Description: {:?}", server.description);
+        warn!(
+            "Server description not recognized. User must pass in server directly. Description: {:?}",
+            server.description
+        );
         return Ok(BTreeMap::new());
     }
     Ok(servers)
@@ -201,17 +191,11 @@ fn extract_key_location(loc: &APIKeyLocation, name: &str) -> AuthLocation {
             if ["bearer_auth", "bearer"].contains(&&*name.to_case(Case::Snake)) {
                 AuthLocation::Bearer
             } else {
-                AuthLocation::Header {
-                    key: name.to_string(),
-                }
+                AuthLocation::Header { key: name.to_string() }
             }
         }
-        APIKeyLocation::Query => AuthLocation::Query {
-            key: name.to_string(),
-        },
-        APIKeyLocation::Cookie => AuthLocation::Cookie {
-            key: name.to_string(),
-        },
+        APIKeyLocation::Query => AuthLocation::Query { key: name.to_string() },
+        APIKeyLocation::Cookie => AuthLocation::Cookie { key: name.to_string() },
     }
 }
 
@@ -228,9 +212,7 @@ pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
             .get(scheme_name)
             .expect(&format!("Security scheme {} not found.", scheme_name));
         debug!("Found security scheme for {}: {:?}", scheme_name, scheme);
-        let scheme = scheme
-            .as_item()
-            .expect("TODO support refs in securitySchemes");
+        let scheme = scheme.as_item().expect("TODO support refs in securitySchemes");
         match scheme {
             SecurityScheme::APIKey { location, name, .. } => {
                 let location = extract_key_location(&location, &name);
@@ -247,23 +229,12 @@ pub fn extract_security_strategies(spec: &OpenAPI) -> Vec<AuthStrategy> {
                     strats.push(AuthStrategy::OAuth2(Oauth2Auth {
                         auth_url: flow.authorization_url.clone(),
                         exchange_url: flow.token_url.clone(),
-                        refresh_url: flow
-                            .refresh_url
-                            .clone()
-                            .unwrap_or_else(|| flow.token_url.clone()),
-                        scopes: flow
-                            .scopes
-                            .iter()
-                            .map(|(k, v)| (k.clone(), v.clone()))
-                            .collect(),
+                        refresh_url: flow.refresh_url.clone().unwrap_or_else(|| flow.token_url.clone()),
+                        scopes: flow.scopes.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
                     }))
                 }
             }
-            SecurityScheme::HTTP {
-                scheme,
-                bearer_format,
-                description,
-            } => {
+            SecurityScheme::HTTP { .. } => {
                 strats.push(AuthStrategy::Token(TokenAuth {
                     name: scheme_name.to_string(),
                     fields: vec![AuthParam {
@@ -304,10 +275,7 @@ pub fn add_operation_models(lang: Language, mut spec: HirSpec) -> Result<HirSpec
     let mut new_schemas = vec![];
     for op in &spec.operations {
         if op.use_required_struct(lang) {
-            new_schemas.push((
-                op.required_struct_name(),
-                Record::Struct(op.required_struct(lang)),
-            ));
+            new_schemas.push((op.required_struct_name(), Record::Struct(op.required_struct(lang))));
         }
     }
     spec.schemas.extend(new_schemas);

@@ -1,9 +1,5 @@
-#![allow(non_snake_case)]
-#![allow(unused)]
-
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
-use hir::Language;
 use libninja::command::*;
 use tracing::Level;
 use tracing_subscriber::layer::SubscriberExt;
@@ -37,11 +33,7 @@ pub enum Command {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let level = if cli.verbose {
-        Level::DEBUG
-    } else {
-        Level::INFO
-    };
+    let level = if cli.verbose { Level::DEBUG } else { Level::INFO };
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer().without_time())
         .with(
@@ -55,23 +47,6 @@ fn main() -> Result<()> {
         .init();
 
     match cli.command {
-        Command::Gen(generate) => {
-            use Language::*;
-            match generate.language {
-                Rust => {}
-                // Python => {
-                //     warn_if_not_found("pdm");
-                //     warn_if_not_found("black");
-                // },
-                // Typescript => {
-                //     warn_if_not_found("pnpm");
-                //     warn_if_not_found("prettier")
-                // },
-                // Golang => {
-                //     warn_if_not_found("gofmt");
-                // },
-            }
-            generate.run()
-        }
+        Command::Gen(generate) => generate.run(),
     }
 }

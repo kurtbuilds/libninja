@@ -1,6 +1,6 @@
 use hir::{Config, HirField, HirSpec, Struct};
 use mir::{import, Import, Ty};
-use mir_rust::{assert_code_eq, bmap, default, make_class, ToRustCode, ToRustIdent};
+use mir_rust::{assert_code_eq, bmap, default, make_class, ToRustIdent};
 
 #[test]
 fn test_to_ident() {
@@ -28,10 +28,8 @@ fn test_import() {
     assert_code_eq!(code, "use plaid::model::LinkTokenCreateRequestUser;");
     let code = import!(plaid::model, LinkTokenCreateRequestUser, Foobar);
     assert_code_eq!(code, "use plaid::model::{LinkTokenCreateRequestUser, Foobar};");
-
     let code = Import::alias("plaid::model", "foobar");
     assert_code_eq!(code, "use plaid::model as foobar;");
-
     let code = Import::package("foo_bar");
     assert_code_eq!(code, "use foo_bar;");
 }

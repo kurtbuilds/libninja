@@ -1,11 +1,8 @@
 use openapiv3 as oa;
 use openapiv3::{ArrayType, OpenAPI, RefOr, ReferenceOr, Schema, SchemaKind, SchemaReference};
-use serde_json::Value;
 use tracing::warn;
 
 use mir::Ty;
-
-use crate::sanitize::sanitize;
 
 pub fn schema_ref_to_ty(schema_ref: &RefOr<Schema>, spec: &OpenAPI) -> Ty {
     let schema = schema_ref.resolve(spec);
@@ -53,21 +50,13 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         SchemaKind::Type(oa::Type::Number(_)) => Ty::Float,
         SchemaKind::Type(oa::Type::Integer(_)) => {
             let ext = &schema.data.extensions;
-            let null_as_zero = ext
-                .get("x-null-as-zero")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
+            let null_as_zero = ext.get("x-null-as-zero").and_then(|v| v.as_bool()).unwrap_or(false);
             if null_as_zero {
                 return Ty::Integer {
                     ser: mir::IntegerSerialization::NullAsZero,
                 };
             }
-            match schema
-                .data
-                .extensions
-                .get("x-format")
-                .and_then(|s| s.as_str())
-            {
+            match schema.data.extensions.get("x-format").and_then(|s| s.as_str()) {
                 Some("date") => Ty::Date {
                     ser: mir::DateSerialization::Integer,
                 },
@@ -78,9 +67,7 @@ pub fn schema_to_ty(schema: &Schema, spec: &OpenAPI) -> Ty {
         }
         SchemaKind::Type(oa::Type::Boolean {}) => Ty::Boolean,
         SchemaKind::Type(oa::Type::Object(_)) => Ty::Any(Some(schema.clone())),
-        SchemaKind::Type(oa::Type::Array(ArrayType {
-            items: Some(item), ..
-        })) => {
+        SchemaKind::Type(oa::Type::Array(ArrayType { items: Some(item), .. })) => {
             let inner = schema_ref_to_ty(&item, spec);
             Ty::Array(Box::new(inner))
         }
@@ -111,9 +98,7 @@ pub fn is_primitive(schema: &Schema, spec: &OpenAPI) -> bool {
         Type(Number(_)) => true,
         Type(Integer(_)) => true,
         Type(Boolean {}) => true,
-        Type(Array(ArrayType {
-            items: Some(inner), ..
-        })) => {
+        Type(Array(ArrayType { items: Some(inner), .. })) => {
             let inner = inner.resolve(spec);
             is_primitive(inner, spec)
         }

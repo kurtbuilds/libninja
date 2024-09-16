@@ -5,19 +5,22 @@ mod model;
 pub mod request;
 mod serde;
 
-use crate::client::make_lib_rs;
-use crate::example::write_examples_folder;
-use crate::extras::calculate_extras;
-use crate::model::write_model_module;
-use crate::request::write_request_module;
-use crate::serde::write_serde_module;
 use anyhow::Result;
+use client::make_lib_rs;
+pub use example::generate_example;
+use example::write_examples_folder;
+use extras::calculate_extras;
 use hir::Config;
 use hir::HirSpec;
 use mir_rust::{format_code, ToRustCode};
-use std::collections::HashSet;
-use std::fs;
-use std::path::{Path, PathBuf};
+use model::write_model_module;
+use request::write_request_module;
+use serde::write_serde_module;
+use std::{
+    collections::HashSet,
+    fs,
+    path::{Path, PathBuf},
+};
 
 pub type Modified = HashSet<PathBuf>;
 
@@ -64,11 +67,7 @@ fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-fn write_rust(
-    path: &Path,
-    code: impl ToRustCode,
-    modified: &mut HashSet<PathBuf>,
-) -> std::io::Result<()> {
+fn write_rust(path: &Path, code: impl ToRustCode, modified: &mut HashSet<PathBuf>) -> std::io::Result<()> {
     modified.insert(path.to_path_buf());
     let code = format_code(code.to_rust_code());
     let mut content = fs::read_to_string(path).unwrap_or_default();
