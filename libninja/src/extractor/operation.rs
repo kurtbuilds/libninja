@@ -1,9 +1,6 @@
 use anyhow::{anyhow, Result};
 use convert_case::{Case, Casing};
-use openapiv3::{
-    ArrayType, OpenAPI, Operation, Parameter, PathItem, RefOr, ReferenceOr, Schema, SchemaKind,
-    Type,
-};
+use openapiv3::{ArrayType, OpenAPI, Operation, Parameter, PathItem, RefOr, ReferenceOr, Schema, SchemaKind, Type};
 use tracing_ez::span;
 
 use hir::{HirSpec, Location};
@@ -13,15 +10,42 @@ use crate::extractor;
 use crate::extractor::record::extract_schema;
 use crate::extractor::{is_primitive, schema_ref_to_ty, schema_ref_to_ty2, schema_to_ty};
 
+pub fn extract_operation(spec: &OpenAPI, path: &str, method: &str, op: &Operation, item: &PathItem, hir: &mut HirSpec) {
+    let name = make_name(op.operation_id.as_ref(), method, path);
+    let doc = extract_doc(op, DocFormat::Markdown);
+    let mut parameters = extract_parameters(op, item, spec).unwrap();
+    parameters.sort_by(|a, b| a.name.cmp(&b.name));
+    let ret = match get_res(op, spec) {
+        None => Ty::Unit,
+        Some(x @ ReferenceOr::Reference { .. }) => schema_ref_to_ty(x, spec),
+        Some(ReferenceOr::Item(res)) => {
+            let name = format!("{}Response", name.to_case(Case::Pascal));
+            extract_schema(&name, res, spec, hir);
+            if is_primitive(res, spec) {
+                schema_to_ty(res, spec)
+            } else if matches!(res.kind, SchemaKind::Type(Type::Array(_))) {
+                schema_to_ty(res, spec)
+            } else {
+                Ty::Model(name)
+            }
+        }
+    };
+    hir.operations.push(hir::Operation {
+        name,
+        doc,
+        parameters,
+        ret,
+        path: path.to_string(),
+        method: method.to_string(),
+    });
+}
+
 /// make a name for hir::Operation
 fn make_name(operation_id: Option<&String>, method: &str, path: &str) -> String {
     if let Some(name) = operation_id {
         return name.replace(".", "_");
     }
-    let names = path
-        .split('/')
-        .filter(|s| !s.starts_with('{'))
-        .collect::<Vec<_>>();
+    let names = path.split('/').filter(|s| !s.starts_with('{')).collect::<Vec<_>>();
     let last_group = path
         .split('/')
         .filter(|s| s.starts_with('{'))
@@ -38,41 +62,6 @@ fn make_name(operation_id: Option<&String>, method: &str, path: &str) -> String 
         .unwrap_or_default();
     let name = names.join("_");
     format!("{method}{name}{last_group}")
-}
-
-pub fn extract_operation(
-    spec: &OpenAPI,
-    path: &str,
-    method: &str,
-    op: &Operation,
-    item: &PathItem,
-    hir: &mut HirSpec,
-) {
-    let name = make_name(op.operation_id.as_ref(), method, path);
-    let doc = extract_doc(op, DocFormat::Markdown);
-    let mut parameters = extract_parameters(op, item, spec).unwrap();
-    parameters.sort_by(|a, b| a.name.cmp(&b.name));
-    let ret = match get_res(op, spec) {
-        None => Ty::Unit,
-        Some(x @ ReferenceOr::Reference { .. }) => schema_ref_to_ty(x, spec),
-        Some(ReferenceOr::Item(res)) => {
-            let name = format!("{}Response", name.to_case(Case::Pascal));
-            extract_schema(&name, res, spec, hir);
-            if is_primitive(res, spec) {
-                schema_to_ty(res, spec)
-            } else {
-                Ty::Model(name)
-            }
-        }
-    };
-    hir.operations.push(hir::Operation {
-        name,
-        doc,
-        parameters,
-        ret,
-        path: path.to_string(),
-        method: method.to_string(),
-    });
 }
 
 fn extract_doc(operation: &Operation, format: DocFormat) -> Option<Doc> {
@@ -93,10 +82,7 @@ fn extract_doc(operation: &Operation, format: DocFormat) -> Option<Doc> {
     if let Some(external_docs) = operation.external_docs.as_ref() {
         doc_pieces.push(match format {
             DocFormat::Markdown => format!("See endpoint docs at <{}>.", external_docs.url),
-            DocFormat::Rst => format!(
-                "See endpoint docs at `{url} <{url}>`_.",
-                url = external_docs.url
-            ),
+            DocFormat::Rst => format!("See endpoint docs at `{url} <{url}>`_.", url = external_docs.url),
         })
     }
     if doc_pieces.is_empty() {
@@ -106,11 +92,7 @@ fn extract_doc(operation: &Operation, format: DocFormat) -> Option<Doc> {
     }
 }
 
-pub fn extract_parameters(
-    op: &Operation,
-    item: &PathItem,
-    spec: &OpenAPI,
-) -> Result<Vec<hir::Parameter>> {
+pub fn extract_parameters(op: &Operation, item: &PathItem, spec: &OpenAPI) -> Result<Vec<hir::Parameter>> {
     let mut inputs = op
         .parameters
         .iter()
