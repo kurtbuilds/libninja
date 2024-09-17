@@ -50,13 +50,6 @@ pub fn generate_rust_library(spec: HirSpec, cfg: Config) -> Result<()> {
 }
 
 fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
-    for f in walkdir::WalkDir::new(dest.join("src")) {
-        let f = f.unwrap();
-        let f = f.into_path();
-        if f.as_os_str() == "./src/request.rs" {
-            dbg!(f.ext_str());
-        }
-    }
     let to_delete = walkdir::WalkDir::new(dest.join("src"))
         .into_iter()
         .chain(walkdir::WalkDir::new(dest.join("examples")).into_iter())
@@ -69,8 +62,6 @@ fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
                 .map(|content| content.contains("libninja: static"))
                 .unwrap_or(false)
         });
-    let to_delete = to_delete.collect::<Vec<_>>();
-    dbg!(&to_delete);
     for e in to_delete {
         fs::remove_file(&e)?;
         eprintln!("{}: Remove unused file.", e.display());
