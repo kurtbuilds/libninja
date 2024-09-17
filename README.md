@@ -86,3 +86,10 @@ deserialize again (serde_json::from_value) into a OpenAPI spec for further proce
 Alternatively, manually modifying the script is great for one-off changes, but your target spec might be evolving over
 time. You can use `git` diffings to partially address this, but it's not ideal.
 If you go this route, the [openapi](https://github.com/kurtbuilds/openapiv3_cli) cli tool can help.
+
+# Roadmap
+
+[ ] Decode anyOf into an enum (IB: submit order array item)
+[ ] Response structs can be newtype (IB: submit order)
+[ ] Put impl Client methods in the request module files.
+[ ] Make sure that request and response structs go in the request module files and not in model/
