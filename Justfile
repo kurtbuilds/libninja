@@ -21,7 +21,6 @@ example EXAMPLE:
 alias e := example
 
 install:
-    just clean release
     cargo install --path libninja --force
 
 check:
@@ -55,10 +54,7 @@ patch: test
     just version patch
     just publish
 
-clean MODE='debug':
-    checkexec ${CARGO_TARGET_DIR:-target}/{{MODE}}/libninja $(fd . -H core/template) -- cargo clean --package libninja
-
-rust: clean
+rust:
     cargo run -- gen --name PetStore --output-dir gen/rust --generator rust data/openapi-spec/petstore/petstore.yaml --github libninjacom/petstore-rs --version 0.1.0
 
 generate:

@@ -18,8 +18,6 @@ pub fn make_lib_rs(spec: &HirSpec, extras: &Extras, cfg: &Config) -> File<TokenS
 
     let client_name = struct_Client.name.clone();
 
-    let struct_Client = struct_Client.to_rust_code();
-
     let serde = extras
         .needs_serde()
         .then(|| {
@@ -71,14 +69,18 @@ pub fn make_lib_rs(spec: &HirSpec, extras: &Extras, cfg: &Config) -> File<TokenS
     File {
         attributes: vec![],
         doc: None,
-        imports: vec![],
+        imports: vec![
+            import!(std::sync, OnceLock),
+            import!(std::borrow, Cow),
+            import!(httpclient, Client),
+        ],
         items: vec![
             Item::Block(base64_import),
             Item::Block(serde),
             Item::Block(static_shared_http_client),
             Item::Block(shared_oauth2_flow),
             Item::Block(fluent_request),
-            Item::Block(struct_Client),
+            Item::Class(struct_Client),
             Item::Block(impl_Client),
             Item::Block(security),
         ],
@@ -175,7 +177,7 @@ pub fn struct_Client(spec: &HirSpec, opt: &Config) -> Class<TokenStream> {
         fields: instance_fields,
         methods,
         vis: Visibility::Public,
-        imports: vec![import!(httpclient, Client)],
+        imports: vec![],
         ..Class::default()
     }
 }

@@ -19,31 +19,33 @@ pub fn write_request_module(spec: &HirSpec, cfg: &Config, m: &mut Modified) -> R
     let src = cfg.src();
     let imports = vec![];
     fs::create_dir_all(src.join("request"))?;
-    let modules: Vec<Ident> = vec![];
+    let mut modules: Vec<(Ident, Ident)> = vec![];
 
     for operation in &spec.operations {
+        modules.push((Ident(operation.file_name()), Ident(operation.request_struct_name())));
         let file = make_single_module(operation, &spec, cfg);
         let fname = operation.file_name();
         let path = src.join("request").join(&fname).with_extension("rs");
-        write_rust(&path, file.to_rust_code(), m)?;
+        write_rust(&path, file, m)?;
     }
     let items = modules
         .into_iter()
-        .map(|m| Item::Block(quote!(pub mod #m;)))
+        .map(|(m, s)| {
+            Item::Block(quote! {
+                pub mod #m;
+                pub use #m::#s;
+            })
+        })
         .collect();
     let file = File {
         imports,
         items,
         ..File::default()
     };
-    write_rust(&src.join("request.rs"), file.to_rust_code(), m)
+    write_rust(&src.join("request").join("mod.rs"), file, m)
 }
 
-pub fn make_single_module(
-    operation: &Operation,
-    spec: &HirSpec,
-    cfg: &Config,
-) -> File<TokenStream> {
+pub fn make_single_module(operation: &Operation, spec: &HirSpec, cfg: &Config) -> File<TokenStream> {
     let client_name = cfg.client_name();
     let authenticate = spec
         .has_security()
@@ -97,10 +99,7 @@ pub fn make_single_module(
             }
         }
     };
-    let mut items: Vec<Item<TokenStream>> = request_structs
-        .into_iter()
-        .map(|s| Item::Class(s))
-        .collect();
+    let mut items: Vec<Item<TokenStream>> = request_structs.into_iter().map(|s| Item::Class(s)).collect();
     items.push(Item::Block(impl_block));
     File {
         attributes: vec![],
@@ -139,8 +138,7 @@ pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
 
             let mut assign = {
                 let param_key = input.to_key().to_rust_code();
-                let value_identifier = if input.ty.is_iterable() && input.location != Location::Body
-                {
+                let value_identifier = if input.ty.is_iterable() && input.location != Location::Body {
                     quote! { item }
                 } else if input.optional {
                     quote! { unwrapped }
@@ -245,53 +243,57 @@ pub fn make_struct_fields(inputs: &[Parameter], use_references: bool) -> Vec<Fie
 
 /// Build the various "builder" methods for optional parameters for a request struct
 pub fn build_request_struct_builder_methods(operation: &Operation) -> Vec<Function<TokenStream>> {
-    operation.parameters.iter().filter(|a| a.optional).map(|a| {
-        let name = a.name.to_rust_ident();
-        let mut arg_type = a.ty.to_reference_type(TokenStream::new());
+    operation
+        .parameters
+        .iter()
+        .filter(|a| a.optional)
+        .map(|a| {
+            let name = a.name.to_rust_ident();
+            let mut arg_type = a.ty.to_reference_type(TokenStream::new());
 
-        let mut body = if a.ty.is_reference_type() {
-            quote! {
-                self.params.#name = Some(#name.to_owned());
-                self
-            }
-        } else {
-            quote! {
-                self.params.#name = Some(#name);
-                self
-            }
-        };
-        if let Some(Ty::String) = a.ty.inner_iterable() {
-            arg_type = quote!( impl IntoIterator<Item = impl AsRef<str>> );
-            body = quote! {
-                self.params.#name = Some(#name.into_iter().map(|s| s.as_ref().to_owned()).collect());
-                self
+            let mut body = if a.ty.is_reference_type() {
+                quote! {
+                    self.params.#name = Some(#name.to_owned());
+                    self
+                }
+            } else {
+                quote! {
+                    self.params.#name = Some(#name);
+                    self
+                }
             };
-        }
-        let name: Ident = a.name.to_rust_ident();
-        Function {
-            doc: Some(Doc(format!("Set the value of the {} field.", name.0))),
-            name,
-            args: vec![
-                Arg::SelfArg { mutable: true, reference: false },
-                Arg::Basic {
-                    name: a.name.to_rust_ident(),
-                    ty: arg_type,
-                    default: None,
-                },
-            ],
-            ret: quote! {Self},
-            body,
-            vis: Visibility::Public,
-            ..Function::default()
-        }
-    }).collect()
+            if let Some(Ty::String) = a.ty.inner_iterable() {
+                arg_type = quote!(impl IntoIterator<Item = impl AsRef<str>>);
+                body = quote! {
+                    self.params.#name = Some(#name.into_iter().map(|s| s.as_ref().to_owned()).collect());
+                    self
+                };
+            }
+            let name: Ident = a.name.to_rust_ident();
+            Function {
+                doc: Some(Doc(format!("Set the value of the {} field.", name.0))),
+                name,
+                args: vec![
+                    Arg::SelfArg {
+                        mutable: true,
+                        reference: false,
+                    },
+                    Arg::Basic {
+                        name: a.name.to_rust_ident(),
+                        ty: arg_type,
+                        default: None,
+                    },
+                ],
+                ret: quote! {Self},
+                body,
+                vis: Visibility::Public,
+                ..Function::default()
+            }
+        })
+        .collect()
 }
 
-pub fn build_request_struct(
-    operation: &Operation,
-    _spec: &HirSpec,
-    opt: &Config,
-) -> Vec<Class<TokenStream>> {
+pub fn build_request_struct(operation: &Operation, _spec: &HirSpec, opt: &Config) -> Vec<Class<TokenStream>> {
     let instance_fields = make_struct_fields(&operation.parameters, false);
 
     let fn_name = operation.name.to_rust_ident().0;
@@ -315,11 +317,7 @@ On request success, this will return a [`{response}`]."#,
     }];
 
     if operation.use_required_struct(Language::Rust) {
-        let lifetimes = if operation
-            .parameters
-            .iter()
-            .any(|param| param.ty.is_reference_type())
-        {
+        let lifetimes = if operation.parameters.iter().any(|param| param.ty.is_reference_type()) {
             vec!["'a".to_string()]
         } else {
             vec![]

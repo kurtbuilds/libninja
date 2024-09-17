@@ -21,6 +21,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use std_ext::PathExt;
 
 pub type Modified = HashSet<PathBuf>;
 
@@ -49,22 +50,30 @@ pub fn generate_rust_library(spec: HirSpec, cfg: Config) -> Result<()> {
 }
 
 fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
-    let mut to_delete: Vec<_> = fs::read_dir(dest.join("examples"))
+    for f in walkdir::WalkDir::new(dest.join("src")) {
+        let f = f.unwrap();
+        let f = f.into_path();
+        if f.as_os_str() == "./src/request.rs" {
+            dbg!(f.ext_str());
+        }
+    }
+    let to_delete = walkdir::WalkDir::new(dest.join("src"))
         .into_iter()
-        .flatten()
-        .chain(fs::read_dir(dest.join("src")).into_iter().flatten())
-        .flat_map(|e| e.ok())
-        .map(|e| e.path())
-        .filter(|e| e.ends_with(".rs"))
-        .filter(|e| {
-            fs::read_to_string(&e)
-                .map(|content| !content.contains("libninja: static"))
+        .chain(walkdir::WalkDir::new(dest.join("examples")).into_iter())
+        .filter_map(|e| e.ok())
+        .map(|e| e.into_path())
+        .filter(|p| p.ext_str() == "rs")
+        .filter(|e| !modified.contains(e))
+        .filter(|p| {
+            !fs::read_to_string(&p)
+                .map(|content| content.contains("libninja: static"))
                 .unwrap_or(false)
-        })
-        .collect();
-    to_delete.retain(|f| !modified.contains(f));
-    for file in to_delete {
-        fs::remove_file(file)?;
+        });
+    let to_delete = to_delete.collect::<Vec<_>>();
+    dbg!(&to_delete);
+    for e in to_delete {
+        fs::remove_file(&e)?;
+        eprintln!("{}: Remove unused file.", e.display());
     }
     Ok(())
 }
