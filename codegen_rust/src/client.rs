@@ -148,7 +148,7 @@ pub fn struct_Client(spec: &HirSpec, opt: &Config) -> Class<TokenStream> {
 
     let mut instance_fields = vec![Field {
         name: Ident::new("client"),
-        ty: quote!(Cow<'static, httpclient::Client>),
+        ty: quote!(Cow<'static, Client>),
         ..Field::default()
     }];
     if spec.has_security() {
@@ -455,10 +455,10 @@ pub fn impl_Authentication(spec: &HirSpec, opt: &Config) -> TokenStream {
 fn static_shared_http_client(spec: &HirSpec, opt: &Config) -> TokenStream {
     let url = server_url(spec, opt);
     quote! {
-        static SHARED_HTTPCLIENT: OnceLock<httpclient::Client> = OnceLock::new();
+        static SHARED_HTTPCLIENT: OnceLock<Client> = OnceLock::new();
 
-        pub fn default_http_client() -> httpclient::Client {
-            httpclient::Client::new()
+        pub fn default_http_client() -> Client {
+            Client::new()
                 .base_url(#url)
         }
 
@@ -471,11 +471,11 @@ fn static_shared_http_client(spec: &HirSpec, opt: &Config) -> TokenStream {
         ///     .with_middleware(..)
         /// );
         /// ```
-        pub fn init_http_client(init: httpclient::Client) {
+        pub fn init_http_client(init: Client) {
             let _ = SHARED_HTTPCLIENT.set(init);
         }
 
-        fn shared_http_client() -> Cow<'static, httpclient::Client> {
+        fn shared_http_client() -> Cow<'static, Client> {
             Cow::Borrowed(SHARED_HTTPCLIENT.get_or_init(default_http_client))
         }
     }

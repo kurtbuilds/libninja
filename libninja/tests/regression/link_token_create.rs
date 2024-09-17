@@ -1,5 +1,4 @@
 use hir::HirSpec;
-use mir_rust::class::implements_default;
 use openapiv3::{OpenAPI, Schema};
 use serde_yaml::from_str;
 

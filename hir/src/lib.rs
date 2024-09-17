@@ -298,15 +298,9 @@ pub enum ServerStrategy {
 impl ServerStrategy {
     pub fn env_var_for_strategy(&self, service_name: &str) -> Option<String> {
         match self {
-            ServerStrategy::BaseUrl => Some(format!(
-                "{}_BASE_URL",
-                service_name.to_case(Case::ScreamingSnake)
-            )),
+            ServerStrategy::BaseUrl => Some(format!("{}_BASE_URL", service_name.to_case(Case::ScreamingSnake))),
             ServerStrategy::Single(_) => None,
-            ServerStrategy::Env => Some(format!(
-                "{}_ENV",
-                service_name.to_case(Case::ScreamingSnake)
-            )),
+            ServerStrategy::Env => Some(format!("{}_ENV", service_name.to_case(Case::ScreamingSnake))),
         }
     }
 }
@@ -372,9 +366,7 @@ impl HirSpec {
     }
 
     pub fn has_basic_auth(&self) -> bool {
-        self.security
-            .iter()
-            .any(|s| matches!(s, AuthStrategy::Token(_)))
+        self.security.iter().any(|s| matches!(s, AuthStrategy::Token(_)))
     }
 
     pub fn oauth2_auth(&self) -> Option<&Oauth2Auth> {

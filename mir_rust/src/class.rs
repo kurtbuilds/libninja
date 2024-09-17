@@ -1,4 +1,4 @@
-use crate::{derives_to_tokens, ToRustCode, ToRustIdent, ToRustType};
+use crate::{derives_to_tokens, CanDerive, ToRustCode, ToRustIdent, ToRustType};
 use hir::{Config, HirField, HirSpec, Struct};
 use mir::{
     Class, DateSerialization, DecimalSerialization, Field, Function, Ident, IntegerSerialization, Item, Ty, Visibility,
@@ -80,10 +80,6 @@ impl ToRustCode for Field<TokenStream> {
             #vis #name: #ty
         }
     }
-}
-
-pub fn implements_default(schema: &Struct, spec: &HirSpec) -> bool {
-    schema.fields.iter().all(|(_, f)| f.ty.implements_default(spec))
 }
 
 fn field_attributes(f: &HirField, name: &str, config: &Config) -> Vec<TokenStream> {
@@ -212,7 +208,7 @@ fn ref_target(s: &Struct) -> Option<RefTarget> {
 }
 
 pub fn make_class(s: &Struct, config: &Config, spec: &HirSpec) -> Class<TokenStream> {
-    let default = implements_default(s, spec).then(|| {
+    let default = s.implements_default(spec).then(|| {
         quote! { , Default }
     });
     let derives = derives_to_tokens(&config.derives);
@@ -262,5 +258,15 @@ pub fn make_class(s: &Struct, config: &Config, spec: &HirSpec) -> Class<TokenStr
         lifetimes: vec![],
         items: vec![Item::Block(impl_blocks)],
         imports: vec![],
+    }
+}
+
+impl CanDerive for Struct {
+    fn implements_default(&self, spec: &HirSpec) -> bool {
+        self.fields.iter().all(|(_, f)| f.ty.implements_default(spec))
+    }
+
+    fn implements_dummy(&self, spec: &HirSpec) -> bool {
+        self.fields.iter().all(|(_, f)| f.ty.implements_dummy(spec))
     }
 }

@@ -9,6 +9,9 @@ pub trait ToRustType {
     fn to_rust_type(&self) -> TokenStream;
     fn to_reference_type(&self, specifier: TokenStream) -> TokenStream;
     fn is_reference_type(&self) -> bool;
+}
+
+pub trait CanDerive {
     fn implements_default(&self, spec: &HirSpec) -> bool;
     fn implements_dummy(&self, spec: &HirSpec) -> bool;
 }
@@ -72,7 +75,9 @@ impl ToRustType for Ty {
             _ => false,
         }
     }
+}
 
+impl CanDerive for Ty {
     fn implements_default(&self, spec: &HirSpec) -> bool {
         match self {
             Ty::String => true,
@@ -80,10 +85,10 @@ impl ToRustType for Ty {
             Ty::Float => true,
             Ty::Boolean => true,
             Ty::Array(_) => true,
-            Ty::Model(name) => {
-                let model = spec.get_record(name.as_str()).expect("Model not found");
-                model.fields().all(|f| f.ty.implements_default(spec))
-            }
+            Ty::Model(name) => spec
+                .get_record(name.as_str())
+                .expect("Model not found")
+                .implements_default(spec),
             Ty::Unit => true,
             Ty::Any(_) => true,
             Ty::Date { .. } => true,

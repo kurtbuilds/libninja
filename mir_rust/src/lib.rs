@@ -23,7 +23,7 @@ pub use example::to_rust_example_value;
 pub use ident::ToRustIdent;
 pub use r#enum::make_enum;
 pub use record::make_item;
-pub use ty::ToRustType;
+pub use ty::{CanDerive, ToRustType};
 pub use util::*;
 
 pub fn serde_rename2(value: &str, ident: &Ident) -> Option<TokenStream> {

@@ -1,3 +1,4 @@
+use crate::ty::CanDerive;
 use crate::{derives_to_tokens, make_class, make_enum, ToRustIdent, ToRustType};
 use hir::{Config, HirField, HirSpec, NewType, Record};
 use mir::Item;
@@ -39,6 +40,22 @@ pub fn make_item(record: &Record, spec: &HirSpec, cfg: &Config) -> Item<TokenStr
         Record::NewType(nt) => make_newtype(nt, spec, &cfg.derives),
         Record::Enum(en) => make_enum(en, &cfg.derives),
         Record::TypeAlias(name, field) => make_typealias(name, field),
+    }
+}
+
+impl CanDerive for Record {
+    fn implements_default(&self, spec: &HirSpec) -> bool {
+        match self {
+            Record::Enum(_) => false,
+            _ => self.fields().all(|f| f.ty.implements_default(spec)),
+        }
+    }
+
+    fn implements_dummy(&self, spec: &HirSpec) -> bool {
+        match self {
+            Record::Enum(_) => false,
+            _ => self.fields().all(|f| f.ty.implements_default(spec)),
+        }
     }
 }
 

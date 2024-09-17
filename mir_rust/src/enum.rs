@@ -52,16 +52,23 @@ impl ToRustCode for Enum<TokenStream> {
         let vis = vis.to_rust_code();
         let doc = doc.to_rust_code();
         let variants = variants.into_iter().map(|v| v.to_rust_code());
-        let methods = methods.into_iter().map(|m| m.to_rust_code());
+        let methods = if methods.is_empty() {
+            TokenStream::new()
+        } else {
+            let methods = methods.into_iter().map(|m| m.to_rust_code());
+            quote! {
+                impl #name {
+                    #(#methods)*
+                }
+            }
+        };
         quote! {
             #doc
             #(#attributes)*
             #vis enum #name {
                 #(#variants),*
             }
-            impl #name {
-                #(#methods)*
-            }
+            #methods
         }
     }
 }
