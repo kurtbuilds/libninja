@@ -22,7 +22,10 @@ pub fn write_request_module(spec: &HirSpec, cfg: &Config, m: &mut Modified) -> R
     let mut modules: Vec<(Ident, Ident)> = vec![];
 
     for operation in &spec.operations {
-        modules.push((Ident(operation.file_name()), Ident(operation.request_struct_name())));
+        modules.push((
+            Ident(operation.file_name()),
+            operation.request_struct_name().to_rust_struct(),
+        ));
         let file = make_single_module(operation, &spec, cfg);
         let fname = operation.file_name();
         let path = src.join("request").join(&fname).with_extension("rs");
