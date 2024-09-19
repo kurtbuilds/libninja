@@ -12,8 +12,10 @@ use example::write_examples_folder;
 use extras::calculate_extras;
 use hir::Config;
 use hir::HirSpec;
+use mir::{File, Item};
 use mir_rust::{format_code, ToRustCode};
 use model::write_model_module;
+use proc_macro2::TokenStream;
 use request::write_request_module;
 use serde::write_serde_module;
 use std::{
@@ -36,7 +38,7 @@ pub fn generate_rust_library(spec: HirSpec, cfg: Config) -> Result<()> {
     write_request_module(&spec, &cfg, &mut m)?;
 
     let file = make_lib_rs(&spec, &extras, &cfg);
-    write_rust(&src.join("lib.rs"), file, &mut m)?;
+    write_lib_rs(&src.join("lib.rs"), file, &mut m)?;
 
     write_serde_module(&extras, &src, &mut m)?;
 
@@ -47,6 +49,15 @@ pub fn generate_rust_library(spec: HirSpec, cfg: Config) -> Result<()> {
     }
     remove_old_files(&cfg.dest, &m)?;
     Ok(())
+}
+
+fn write_lib_rs(path: &Path, mut file: File<TokenStream>, m: &mut Modified) -> std::io::Result<()> {
+    let content = fs::read_to_string(&path).unwrap_or_default();
+    if content.contains("default_http_client") {
+        file.items
+            .retain(|item| !matches!(item, Item::Fn(f) if f.name == "default_http_client"));
+    }
+    write_with_content(path, file, content, m)
 }
 
 fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
@@ -69,10 +80,19 @@ fn remove_old_files(dest: &Path, modified: &HashSet<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-fn write_rust(path: &Path, code: impl ToRustCode, modified: &mut HashSet<PathBuf>) -> std::io::Result<()> {
+fn write_rust(path: &Path, code: impl ToRustCode, modified: &mut Modified) -> std::io::Result<()> {
+    let content = fs::read_to_string(path).unwrap_or_default();
+    write_with_content(path, code, content, modified)
+}
+
+fn write_with_content(
+    path: &Path,
+    code: impl ToRustCode,
+    mut content: String,
+    modified: &mut Modified,
+) -> std::io::Result<()> {
     modified.insert(path.to_path_buf());
     let code = format_code(code.to_rust_code());
-    let mut content = fs::read_to_string(path).unwrap_or_default();
     if content.contains("libninja: static") {
         return Ok(());
     } else if content.contains("libninja: after") {

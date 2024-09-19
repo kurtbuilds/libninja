@@ -54,7 +54,8 @@ pub fn make_lib_rs(spec: &HirSpec, extras: &Extras, cfg: &Config) -> File<TokenS
             }
         })
         .unwrap_or_default();
-    let static_shared_http_client = static_shared_http_client(spec, cfg);
+    let static_shared_http_client = static_shared_http_client();
+    let default_http_client = fn_default_http_client(spec, cfg);
     let oauth = spec
         .security
         .iter()
@@ -77,6 +78,7 @@ pub fn make_lib_rs(spec: &HirSpec, extras: &Extras, cfg: &Config) -> File<TokenS
         items: vec![
             Item::Block(base64_import),
             Item::Block(serde),
+            Item::Fn(default_http_client),
             Item::Block(static_shared_http_client),
             Item::Block(shared_oauth2_flow),
             Item::Block(fluent_request),
@@ -452,15 +454,17 @@ pub fn impl_Authentication(spec: &HirSpec, opt: &Config) -> TokenStream {
     }
 }
 
-fn static_shared_http_client(spec: &HirSpec, opt: &Config) -> TokenStream {
+fn fn_default_http_client(spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
     let url = server_url(spec, opt);
+    rfunction!(pub default_http_client() -> Client {
+        Client::new()
+            .base_url(#url)
+    })
+}
+
+fn static_shared_http_client() -> TokenStream {
     quote! {
         static SHARED_HTTPCLIENT: OnceLock<Client> = OnceLock::new();
-
-        pub fn default_http_client() -> Client {
-            Client::new()
-                .base_url(#url)
-        }
 
         /// Use this method if you want to add custom middleware to the httpclient.
         /// It must be called before any requests are made, otherwise it will have no effect.
