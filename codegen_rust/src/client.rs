@@ -8,7 +8,7 @@ use crate::extras::Extras;
 use hir::{qualified_env_var, AuthLocation, AuthStrategy, HirSpec, Language, Oauth2Auth, ServerStrategy};
 use hir::{Config, Operation};
 use libninja_macro::rfunction;
-use mir::{import, Class, Field, File, Function, Ident, Item, Visibility};
+use mir::{import, Class, Field, File, Function, Ident, Item, Module, Visibility};
 use mir_rust::{ToRustCode, ToRustIdent, ToRustType};
 
 /// Generates the client code for a given OpenAPI specification.
@@ -86,6 +86,7 @@ pub fn make_lib_rs(spec: &HirSpec, extras: &Extras, cfg: &Config) -> File<TokenS
             Item::Block(impl_Client),
             Item::Block(security),
         ],
+        modules: vec![Module::new_pub("request"), Module::new_pub("model")],
     }
 }
 
@@ -234,10 +235,10 @@ pub fn build_api_client_method(operation: &Operation) -> TokenStream {
     let name = &operation.name.to_rust_ident();
     quote! {
         #doc
-        pub fn #name(&self, #(#fn_args),*) -> FluentRequest<'_, request::#request_struct> {
+        pub fn #name(&self, #(#fn_args),*) -> FluentRequest<'_, #request_struct> {
             FluentRequest {
                 client: self,
-                params: request::#request_struct {
+                params: #request_struct {
                     #(#struct_field_values,)*
                 }
             }
@@ -245,13 +246,13 @@ pub fn build_api_client_method(operation: &Operation) -> TokenStream {
     }
 }
 
-pub fn impl_ServiceClient_paths(spec: &HirSpec) -> Vec<TokenStream> {
-    let mut result = vec![];
-    for operation in &spec.operations {
-        result.push(build_api_client_method(operation));
-    }
-    result
-}
+// pub fn impl_ServiceClient_paths(spec: &HirSpec) -> Vec<TokenStream> {
+//     let mut result = vec![];
+//     for operation in &spec.operations {
+//         result.push(build_api_client_method(operation));
+//     }
+//     result
+// }
 
 pub fn authenticate_variant(req: &AuthStrategy, opt: &Config) -> TokenStream {
     let auth_struct = opt.authenticator_name().to_rust_struct();
@@ -324,7 +325,7 @@ pub fn build_Client_authenticate(spec: &HirSpec, opt: &Config) -> TokenStream {
 
 pub fn impl_Client(spec: &HirSpec, opt: &Config) -> TokenStream {
     let client_struct_name = opt.client_name();
-    let path_fns = impl_ServiceClient_paths(spec);
+    // let path_fns = impl_ServiceClient_paths(spec);
 
     let security = spec.has_security();
     let authenticate = security
@@ -334,7 +335,6 @@ pub fn impl_Client(spec: &HirSpec, opt: &Config) -> TokenStream {
     quote! {
         impl #client_struct_name {
             #authenticate
-            #(#path_fns)*
         }
     }
 }

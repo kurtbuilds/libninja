@@ -8,11 +8,11 @@ use quote::quote;
 use regex::Captures;
 
 use hir::{Config, HirSpec, Language, Location, Operation, Parameter};
-use mir::{import, Arg, Class, Doc, Field, File, Function, Ident, Import, Item, Ty, Visibility};
+use mir::{import, Arg, Class, Doc, Field, File, Function, Ident, Item, Ty, Visibility};
 
 use mir_rust::{derives_to_tokens, ToRustCode, ToRustIdent, ToRustType};
 
-use crate::{write_rust, Modified};
+use crate::{client::build_api_client_method, write_rust, Modified};
 use std::io::Result;
 
 pub fn write_request_module(spec: &HirSpec, cfg: &Config, m: &mut Modified) -> Result<()> {
@@ -63,31 +63,24 @@ pub fn make_single_module(operation: &Operation, spec: &HirSpec, cfg: &Config) -
     let struct_name = request_structs[0].name.clone();
     let response = operation.ret.to_rust_type();
     let method = Ident(operation.method.clone());
-    // let struct_names = request_structs
-    //     .iter()
-    //     .map(|s| s.name.to_string())
-    //     .collect::<Vec<_>>();
-    // let request_structs = request_structs
-    //     .into_iter()
-    //     .map(|s| s.to_rust_code())
-    //     .collect::<Vec<_>>();
     let url = make_url(&operation);
-    // modules.push(fname.clone());
-    // let mut import = Import::new(&fname, struct_names);
-    // import.vis = Visibility::Public;
-    // imports.push(import);
     let builder_methods = build_request_struct_builder_methods(&operation)
         .into_iter()
         .map(|s| s.to_rust_code());
 
     let assign_inputs = assign_inputs_to_request(&operation.parameters);
+    let output = if operation.ret.is_primitive() {
+        quote! { #response }
+    } else {
+        quote! { crate::model::#response }
+    };
 
     let impl_block = quote! {
         impl FluentRequest<'_, #struct_name> {
             #(#builder_methods)*
         }
         impl<'a> ::std::future::IntoFuture for FluentRequest<'a, #struct_name> {
-            type Output = httpclient::InMemoryResult<#response>;
+            type Output = httpclient::InMemoryResult<#output>;
             type IntoFuture = ::futures::future::BoxFuture<'a, Self::Output>;
 
             fn into_future(self) -> Self::IntoFuture {
@@ -104,18 +97,22 @@ pub fn make_single_module(operation: &Operation, spec: &HirSpec, cfg: &Config) -
     };
     let mut items: Vec<Item<TokenStream>> = request_structs.into_iter().map(|s| Item::Class(s)).collect();
     items.push(Item::Block(impl_block));
+    let client_method = build_api_client_method(operation);
+    items.push(Item::Block(quote! {
+        impl crate::#client_name {
+            #client_method
+        }
+    }));
     File {
         attributes: vec![],
         doc: None,
         imports: vec![
-            import!(serde_json, json),
-            import!("crate::model::*"),
             import!(crate, FluentRequest),
             import!(serde, Serialize, Deserialize),
             import!(httpclient, InMemoryResponseExt),
-            Import::new("crate", vec![client_name]),
         ],
         items,
+        modules: Vec::new(),
     }
 }
 
@@ -151,7 +148,7 @@ pub fn assign_inputs_to_request(inputs: &[Parameter]) -> TokenStream {
                 match input.location {
                     Location::Path => panic!("Should be filtered."),
                     Location::Body => quote! {
-                        r = r.json(json!({#param_key: #value_identifier}));
+                        r = r.json(serde_json::json!({#param_key: #value_identifier}));
                     },
                     Location::Query => quote! {
                         r = r.query(#param_key, &#value_identifier.to_string());

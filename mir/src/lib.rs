@@ -1,6 +1,6 @@
 pub use class::*;
 pub use doc::{Doc, DocFormat};
-pub use file::{File, Item};
+pub use file::{File, Item, Module};
 pub use function::{build_dict, build_struct, Arg, Function};
 pub use ident::*;
 pub use import::*;

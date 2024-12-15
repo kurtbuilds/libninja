@@ -11,6 +11,7 @@ impl ToRustCode for File<TokenStream> {
             doc,
             mut imports,
             mut items,
+            modules,
         } = self;
         for m in &mut items {
             let Item::Class(m) = m else {
@@ -21,10 +22,18 @@ impl ToRustCode for File<TokenStream> {
         let imports = imports.into_iter().map(|i| i.to_rust_code());
         let doc = doc.to_rust_code();
         let items = items.into_iter().map(|f| f.to_rust_code());
+        let modules = modules.into_iter().map(|m| {
+            let vis = m.vis.to_rust_code();
+            let name = syn::parse_str::<syn::Ident>(&m.name).unwrap();
+            quote! {
+                #vis mod #name;
+            }
+        });
         quote! {
             #(#annotations)*
             #doc
             #(#imports)*
+            #(#modules)*
             #(#items)*
         }
     }

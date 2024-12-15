@@ -53,9 +53,13 @@ pub fn generate_rust_library(spec: HirSpec, cfg: Config) -> Result<()> {
 
 fn write_lib_rs(path: &Path, mut file: File<TokenStream>, m: &mut Modified) -> std::io::Result<()> {
     let content = fs::read_to_string(&path).unwrap_or_default();
-    if content.contains("default_http_client") {
-        file.items
-            .retain(|item| !matches!(item, Item::Fn(f) if f.name == "default_http_client"));
+    let mut c = content.as_str();
+    if let Some(p) = c.find("libninja: after") {
+        c = &c[..p];
+        if c.contains("default_http_client") {
+            file.items
+                .retain(|item| !matches!(item, Item::Fn(f) if f.name == "default_http_client"));
+        }
     }
     write_with_content(path, file, content, m)
 }
