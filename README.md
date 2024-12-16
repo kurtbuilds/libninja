@@ -27,6 +27,11 @@ libninja gen Plaid ~/path/to/plaid/openapi.yaml
 cargo install --git https://github.com/kurtbuilds/libninja
 ```
 
+Or alternatively for Nix users you can run the following:
+```bash
+nix run github:kurtbuilds/libninja
+```
+
 Use the command line help to see required arguments & options when generating libraries.
 
 # Usage
