@@ -4,16 +4,17 @@ members = ["libninja", "macro", "mir", "hir", "codegen_rust"]
 
 [workspace.dependencies]
 anyhow = "1.0"
-libninja_mir = { path = "mir" }
+libninja_mir = { path = "mir", version = "0.1" }
+libninja_mir_rust = { path = "mir_rust", version = "0.1" }
+libninja_codegen_rust = { path = "codegen_rust", version = "0.1" }
+libninja_hir = { path = "hir", version = "0.1" }
+libninja_macro = { path = "macro", version = "0.1" }
 syn = { version = "2.0.48", features = ["full"] }
-libninja_hir = { path = "hir" }
 proc-macro2 = "1.0.78"
 quote = "1.0.9"
 convert_case = "0.6.0"
 regex = "1.10.3"
 openapiv3-extended = { version = "6.0.0", features = ["v2"] }
-libninja_mir_rust = { path = "mir_rust" }
-libninja_codegen_rust = { path = "codegen_rust" }
 indexmap = "2.0"
 clap = { version = "4.5", features = ["derive"] }
 serde_json = "1.0"
