@@ -66,7 +66,10 @@ fn check_imports(r: &Record, path: &str) -> Option<Import> {
 
 /// Generate the file for a single struct.
 pub fn make_single_module(record: &Record, spec: &HirSpec, cfg: &Config) -> File<TokenStream> {
-    let mut imports = vec![import!(serde, Serialize, Deserialize)];
+    let mut imports = Vec::new();
+    if !matches!(record, Record::TypeAlias(_, _)) {
+        imports = vec![import!(serde, Serialize, Deserialize)];
+    }
     if let Some(import) = check_imports(record, "super") {
         imports.push(import);
     }

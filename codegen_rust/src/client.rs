@@ -135,7 +135,7 @@ fn build_Client_with_auth(_spec: &HirSpec, opt: &Config) -> Function<TokenStream
     })
 }
 
-fn build_Client_new_with(_spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
+fn build_Client_new(_spec: &HirSpec, opt: &Config) -> Function<TokenStream> {
     let auth_struct = opt.authenticator_name().to_rust_struct();
     let body = quote! {
         Self {
@@ -143,7 +143,7 @@ fn build_Client_new_with(_spec: &HirSpec, opt: &Config) -> Function<TokenStream>
             authentication,
         }
     };
-    rfunction!(pub new_with(client: Client, authentication: #auth_struct)).body(body)
+    rfunction!(pub new(client: Client, authentication: #auth_struct) -> Self).body(body)
 }
 
 pub fn struct_Client(spec: &HirSpec, opt: &Config) -> Class<TokenStream> {
@@ -173,7 +173,7 @@ pub fn struct_Client(spec: &HirSpec, opt: &Config) -> Class<TokenStream> {
         }));
     }
     if spec.has_security() {
-        methods.push(build_Client_new_with(spec, opt));
+        methods.push(build_Client_new(spec, opt));
     }
     Class {
         name: opt.client_name(),

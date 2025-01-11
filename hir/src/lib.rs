@@ -182,6 +182,19 @@ pub struct Enum {
     pub doc: Option<Doc>,
 }
 
+impl Enum {
+    pub fn iter_safe_variant_names(&self) -> impl Iterator<Item = (String, &str)> + '_ {
+        self.variants.iter().map(|v| {
+            let n = v.alias.as_ref().unwrap_or(&v.value);
+            if n.chars().next().unwrap().is_numeric() {
+                (format!("{}{n}", self.name), v.value.as_str())
+            } else {
+                (n.to_string(), v.value.as_str())
+            }
+        })
+    }
+}
+
 impl Into<Record> for Enum {
     fn into(self) -> Record {
         Record::Enum(self)

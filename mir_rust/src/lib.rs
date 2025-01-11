@@ -168,6 +168,9 @@ fn sanitize_struct(s: impl AsRef<str>) -> Ident {
     if s == "Self" {
         s += "_";
     }
+    if s.chars().next().unwrap().is_numeric() {
+        s = format!("_{}", s)
+    }
     assert_valid_ident(&s, &original);
     Ident(s)
 }

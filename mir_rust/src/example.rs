@@ -63,17 +63,9 @@ pub fn to_rust_example_value(ty: &Ty, name: &str, spec: &HirSpec, use_ref_value:
                     let name = name.to_rust_struct();
                     quote!(#name(#(#fields),*))
                 }
-                Record::Enum(Enum {
-                    name: _,
-                    variants,
-                    doc: _docs,
-                }) => {
-                    let variant = variants.first().unwrap();
-                    let variant = if let Some(a) = &variant.alias {
-                        a.to_rust_struct()
-                    } else {
-                        variant.value.to_rust_struct()
-                    };
+                Record::Enum(z @ Enum { .. }) => {
+                    let (name, _) = z.iter_safe_variant_names().next().expect("at least 1 variant");
+                    let variant = name.to_rust_struct();
                     let model = model.to_rust_struct();
                     quote!(#model::#variant)
                 }

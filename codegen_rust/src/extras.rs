@@ -14,7 +14,7 @@ pub struct Extras {
 
 impl Extras {
     pub fn needs_serde(&self) -> bool {
-        self.null_as_zero || self.date_serialization
+        self.null_as_zero || self.integer_date_serialization || self.option_i64_str
     }
 }
 

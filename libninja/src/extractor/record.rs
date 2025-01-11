@@ -86,6 +86,7 @@ pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut Hir
                     schema_ref_to_ty2(schema_ref, spec, schema)
                 }
             };
+            let ty = Ty::HashMap(Box::new(ty));
             let t = TypeAlias {
                 name: name.clone(),
                 ty,
@@ -102,6 +103,7 @@ pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut Hir
                 docs: schema.description.as_ref().map(|d| Doc(d.trim().to_string())),
             };
             hir.insert_schema(s);
+            return;
         }
     } else if let SchemaKind::Type(Type::String(StringType { enumeration, .. })) = k {
         let lookup = schema.extensions.get("x-rename").and_then(|v| v.as_object());

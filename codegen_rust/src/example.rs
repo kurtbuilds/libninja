@@ -68,7 +68,9 @@ pub fn generate_example(operation: &Operation, cfg: &Config, spec: &HirSpec) -> 
     ];
     if use_required {
         let struct_name = operation.required_struct_name();
-        imports.push(import!(format!("{}::request", cfg.package_name()), struct_name));
+        let file_name = operation.file_name();
+        let package_name = cfg.package_name();
+        imports.push(import!(format!("{package_name}::request::{file_name}::{struct_name}")));
     }
     let operation = operation.name.to_rust_ident();
     let client = cfg.client_name();

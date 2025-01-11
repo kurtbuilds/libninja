@@ -221,10 +221,11 @@ pub fn make_url(operation: &Operation) -> TokenStream {
 }
 
 fn add_model_import(imports: &mut Vec<Import>, model: &str) {
+    let model = model.to_rust_struct();
     for import in imports.iter_mut() {
         if import.path == "crate::model" {
             for item in &mut import.imports {
-                if item.name == model {
+                if model == item.name {
                     return;
                 }
             }

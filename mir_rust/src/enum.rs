@@ -6,19 +6,10 @@ use quote::quote;
 
 pub fn make_enum(e: &hir::Enum, derives: &[String]) -> Item<TokenStream> {
     let variants = e
-        .variants
-        .iter()
-        .map(|s| {
-            let ident = if let Some(a) = &s.alias {
-                a.to_rust_struct()
-            } else {
-                let mut s = s.value.clone();
-                if !s.is_empty() && s.chars().next().unwrap().is_numeric() {
-                    s = format!("{}{}", e.name, s);
-                }
-                s.to_rust_struct()
-            };
-            let rename = serde_rename2(&s.value, &ident);
+        .iter_safe_variant_names()
+        .map(|(name, value)| {
+            let ident = name.to_rust_struct();
+            let rename = serde_rename2(value, &ident);
             Variant {
                 ident,
                 doc: None,
