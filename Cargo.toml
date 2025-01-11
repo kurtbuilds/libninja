@@ -2,6 +2,9 @@
 resolver = "2"
 members = ["libninja", "macro", "mir", "hir", "codegen_rust"]
 
+[workspace.package]
+license = "MIT"
+
 [workspace.dependencies]
 anyhow = "1.0"
 libninja_mir = { path = "mir", version = "0.1" }
