@@ -1,9 +1,17 @@
 [workspace]
 resolver = "2"
-members = [
-    "libninja",
-    "macro",
-    "mir",
-    "hir",
-    "codegen_rust",
-]
+members = ["libninja", "macro", "mir", "hir", "codegen_rust"]
+
+[workspace.dependencies]
+anyhow = "1.0"
+libninja_mir = { path = "mir" }
+syn = { version = "2.0.48", features = ["full"] }
+libninja_hir = { path = "hir" }
+proc-macro2 = "1.0.78"
+quote = "1.0.9"
+convert_case = "0.6.0"
+regex = "1.10.3"
+openapiv3-extended = { version = "6.0.0", features = ["v2"] }
+libninja_mir_rust = { path = "mir_rust" }
+libninja_codegen_rust = { path = "codegen_rust" }
+indexmap = "2.0"

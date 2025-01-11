@@ -10,14 +10,14 @@ name = "mir_rust"
 path = "src/lib.rs"
 
 [dependencies]
-libninja_mir = { path = "../mir" }
-proc-macro2 = "1.0.78"
-quote = "1.0.9"
-syn = { version = "2.0.48", features = ["full"] }
-convert_case = "0.6.0"
-regex = "1.10.3"
+libninja_mir.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true
+convert_case.workspace = true
+regex.workspace = true
 prettyplease = "0.2.16"
-libninja_hir = { path = "../hir" }
+libninja_hir.workspace = true
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
