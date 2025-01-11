@@ -22,7 +22,7 @@ pub fn write_examples_folder(spec: &HirSpec, config: &Config, modified: &mut Has
 }
 
 pub fn generate_example(operation: &Operation, cfg: &Config, spec: &HirSpec) -> Result<File<TokenStream>> {
-    let args = operation.function_args(Language::Rust);
+    let args: Vec<_> = operation.parameters.iter().filter(|p| !p.optional).cloned().collect();
     let declarations = args
         .iter()
         .map(|p| {
@@ -33,7 +33,24 @@ pub fn generate_example(operation: &Operation, cfg: &Config, spec: &HirSpec) -> 
             })
         })
         .collect::<Result<Vec<_>>>()?;
-    let fn_args = args.iter().map(|p| p.name.to_rust_ident());
+    let use_required = operation.use_required_struct(Language::Rust);
+    let fn_args = if use_required {
+        let struct_name = operation.required_struct_name().to_rust_struct();
+        let args = operation.parameters.iter().filter(|&p| !p.optional).map(|p| {
+            let ident = p.name.to_rust_ident();
+            quote!(#ident)
+        });
+        quote! {
+            #struct_name {
+                #(#args),*
+            }
+        }
+    } else {
+        let fn_args = args.iter().map(|p| p.name.to_rust_ident());
+        quote! {
+            #(#fn_args),*
+        }
+    };
     let optionals: Vec<TokenStream> = operation
         .optional_args()
         .into_iter()
@@ -49,7 +66,7 @@ pub fn generate_example(operation: &Operation, cfg: &Config, spec: &HirSpec) -> 
         import!(format!("{}::model::*", cfg.package_name())),
         import!(cfg.package_name(), cfg.client_name()),
     ];
-    if operation.use_required_struct(Language::Rust) {
+    if use_required {
         let struct_name = operation.required_struct_name();
         imports.push(import!(format!("{}::request", cfg.package_name()), struct_name));
     }
@@ -58,7 +75,7 @@ pub fn generate_example(operation: &Operation, cfg: &Config, spec: &HirSpec) -> 
     let mut main: Function<TokenStream> = rfunction!(async main() {
        let client = #client::from_env();
         #(#declarations)*
-        let response = client.#operation(#(#fn_args),*)
+        let response = client.#operation(#fn_args)
             #(#optionals)*
             .await
             .unwrap();

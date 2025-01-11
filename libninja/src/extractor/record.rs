@@ -3,38 +3,25 @@ use std::collections::{BTreeMap, HashSet};
 use convert_case::{Case, Casing};
 /// Records are the "model"s of the MIR world. model is a crazy overloaded word though.
 use openapiv3::{
-    AdditionalProperties, ObjectType, OpenAPI, RefOr, RefOrMap, ReferenceOr, Schema, SchemaData, SchemaKind,
-    SchemaReference, StringType, Type,
+    AdditionalProperties, ObjectType, OpenAPI, RefOrMap, ReferenceOr, Schema, SchemaData, SchemaKind, SchemaReference,
+    StringType, Type,
 };
 
-use hir::{Enum, HirField, HirSpec, NewType, Record, Struct, Variant};
+use hir::{Enum, HirField, HirSpec, NewType, Record, Struct, TypeAlias, Variant};
 use mir::{Doc, Ty};
-use mir_rust::sanitize;
 
 use crate::{
     extractor,
     extractor::plural::{is_plural, singular},
-    extractor::{is_optional, is_primitive, schema_ref_to_ty, schema_ref_to_ty2, schema_to_ty},
+    extractor::{is_optional, schema_ref_to_ty, schema_ref_to_ty2, schema_to_ty},
 };
 
-fn extract_fields(
-    properties: &RefOrMap<Schema>,
-    parent: &Schema,
-    spec: &OpenAPI,
-    hir: &mut HirSpec,
-) -> BTreeMap<String, HirField> {
+fn extract_fields(properties: &RefOrMap<Schema>, parent: &Schema, spec: &OpenAPI) -> BTreeMap<String, HirField> {
     properties
         .iter()
         .map(|(name, schema_ref)| {
             let schema = schema_ref.resolve(spec);
-            let mut ty = None;
-            if let RefOr::Item(schema) = schema_ref {
-                if !is_primitive(schema, spec) {
-                    let name = sanitize(name).to_case(Case::Pascal);
-                    ty = extract_schema(&name, schema, spec, hir);
-                }
-            }
-            let ty = ty.unwrap_or_else(|| schema_ref_to_ty2(schema_ref, spec, schema));
+            let ty = schema_ref_to_ty2(schema_ref, spec, schema);
             let optional = is_optional(name, schema, parent);
             (
                 name.clone(),
@@ -78,7 +65,7 @@ pub fn effective_length(all_of: &[ReferenceOr<Schema>]) -> usize {
     length
 }
 
-pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut HirSpec) -> Option<Ty> {
+pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut HirSpec) {
     println!("Extracting schema: {}", name);
     let name = name.to_string();
 
@@ -91,22 +78,32 @@ pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut Hir
     {
         if properties.is_empty() && additional_properties.is_some() {
             let p = additional_properties.as_ref().unwrap();
-            return match p {
-                AdditionalProperties::Any(_) => Some(Ty::HashMap(Box::new(Ty::Any(None)))),
-                AdditionalProperties::Schema(s) => Some(Ty::HashMap(Box::new(schema_ref_to_ty(s, spec)))),
+            let ty = match p {
+                AdditionalProperties::Any(_) => Ty::default(),
+                AdditionalProperties::Schema(s) => {
+                    let schema_ref = s.as_ref();
+                    let schema = schema_ref.resolve(spec);
+                    schema_ref_to_ty2(schema_ref, spec, schema)
+                }
             };
+            let t = TypeAlias {
+                name: name.clone(),
+                ty,
+                optional: false,
+            };
+            hir.insert_schema(t);
+            return;
+        } else {
+            let fields = extract_fields(properties, schema, spec);
+            let s = Struct {
+                name: name.clone(),
+                fields,
+                nullable: schema.nullable,
+                docs: schema.description.as_ref().map(|d| Doc(d.trim().to_string())),
+            };
+            hir.insert_schema(s);
         }
-        let fields = extract_fields(properties, schema, spec, hir);
-        let s = Struct {
-            name: name.clone(),
-            fields,
-            nullable: schema.nullable,
-            docs: schema.description.as_ref().map(|d| Doc(d.trim().to_string())),
-        };
-        hir.insert_schema(s);
-        return None;
-    }
-    if let SchemaKind::Type(Type::String(StringType { enumeration, .. })) = k {
+    } else if let SchemaKind::Type(Type::String(StringType { enumeration, .. })) = k {
         let lookup = schema.extensions.get("x-rename").and_then(|v| v.as_object());
         if !enumeration.is_empty() {
             let s = Enum {
@@ -127,12 +124,11 @@ pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut Hir
                 doc: schema.description.as_ref().map(|d| Doc(d.clone())),
             };
             hir.insert_schema(s);
-            return None;
+            return;
         }
-    }
-    if let SchemaKind::AllOf { all_of } = k {
+    } else if let SchemaKind::AllOf { all_of } = k {
         extract_all_of(name, all_of.as_slice(), &schema.data, spec, hir);
-        return None;
+        return;
     }
     'foo: {
         let SchemaKind::Type(Type::Array(arr)) = k else {
@@ -149,10 +145,9 @@ pub fn extract_schema(name: &str, schema: &Schema, spec: &OpenAPI, hir: &mut Hir
             break 'foo;
         };
         extract_schema(&name, item, spec, hir);
-        return Some(Ty::Array(Box::new(Ty::model(&name))));
+        return;
     }
     extract_newtype(name, schema, spec, hir);
-    None
 }
 
 fn extract_newtype(name: String, schema: &Schema, spec: &OpenAPI, hir: &mut HirSpec) {

@@ -8,7 +8,7 @@ use quote::quote;
 use regex::Captures;
 
 use hir::{Config, HirSpec, Language, Location, Operation, Parameter};
-use mir::{import, Arg, Class, Doc, Field, File, Function, Ident, Item, Ty, Visibility};
+use mir::{import, Arg, Class, Doc, Field, File, Function, Ident, Import, Item, Ty, Visibility};
 
 use mir_rust::{derives_to_tokens, ToRustCode, ToRustIdent, ToRustType};
 
@@ -59,7 +59,12 @@ pub fn make_single_module(operation: &Operation, spec: &HirSpec, cfg: &Config) -
         })
         .unwrap_or_default();
 
-    let request_structs = build_request_struct(operation, spec, &cfg);
+    let mut imports: Vec<Import> = vec![
+        import!(crate, FluentRequest),
+        import!(serde, Serialize, Deserialize),
+        import!(httpclient, InMemoryResponseExt),
+    ];
+    let request_structs = build_request_struct(operation, spec, &cfg, &mut imports);
     let struct_name = request_structs[0].name.clone();
     let response = operation.ret.to_rust_type();
     let method = Ident(operation.method.clone());
@@ -106,11 +111,7 @@ pub fn make_single_module(operation: &Operation, spec: &HirSpec, cfg: &Config) -
     File {
         attributes: vec![],
         doc: None,
-        imports: vec![
-            import!(crate, FluentRequest),
-            import!(serde, Serialize, Deserialize),
-            import!(httpclient, InMemoryResponseExt),
-        ],
+        imports,
         items,
         modules: Vec::new(),
     }
@@ -219,10 +220,32 @@ pub fn make_url(operation: &Operation) -> TokenStream {
     }
 }
 
-pub fn make_struct_fields(inputs: &[Parameter], use_references: bool) -> Vec<Field<TokenStream>> {
+fn add_model_import(imports: &mut Vec<Import>, model: &str) {
+    for import in imports.iter_mut() {
+        if import.path == "crate::model" {
+            for item in &mut import.imports {
+                if item.name == model {
+                    return;
+                }
+            }
+            import.imports.push(model.into());
+            return;
+        }
+    }
+    imports.push(Import::new("crate::model", vec![model.to_string()]));
+}
+
+pub fn make_struct_fields(
+    inputs: &[Parameter],
+    use_references: bool,
+    imports: &mut Vec<Import>,
+) -> Vec<Field<TokenStream>> {
     inputs
         .iter()
         .map(|input| {
+            if let Some(m) = input.ty.inner_model() {
+                add_model_import(imports, m);
+            }
             let mut tok = if use_references {
                 input.ty.to_reference_type(quote!( 'a ))
             } else {
@@ -293,8 +316,13 @@ pub fn build_request_struct_builder_methods(operation: &Operation) -> Vec<Functi
         .collect()
 }
 
-pub fn build_request_struct(operation: &Operation, _spec: &HirSpec, opt: &Config) -> Vec<Class<TokenStream>> {
-    let instance_fields = make_struct_fields(&operation.parameters, false);
+pub fn build_request_struct(
+    operation: &Operation,
+    _spec: &HirSpec,
+    opt: &Config,
+    imports: &mut Vec<Import>,
+) -> Vec<Class<TokenStream>> {
+    let instance_fields = make_struct_fields(&operation.parameters, false, imports);
 
     let fn_name = operation.name.to_rust_ident().0;
     let response = operation.ret.to_rust_type().to_string().replace(" ", "");
@@ -331,7 +359,7 @@ On request success, this will return a [`{response}`]."#,
                     .filter(|i| !i.optional)
                     .cloned()
                     .collect::<Vec<_>>();
-                make_struct_fields(&required, true)
+                make_struct_fields(&required, true, imports)
             },
             vis: Visibility::Public,
             lifetimes,

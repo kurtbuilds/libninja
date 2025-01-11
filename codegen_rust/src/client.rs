@@ -190,7 +190,7 @@ pub fn build_api_client_method(operation: &Operation) -> TokenStream {
 
     let fn_args = if use_struct {
         let arg_struct = operation.required_struct_name().to_rust_struct();
-        vec![quote!(args: request::#arg_struct)]
+        vec![quote!(args: #arg_struct)]
     } else {
         operation
             .parameters

@@ -203,6 +203,21 @@ impl From<NewType> for Record {
     }
 }
 
+impl From<TypeAlias> for Record {
+    fn from(ta: TypeAlias) -> Self {
+        Record::TypeAlias(
+            ta.name,
+            HirField {
+                ty: ta.ty,
+                optional: ta.optional,
+                doc: None,
+                example: None,
+                flatten: false,
+            },
+        )
+    }
+}
+
 impl Record {
     pub fn name(&self) -> &str {
         match self {

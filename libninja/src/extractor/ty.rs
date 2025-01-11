@@ -16,17 +16,13 @@ pub fn schema_ref_to_ty2(schema_ref: &RefOr<Schema>, spec: &OpenAPI, schema: &Sc
         match schema_ref {
             ReferenceOr::Reference { reference } => {
                 let r = SchemaReference::from_str(reference);
-                schema_ref_to_model(r)
+                match r {
+                    SchemaReference::Schema { schema } => Ty::model(&schema),
+                    SchemaReference::Property { .. } => unimplemented!(),
+                }
             }
             ReferenceOr::Item(schema) => schema_to_ty(schema, spec),
         }
-    }
-}
-
-pub fn schema_ref_to_model(reference: SchemaReference) -> Ty {
-    match reference {
-        SchemaReference::Schema { schema } => Ty::model(&schema),
-        SchemaReference::Property { .. } => unimplemented!(),
     }
 }
 

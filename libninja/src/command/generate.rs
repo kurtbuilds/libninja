@@ -1,6 +1,7 @@
 use crate::extractor::extract_spec;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
+use convert_case::{Case, Casing};
 use hir::{Config, Language};
 use openapiv3::{OpenAPI, VersionedOpenAPI};
 use std::fs::File;
@@ -50,7 +51,7 @@ impl Generate {
         let output_dir = PathBuf::from(self.output_dir.unwrap_or_else(|| ".".to_string()));
         let spec = extract_spec(&spec)?;
         let config = Config {
-            name: self.name,
+            name: self.name.to_case(Case::Pascal),
             dest: output_dir,
             derives: self.derive,
             build_examples: self.examples,

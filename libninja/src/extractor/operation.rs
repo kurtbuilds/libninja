@@ -31,7 +31,7 @@ pub fn extract_operation(spec: &OpenAPI, path: &str, method: &str, op: &Operatio
         }
     };
     hir.operations.push(hir::Operation {
-        name,
+        name: name.to_case(Case::Pascal),
         doc,
         parameters,
         ret,

@@ -64,33 +64,6 @@ impl Operation {
         self.crowded_args()
     }
 
-    /// Returns the params that are used as function arguments.
-    pub fn function_args(&self, generator: Language) -> Vec<Parameter> {
-        match generator {
-            // Language::Golang if self.crowded_args() => {
-            //     vec![Parameter {
-            //         name: "args".to_string(),
-            //         ty: Ty::model("Required"),
-            //         location: Location::Body,
-            //         optional: false,
-            //         doc: None,
-            //         example: None,
-            //     }]
-            // }
-            _ if self.use_required_struct(generator) => {
-                vec![Parameter {
-                    name: "args".to_string(),
-                    ty: Ty::Model(self.required_struct_name()),
-                    location: Location::Body,
-                    optional: false,
-                    doc: None,
-                    example: None,
-                }]
-            }
-            _ => self.parameters.iter().filter(|p| !p.optional).cloned().collect(),
-        }
-    }
-
     pub fn required_struct(&self, sourcegen: Language) -> Struct {
         let fields = match sourcegen {
             // Language::Typescript => self
